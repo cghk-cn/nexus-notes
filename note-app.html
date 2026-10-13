@@ -146,8 +146,32 @@ html[data-theme=dark] #home{background:
 body.view-home #home{display:flex}
 body.view-home #app{display:none}
 .homeTop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:calc(9px + var(--safe-top)) calc(18px + var(--safe-right)) 4px calc(18px + var(--safe-left))}
-.homeTop .brand{margin-right:0;font-size:16px;height:44px;padding:0 16px 0 9px;gap:9px}
+.homeTop .brand{margin-right:0;font-size:16px;height:44px;padding:0 8px 0 9px;gap:9px}
 .homeTop .brand .ic.nx{width:26px;height:26px}
+.homeTop .brand .chkUpd{display:inline-flex;align-items:center;gap:6px;height:30px;margin-left:4px;padding:0 12px 0 9px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.14);color:#fff;font:inherit;font-size:12.5px;font-weight:700;letter-spacing:.02em;cursor:pointer;white-space:nowrap;transition:background .16s ease,transform .14s cubic-bezier(.2,.8,.3,1.2)}
+.homeTop .brand .chkUpd:hover{background:rgba(255,255,255,.26);transform:translateY(-1px)}
+.homeTop .brand .chkUpd:active{transform:translateY(0)}
+.homeTop .brand .chkUpd .ic{width:15px;height:15px}
+.homeTop .brand .chkUpd.spinning .ic{animation:chkSpin .8s linear infinite}
+@keyframes chkSpin{to{transform:rotate(360deg)}}
+.homeTop .brand .chkUpd.dot::after{content:'';position:absolute;top:6px;right:7px;width:7px;height:7px;border-radius:50%;background:#ff5a5f;box-shadow:0 0 0 2px rgba(0,0,0,.25)}
+.homeTop .brand .chkUpd{position:relative}
+/* 檢查更新對話框 */
+#mUpdate .card{width:520px}
+#mUpdate .uVer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);margin-bottom:12px}
+#mUpdate .uVer .lab{font-size:12px;color:var(--text-3);display:block;margin-bottom:3px}
+#mUpdate .uVer .val{font-size:16px;font-weight:800;letter-spacing:.01em}
+#mUpdate .uVer .val.new{color:var(--accent-text)}
+#mUpdate .uArrow{color:var(--text-3);flex:none}
+#mUpdate .uStatus{font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:12px}
+#mUpdate .uStatus b{color:var(--text)}
+#mUpdate .uNotes{max-height:200px;overflow:auto;font-size:12.5px;line-height:1.7;color:var(--text-2);white-space:pre-wrap;word-break:break-word;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:12px}
+#mUpdate .uAssets{display:flex;flex-direction:column;gap:8px;margin-bottom:4px}
+#mUpdate .uAsset{display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:11px;border:1px solid var(--border);background:var(--surface);text-decoration:none;color:var(--text);font-size:13px;font-weight:600;transition:border-color .15s ease,background .15s ease,transform .12s}
+#mUpdate .uAsset:hover{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-1px)}
+#mUpdate .uAsset .ic{width:17px;height:17px;color:var(--accent-text);flex:none}
+#mUpdate .uAsset .sz{margin-left:auto;font-size:11.5px;font-weight:500;color:var(--text-3)}
+#mUpdate .uSpin{display:inline-block;width:15px;height:15px;border:2px solid var(--border-strong);border-top-color:var(--accent);border-radius:50%;animation:chkSpin .7s linear infinite;vertical-align:-3px;margin-right:7px}
 .homeSearch{flex:1;max-width:560px;display:flex;align-items:center;gap:10px;height:46px;padding:0 20px;border-radius:999px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-sm);transition:box-shadow .18s ease,border-color .18s ease,transform .18s cubic-bezier(.2,.8,.3,1.2)}
 .homeSearch:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-ring),var(--shadow-md);transform:scale(1.01)}
 .homeSearch input{flex:1;min-width:0;border:none;background:none;outline:none;font-size:14.5px;color:var(--text);font-family:inherit}
@@ -528,6 +552,7 @@ body.dragging #dropHint{display:flex}
 <symbol id="i-spline" viewBox="0 0 24 24"><path d="M4 4v16h16"/><path d="M7 16l4.5-7 3.5 4 4-7.5"/><circle cx="11.5" cy="9" r="1.7"/></symbol>
 <symbol id="i-undo" viewBox="0 0 24 24"><path d="M4 9h11a4.5 4.5 0 0 1 0 9h-5"/><path d="M8 5L4 9l4 4"/></symbol>
 <symbol id="i-redo" viewBox="0 0 24 24"><path d="M20 9H9a4.5 4.5 0 0 0 0 9h5"/><path d="M16 5l4 4-4 4"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20.5 12a8.5 8.5 0 1 1-2.49-6.01"/><path d="M20.5 3.5V9h-5.5"/></symbol>
 <symbol id="i-zoom-in" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M11 8v6M8 11h6"/><path d="M21 21l-4.4-4.4"/></symbol>
 <symbol id="i-zoom-out" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M8 11h6"/><path d="M21 21l-4.4-4.4"/></symbol>
 <symbol id="i-fit" viewBox="0 0 24 24"><path d="M3 8V5a2 2 0 0 1 2-2h3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2h-3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M9 12h6"/></symbol>
@@ -546,7 +571,7 @@ body.dragging #dropHint{display:flex}
 
 <div id="home">
  <div class="homeTop">
-  <div class="brand"><svg class="ic nx"><use href="#i-nexus"></use></svg><span>NEXUS</span></div>
+  <div class="brand" id="homeBrand"><svg class="ic nx"><use href="#i-nexus"></use></svg><span>NEXUS</span><button class="chkUpd" id="btnCheckUpdate" data-tip="檢查更新" aria-label="檢查更新"><svg class="ic"><use href="#i-refresh"></use></svg><span class="chkUpdTx">檢查更新</span></button></div>
   <div class="homeSearch">
    <svg class="ic"><use href="#i-search"></use></svg>
    <input id="homeSearchIn" type="text" placeholder="搜尋筆記…" aria-label="搜尋筆記">
@@ -718,6 +743,14 @@ body.dragging #dropHint{display:flex}
  <div class="btns"><button onclick="closeModal('mTable')">取消</button><button class="primary" id="tOk">插入表格</button></div>
 </div></div>
 
+<div class="modal" id="mUpdate"><div class="card">
+ <h3><svg class="ic"><use href="#i-refresh"></use></svg>檢查更新</h3>
+ <div id="uBody">
+  <div class="uStatus"><span class="uSpin"></span>正在檢查更新…</div>
+ </div>
+ <div class="btns"><button onclick="closeModal('mUpdate')">關閉</button><a class="primary" id="uDL" href="#" target="_blank" rel="noopener" style="display:none;text-decoration:none"><svg class="ic"><use href="#i-download"></use></svg>前往下載</a></div>
+</div></div>
+
 <div class="modal" id="mChart"><div class="card wide">
  <h3>📈 插入經濟學曲線圖表</h3>
  <div class="row"><label>圖表類型</label>
@@ -822,6 +855,74 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const fmt=v=>{v=+v;if(Number.isInteger(v))return String(v);let s=Math.abs(v)>=100?v.toFixed(0):v.toFixed(2);if(s.indexOf('.')>=0)s=s.replace(/0+$/,'').replace(/\.$/,'');return s||'0';};
 function toast(msg){const e=$('#toast');e.textContent=t(msg);e.classList.add('on');clearTimeout(e._h);e._h=setTimeout(()=>e.classList.remove('on'),2200);}
 function closeModal(id){$('#'+id).classList.remove('open');}
+/* ===== 檢查更新（GitHub Releases） =====
+   APP_VERSION 為目前版本；檢查時向 GitHub Releases API 取最新版並比對。
+   發佈仓库：cghk-cn/nexus-notes。 */
+const APP_VERSION='1.0.0';
+const UPD=(function(){
+ const OWNER='cghk-cn', REPO='nexus-notes';
+ const API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/latest';
+ const PAGE='https://github.com/'+OWNER+'/'+REPO+'/releases';
+ function num(v){const m=String(v||'').match(/(\d+(?:\.\d+)*)/);return m?m[1].split('.').map(Number):[0];}
+ /* 回傳 >0 表 a 較新、<0 表 b 較新、0 相同 */
+ function cmp(a,b){const A=num(a),B=num(b);for(let i=0;i<Math.max(A.length,B.length);i++){const x=A[i]||0,y=B[i]||0;if(x!==y)return x-y;}return 0;}
+ function fmtSize(n){if(n==null)return '';const u=['B','KB','MB','GB'];let i=0;n=+n;while(n>=1024&&i<u.length-1){n/=1024;i++;}return (n>=10||i===0?Math.round(n):n.toFixed(1))+' '+u[i];}
+ function fmtDate(s){try{return new Date(s).toLocaleDateString(LANG==='en'?'en-US':'zh-TW');}catch(e){return s||'';}}
+ function open(url){ try{window.open(url,'_blank','noopener');}catch(e){location.href=url;} }
+ async function run(){
+  const btn=$('#btnCheckUpdate'), body=$('#uBody'), dl=$('#uDL');
+  $('#mUpdate').classList.add('open');
+  btn.classList.add('spinning'); btn.classList.remove('dot');
+  body.innerHTML='<div class="uStatus"><span class="uSpin"></span>'+esc(t('正在檢查更新…'))+'</div>';
+  dl.style.display='none';
+  let rel;
+  try{
+   const r=await fetch(API,{headers:{'Accept':'application/vnd.github+json'}});
+   if(r.status===404){ renderNone(); return; }
+   if(!r.ok)throw new Error('HTTP '+r.status);
+   rel=await r.json();
+  }catch(e){
+   body.innerHTML='<div class="uStatus">'+esc(t('檢查更新失敗：請檢查網路連線。'))+'</div>';
+   return;
+  }finally{ btn.classList.remove('spinning'); }
+  const latest=(rel.tag_name||rel.name||'').trim();
+  const newer=cmp(latest,APP_VERSION)>0;
+  const notes=(rel.body||'').trim();
+  let html='';
+  html+='<div class="uVer"><div><span class="lab">'+esc(t('目前版本'))+'</span><span class="val">'+esc(APP_VERSION)+'</span></div>'+
+        '<svg class="ic uArrow"><use href="#i-arrow-r"></use></svg>'+
+        '<div style="text-align:right"><span class="lab">'+esc(t('最新版本'))+'</span><span class="val'+(newer?' new':'')+'">'+esc(latest||t('未知'))+'</span></div></div>';
+  if(newer){
+   html+='<div class="uStatus">🎉 '+esc(tN('有新版本 {v} 可供下載。',{v:latest}))+'</div>';
+   btn.classList.add('dot');
+  }else{
+   html+='<div class="uStatus">✅ '+esc(t('你使用的已是最新版本。'))+'</div>';
+  }
+  if(rel.published_at)html+='<div class="uStatus" style="margin-top:-6px">'+esc(t('發布日期'))+'：'+esc(fmtDate(rel.published_at))+'</div>';
+  if(notes)html+='<div class="uNotes">'+esc(notes)+'</div>';
+  const assets=(rel.assets||[]).filter(a=>a.name);
+  if(assets.length){
+   html+='<div class="uAssets">';
+   for(const a of assets){
+    html+='<a class="uAsset" href="'+esc(a.browser_download_url)+'" target="_blank" rel="noopener">'+
+          '<svg class="ic"><use href="#i-download"></use></svg><span>'+esc(a.name)+'</span>'+
+          (a.size?'<span class="sz">'+esc(fmtSize(a.size))+'</span>':'')+'</a>';
+   }
+   html+='</div>';
+  }
+  body.innerHTML=html;
+  dl.href=rel.html_url||PAGE; dl.style.display='';
+ }
+ function renderNone(){
+  $('#btnCheckUpdate').classList.remove('spinning');
+  $('#uBody').innerHTML='<div class="uStatus">'+esc(t('目前沒有任何已發布的版本。'))+'</div>';
+  $('#uDL').href=PAGE; $('#uDL').style.display='';
+ }
+ return {run};
+})();
+$('#btnCheckUpdate').addEventListener('click',()=>UPD.run());
+
+
 
 /* ===== 多語言（繁體 / 简体 / English） ===== */
 let LANG='zh-TW';
@@ -1065,6 +1166,15 @@ Object.assign(I18N['zh-Hans'],{
 
  '已儲存到瀏覽器':'已保存到浏览器'
 });
+/* ===== 檢查更新 新增字串 ===== */
+Object.assign(I18N['zh-Hans'],{
+ '檢查更新':'检查更新','正在檢查更新…':'正在检查更新…','前往下載':'前往下载','關閉':'关闭',
+ '檢查更新失敗：請檢查網路連線。':'检查更新失败：请检查网络连接。',
+ '目前沒有任何已發布的版本。':'目前没有任何已发布的版本。',
+ '目前版本':'目前版本','最新版本':'最新版本','未知':'未知',
+ '有新版本 {v} 可供下載。':'有新版本 {v} 可供下载。','你使用的已是最新版本。':'你使用的已是最新版本。',
+ '發布日期':'发布日期'
+});
 Object.assign(I18N['en'],{
  '開啟本地檔案：編輯後可直接覆蓋原檔':'Open local file: overwrite it directly after editing',
  '儲存 (Ctrl+S)：覆蓋已連結的本地檔案，否則另存新檔':'Save (Ctrl+S): overwrite the linked local file, otherwise Save As',
@@ -1082,6 +1192,15 @@ Object.assign(I18N['en'],{
  'NEXUS 筆記檔 (.json)':'NEXUS note file (.json)',
 
  '已儲存到瀏覽器':'Saved to browser'
+});
+/* ===== 檢查更新 新增字串（English） ===== */
+Object.assign(I18N['en'],{
+ '檢查更新':'Check Updates','正在檢查更新…':'Checking for updates…','前往下載':'Download','關閉':'Close',
+ '檢查更新失敗：請檢查網路連線。':'Update check failed — please check your connection.',
+ '目前沒有任何已發布的版本。':'No releases have been published yet.',
+ '目前版本':'Current version','最新版本':'Latest version','未知':'Unknown',
+ '有新版本 {v} 可供下載。':'A new version {v} is available to download.','你使用的已是最新版本。':'You are already on the latest version.',
+ '發布日期':'Released'
 });
 /* ===== 翻譯 helpers ===== */
 function t(s){ if(!s||LANG==='zh-TW')return s; const d=I18N[LANG]; if(!d)return s;
