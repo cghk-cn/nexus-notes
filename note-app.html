@@ -101,7 +101,7 @@ button.tcat{flex:none;height:34px;min-width:74px;padding:0 14px;border:none;bord
 button.tcat:hover{background:var(--surface-2);color:var(--text);transform:scale(1.04)}
 button.tcat.on{background:linear-gradient(135deg,var(--accent),#7b5cf0);color:#fff;box-shadow:0 5px 14px rgba(66,133,244,.34)}
 button.tcat.on:hover{filter:brightness(1.06)}
-#tbPanel{position:relative;z-index:55;background:var(--surface);border-bottom:1px solid var(--border);padding:7px calc(12px + var(--safe-right)) 7px calc(12px + var(--safe-left));box-shadow:0 8px 18px rgba(16,24,40,.05)}
+#tbPanel{position:relative;z-index:55;background:var(--surface);border-bottom:1px solid var(--border);padding:7px calc(12px + var(--safe-right)) 7px calc(12px + var(--safe-left));box-shadow:0 8px 18px rgba(16,24,40,.05);display:flex;align-items:center;gap:10px}
 .tbPane{display:none;align-items:center;gap:8px;flex-wrap:wrap}
 .tbPane.on{display:flex}
 .tbSep{width:1px;align-self:stretch;min-height:24px;background:var(--border);flex:none;opacity:.9}
@@ -348,6 +348,12 @@ body.tool-pen .flow,body.tool-eraser .flow,body.tool-text .flow{pointer-events:n
 .elbar input[type=text]{width:92px;padding:3px 7px;font-size:13px}
 .elbar .smi{color:var(--text-3);font-size:12px}
 .elbar select.fontSel{width:116px;padding:3px 6px;font-size:13px}
+/* 元素編輯列改駐留於頂部工具列右側空白處，不再浮在文件上遮擋內容 */
+#tbPanel .tbPane{flex:0 1 auto}
+#elbarHost{margin-left:auto;display:flex;align-items:center;min-width:0;flex:0 1 auto}
+#elbarHost:empty{display:none}
+#elbarHost .elbar{position:static;max-width:min(96vw,760px);box-shadow:var(--shadow-sm);background:var(--surface-2)}
+#elbarHost .elgrip{display:none}
 /* ================= 屬性面板 ================= */
 #panel{width:254px;background:var(--surface);border-left:1px solid var(--border);overflow:auto;padding:16px 14px 28px;flex:none;font-size:12.5px;display:flex;flex-direction:column}
 #panel h4,#propEmpty,#propBox{flex:none}
@@ -467,11 +473,12 @@ body.dragging #dropHint{display:flex}
  #topbar .brand{font-size:14px;height:34px;padding:0 7px;gap:0}
  #topbar .brand span{display:none} /* 手機版只留圖示（仍可點回主頁），騰出空間給分類列 */
  #tbCats{mask-image:linear-gradient(to right,#000 calc(100% - 32px),rgba(0,0,0,.08));-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 32px),rgba(0,0,0,.08))}
- #tbPanel{padding:6px calc(10px + var(--safe-right)) 6px calc(10px + var(--safe-left))}
+ #tbPanel{padding:6px calc(10px + var(--safe-right)) 6px calc(10px + var(--safe-left));flex-wrap:wrap;row-gap:6px}
+ #elbarHost{margin-left:0;flex-basis:100%}
  .tbPane.on{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
  .tbPane.on::-webkit-scrollbar{display:none}
  .tbPane>*{flex:none}
- .elbar{max-width:96%}
+ .elbar{max-width:100%}
 }
 @media (pointer:coarse){
  /* 觸控裝置：畫筆 / 橡皮擦 / 文字工具優先接收手指事件，不被捲動搶走 */
@@ -646,6 +653,7 @@ body.dragging #dropHint{display:flex}
       <button data-x="print"><svg class="ic"><use href="#i-print"></use></svg>列印 / 存成 PDF</button>
      </div>
     </div>
+    <div id="elbarHost" aria-live="polite"></div>
    </section>
 
  <div id="main">
@@ -1282,11 +1290,77 @@ const FSA=(function(){
   }
  };
 })();
-/* 儲存（Ctrl+S 與儲存鈕共用）：已連結本機檔→覆蓋原檔；否則存到瀏覽器 */
+/* ===== 桌面版（Electron）原生檔案開啟／覆蓋 =====
+   桌面版中 window.nexus 由 preload 注入。可「以此打開」本機檔，
+   並以真實路徑儲存直接覆蓋原檔（無需瀏覽器的 File System Access）。
+   NEXUS 筆記檔（.json/.noteapp）會開啟成可編輯筆記並記下真實路徑；
+   PDF／文字／圖片則像「預覽」一樣匯入成新筆記。 */
+const DESK=(function(){
+ const api=(typeof window!=='undefined'&&window.nexus&&window.nexus.isDesktop)?window.nexus:null;
+ if(!api)return{supported:false};
+ const MIME={pdf:'application/pdf',txt:'text/plain',md:'text/markdown',markdown:'text/markdown',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp'};
+ const isNote=e=>e==='json'||e==='noteapp';
+ function b64ToBlob(b64,mime){
+  const bin=atob(b64);const n=bin.length;const u8=new Uint8Array(n);
+  for(let i=0;i<n;i++)u8[i]=bin.charCodeAt(i);
+  return new Blob([u8],{type:mime||'application/octet-stream'});
+ }
+ async function openPath(p){
+  const r=await api.readFile(p);
+  if(!r||!r.ok){ toast(t('開啟失敗')+(r&&r.error?('：'+r.error):'')); return; }
+  const name=r.name||(String(p).split('/').pop()||'file');
+  const ext=r.ext||(name.split('.').pop()||'').toLowerCase();
+  if(isNote(ext)){
+   let doc;
+   try{ const o=JSON.parse(r.text); doc=(o&&o.doc)?o.doc:o; if(!doc||!Array.isArray(doc.pages))throw new Error('格式不符'); }
+   catch(e){ alert(t('開啟失敗：不是有效的筆記 JSON 檔')); return; }
+   doc.id=uid(); doc.updated=Date.now(); doc.filePath=p; doc.fileName=name;
+   if(!doc.name)doc.name=name.replace(/\.(noteapp\.)?json$/i,'');
+   S.docs.unshift(doc);
+   openDoc(doc.id); persist();
+   toast(tN('已開啟「{n}」，儲存時將覆蓋原檔',{n:doc.name}));
+   return;
+  }
+  /* 非筆記檔（pdf／文字／圖片）：像「預覽」開啟，匯入成新筆記 */
+  let file;
+  if(r.text!=null)file=new File([r.text],name,{type:MIME[ext]||'text/plain'});
+  else file=new File([b64ToBlob(r.base64,MIME[ext])],name,{type:MIME[ext]||'application/octet-stream'});
+  const base=name.replace(/\.[^.]+$/,'')||name;
+  const d=newDoc(base); openDoc(d.id);
+  uploadMode='doc'; /* 已在上面建好筆記，匯入目前這份即可 */
+  await handleFiles([file]);
+ }
+ return {
+  supported:true,
+  listen(){ api.onOpenFile(async ({path})=>{ if(path)await openPath(path); }); },
+  ready(){ try{api.notifyReady();}catch(e){} },
+  async open(){ const p=await api.pickOpen(); if(p)await openPath(p); },
+  async save(){
+   const d=curDoc(); if(!d||!d.filePath)return false;
+   const r=await api.writeFile(d.filePath,JSON.stringify({app:'noteapp',v:1,doc:d},null,1));
+   if(!r||!r.ok){ toast(t('寫入檔案失敗')+(r&&r.error?('：'+r.error):'')); return false; }
+   d.fileName=r.name||d.fileName; d.updated=Date.now(); persist(); renderDocList();
+   toast(tN('已覆蓋「{n}」',{n:d.fileName||d.name}));
+   return true;
+  },
+  async saveAs(){
+   const d=curDoc(); if(!d)return false;
+   const p=await api.pickSave(d.fileName||(safeName()+'.noteapp.json'));
+   if(!p)return false;
+   const r=await api.writeFile(p,JSON.stringify({app:'noteapp',v:1,doc:d},null,1));
+   if(!r||!r.ok){ toast(t('寫入檔案失敗')); return false; }
+   d.filePath=p; d.fileName=r.name||d.fileName; d.updated=Date.now(); persist(); renderDocList();
+   toast(tN('已連結「{n}」，之後儲存將覆蓋此檔',{n:d.fileName}));
+   return true;
+  }
+ };
+})();
+/* 儲存（Ctrl+S 與儲存鈕共用）：桌面版已連結本機檔→覆蓋原檔；瀏覽器已連結→FSA 覆蓋；否則存到瀏覽器 */
 async function doSave(){
  persist(); /* 一律先更新瀏覽器內的備份 */
+ const d=curDoc();
+ if(DESK.supported&&d&&d.filePath){ await DESK.save(); return; }
  if(FSA.supported){
-  const d=curDoc();
   if(d && await FSA.handleFor(d.id)){ await FSA.save(); return; }
  }
  toast(t('已儲存到瀏覽器'));
@@ -1514,7 +1588,7 @@ function renderDocList(){
    if(a){
     ev.stopPropagation();
     if(a.dataset.a==='dup'){
-     const c=JSON.parse(JSON.stringify(d));c.id=uid();c.name=d.name+' (副本)';c.updated=Date.now();delete c.fileName;
+     const c=JSON.parse(JSON.stringify(d));c.id=uid();c.name=d.name+' (副本)';c.updated=Date.now();delete c.fileName;delete c.filePath;
      S.docs.unshift(c);persist();renderDocList();toast('已複製筆記');
     }else{
      if(!confirm(tN('刪除筆記「{n}」？此動作無法復原。',{n:d.name})))return;
@@ -1591,21 +1665,10 @@ function updateSelUI(){
  Object.assign(sb.style,{display:'block',left:e.x+'px',top:e.y+'px',width:e.w+'px',height:e.h+'px'});
  const box=document.createElement('div');box.className='elbar';box.id='elbar';
  box.innerHTML=elbarHTML(e);
- if(layer){
-  layer.appendChild(box);
-  const bw=Math.min(box.offsetWidth||300,Math.max(60,d.w-4)),bh=box.offsetHeight||36;
-  const off=(S.elbarOff&&S.elbarOff[e.id])||null;
-  if(off){
-   /* 使用者手動拖曳過的相對位置（元素移動時編輯列跟著走） */
-   box.style.left=clamp(e.x+off.x,2,Math.max(2,d.w-bw))+'px';
-   box.style.top=clamp(e.y+off.y,2,Math.max(2,d.h-bh))+'px';
-  }else{
-   /* 預設：完整放在元素上方；上方不夠空間則放下方，避免擋住輸入框 */
-   const bx=clamp(e.x,2,Math.max(2,d.w-bw));
-   const topAbove=e.y-bh-6;
-   box.style.left=bx+'px';
-   box.style.top=(topAbove>=2?topAbove:(e.y+e.h+6))+'px';
-  }
+ const host=$('#elbarHost');
+ if(host){
+  /* 編輯列駐留於頂部工具列右側空白處，不再浮在文件上遮擋內容 */
+  host.appendChild(box);
   wireElbar(box,e);
  }
  renderPanel();
@@ -3362,7 +3425,7 @@ $('#exportMenu').addEventListener('click',ev=>{
  $('#exportMenu').classList.remove('open');
  const k=b.dataset.x;
  if(k==='json')exportJSON();
- if(k==='saveas'){ if(!FSA.supported){ toast(t('此環境不支援本機覆蓋儲存，改以下載 JSON')); exportJSON(); } else FSA.saveAs(); }
+ if(k==='saveas'){ if(DESK.supported)DESK.saveAs(); else if(!FSA.supported){ toast(t('此環境不支援本機覆蓋儲存，改以下載 JSON')); exportJSON(); } else FSA.saveAs(); }
  if(k==='html')exportHTML();
  if(k==='txt')exportTXT();
  if(k==='png')exportPNG();
@@ -3437,7 +3500,7 @@ $('#homeGrid').addEventListener('click',ev=>{
  if(a){
   ev.stopPropagation();
   if(a.dataset.a==='dup'){
-   const c=JSON.parse(JSON.stringify(d));c.id=uid();c.name=d.name+' (副本)';c.updated=Date.now();delete c.fileName;
+   const c=JSON.parse(JSON.stringify(d));c.id=uid();c.name=d.name+' (副本)';c.updated=Date.now();delete c.fileName;delete c.filePath;
    S.docs.unshift(c);persist();renderHome();toast('已複製筆記');
   }else{
    if(!confirm(tN('刪除筆記「{n}」？此動作無法復原。',{n:d.name})))return;
@@ -3552,6 +3615,7 @@ $('#pgOk').addEventListener('click',()=>{
 $('#btnNewDoc').addEventListener('click',()=>{newDoc();toast('已建立新筆記');});
 $('#btnSave').addEventListener('click',()=>doSave());
 $('#btnOpenLocal').addEventListener('click',()=>{
+ if(DESK.supported){ DESK.open(); return; }
  if(!FSA.supported){ toast(t('此環境不支援直接覆蓋本機檔，將改以「匯入」建立新筆記')); $('#jsonInput').click(); return; }
  FSA.open();
 });
@@ -3757,6 +3821,9 @@ window.addEventListener('keydown',ev=>{
  renderHome();
  applyLang();
  document.body.classList.add('view-home');
+  /* 桌面版：訂閱「以此打開」事件，並告知主進緒渲染已就緒（送出待處理的開啟檔案） */
+  if(DESK.supported){ DESK.listen(); DESK.ready(); }
+
  console.log('NoteApp ready —',S.docs.length,'doc(s) · home view · lang=',LANG);
 })();
 </script>

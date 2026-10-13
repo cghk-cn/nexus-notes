@@ -22,6 +22,7 @@
     "productName": "NEXUS",
     "files": [
       "main.js",
+      "preload.js",
       "app/**/*",
       "package.json"
     ],
@@ -29,6 +30,72 @@
       "output": "release"
     },
     "icon": "build/icon.png",
+    "fileAssociations": [
+      {
+        "ext": "noteapp",
+        "name": "NEXUS Note",
+        "description": "NEXUS 筆記檔",
+        "role": "Editor",
+        "rank": "Owner",
+        "icon": "build/icon.icns"
+      },
+      {
+        "ext": "json",
+        "name": "JSON Note",
+        "description": "NEXUS / JSON 筆記檔",
+        "role": "Editor",
+        "rank": "Alternate",
+        "icon": "build/icon.icns"
+      },
+      {
+        "ext": "pdf",
+        "name": "PDF Document",
+        "role": "Viewer",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "txt",
+        "name": "Plain Text",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "md",
+        "name": "Markdown",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "markdown",
+        "name": "Markdown",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "png",
+        "name": "PNG Image",
+        "role": "Viewer",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "jpg",
+        "name": "JPEG Image",
+        "role": "Viewer",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "jpeg",
+        "name": "JPEG Image",
+        "role": "Viewer",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "webp",
+        "name": "WebP Image",
+        "role": "Viewer",
+        "rank": "Alternate"
+      }
+    ],
     "mac": {
       "category": "public.app-category.productivity",
       "icon": "build/icon.icns",
