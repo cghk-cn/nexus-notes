@@ -274,6 +274,8 @@ html[data-theme=dark] .docItem.active{background:linear-gradient(155deg,rgba(91,
 .docItem .meta{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-3);margin-top:3px;white-space:nowrap}
 .docItem .meta .sep{opacity:.6}
 .docItem .pv{font-size:11.5px;color:var(--text-2);line-height:1.55;margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.docItem .fNm{display:flex;align-items:center;gap:5px;margin-top:6px;font-size:11px;font-weight:600;color:var(--accent-text);background:var(--accent-soft);border-radius:6px;padding:3px 7px;max-width:100%}
+.docItem .fNm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .docItem .acts{position:absolute;top:8px;right:8px;display:none;gap:3px}
 .docItem:hover .acts{display:flex}
 .docItem .acts button{width:23px;height:23px;padding:0;border-radius:6px;background:var(--surface);border:1px solid var(--border);color:var(--text-3)}
@@ -500,6 +502,8 @@ body.dragging #dropHint{display:flex}
 <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
 <symbol id="i-import" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v6M9 14l3 3 3-3"/></symbol>
 <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></symbol>
+<symbol id="i-folder" viewBox="0 0 24 24"><path d="M4.5 6.5A2 2 0 0 1 6.5 4.5h3.1a2 2 0 0 1 1.4.6l1.3 1.4h5.2A2 2 0 0 1 19.5 8.5v1"/><path d="M3.2 9.6A1.6 1.6 0 0 1 4.8 8h14.4a1.6 1.6 0 0 1 1.55 2l-1.7 8A2 2 0 0 1 17.1 19.6H6.9a2 2 0 0 1-1.95-1.56L3.2 9.6z"/></symbol>
+
 <symbol id="i-eyedropper" viewBox="0 0 24 24"><path d="m2 22 1-4 11-11 3 3L6 21l-4 1z"/><path d="m15.5 5.5 3 3"/><path d="M18 3l3 3-2 2-3-3 2-2z"/></symbol>
 <symbol id="i-arrow-l" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="m11 6-6 6 6 6"/></symbol>
 <symbol id="i-arrow-r" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></symbol>
@@ -573,8 +577,9 @@ body.dragging #dropHint{display:flex}
     <div class="tbPane" data-cat="file">
      <button id="btnNewDoc" class="ibtn" data-tip="新增筆記" aria-label="新增筆記"><svg class="ic"><use href="#i-note-plus"></use></svg></button>
      <input id="docName" spellcheck="false" aria-label="筆記名稱" data-tip="筆記名稱（雙擊左側卡片可重新命名）">
-     <button id="btnSave" class="ibtn" data-tip="儲存到瀏覽器 (Ctrl+S)" aria-label="儲存"><svg class="ic"><use href="#i-save"></use></svg></button>
-     <button id="btnImport" class="ibtn" data-tip="匯入先前匯出的 JSON 筆記檔" aria-label="匯入"><svg class="ic"><use href="#i-import"></use></svg></button>
+     <button id="btnSave" class="ibtn" data-tip="儲存 (Ctrl+S)：覆蓋已連結的本地檔案，否則另存新檔" aria-label="儲存"><svg class="ic"><use href="#i-save"></use></svg></button>
+     <button id="btnOpenLocal" class="ibtn" data-tip="開啟本地檔案：編輯後可直接覆蓋原檔" aria-label="開啟本地檔案"><svg class="ic"><use href="#i-folder"></use></svg></button>
+      <button id="btnImport" class="ibtn" data-tip="匯入先前匯出的 JSON 筆記檔（建立新筆記）" aria-label="匯入"><svg class="ic"><use href="#i-import"></use></svg></button>
      <button id="btnUploadDoc" class="ibtn" data-tip="上載檔案到目前筆記" aria-label="上載檔案"><svg class="ic"><use href="#i-upload"></use></svg></button>
     </div>
     <div class="tbPane" data-cat="page">
@@ -634,6 +639,7 @@ body.dragging #dropHint{display:flex}
      <button id="btnExport" class="ibtn" data-tip="匯出：JSON / HTML / TXT / PNG / 列印" aria-label="匯出"><svg class="ic"><use href="#i-download"></use></svg><svg class="ic caret"><use href="#i-caret"></use></svg></button>
      <div class="menu" id="exportMenu">
       <button data-x="json"><svg class="ic"><use href="#i-doc-json"></use></svg>JSON（可再匯入）</button>
+      <button data-x="saveas"><svg class="ic"><use href="#i-folder"></use></svg>另存到本機檔案（可覆蓋）</button>
       <button data-x="html"><svg class="ic"><use href="#i-globe"></use></svg>獨立 HTML 檔</button>
       <button data-x="txt"><svg class="ic"><use href="#i-txt"></use></svg>純文字 TXT</button>
       <button data-x="png"><svg class="ic"><use href="#i-image"></use></svg>每頁 PNG 圖片</button>
@@ -1032,6 +1038,43 @@ Object.assign(I18N['en'],{
 /* 分類列標籤（編輯頁頂部分類） */
 Object.assign(I18N['zh-Hans'],{'檢視':'视图'});
 Object.assign(I18N['en'],{'檢視':'View'});
+/* ===== 本機檔案覆蓋（File System Access）新增字串 ===== */
+Object.assign(I18N['zh-Hans'],{
+ '開啟本地檔案：編輯後可直接覆蓋原檔':'开启本地文件：编辑后可直接覆盖原文件',
+ '儲存 (Ctrl+S)：覆蓋已連結的本地檔案，否則另存新檔':'保存 (Ctrl+S)：覆盖已链接的本地文件，否则另存新文件',
+ '已開啟「{n}」，儲存時將覆蓋原檔':'已打开「{n}」，保存时将覆盖原文件',
+ '已覆蓋「{n}」':'已覆盖「{n}」',
+ '已另存為「{n}」':'已另存为「{n}」',
+ '此環境不支援直接覆蓋本機檔，將改以「匯入」建立新筆記':'此环境不支持直接覆盖本机文件，将改用「导入」建立新笔记',
+ '已連結本機檔：儲存時將覆蓋原檔':'已链接本机文件：保存时将覆盖原文件',
+ '已連結「{n}」，之後儲存將覆蓋此檔':'已链接「{n}」，之后保存将覆盖此文件',
+ '開啟失敗：不是有效的筆記 JSON 檔':'打开失败：不是有效的笔记 JSON 文件',
+ '已拒絕寫入權限，無法覆蓋檔案':'已拒绝写入权限，无法覆盖文件',
+ '寫入檔案失敗':'写入文件失败',
+ '此環境不支援本機覆蓋儲存，改以下載 JSON':'此环境不支持本机覆盖保存，改为下载 JSON',
+ 'NEXUS 筆記檔 (.json / .noteapp)':'NEXUS 笔记文件 (.json / .noteapp)',
+ 'NEXUS 筆記檔 (.json)':'NEXUS 笔记文件 (.json)',
+
+ '已儲存到瀏覽器':'已保存到浏览器'
+});
+Object.assign(I18N['en'],{
+ '開啟本地檔案：編輯後可直接覆蓋原檔':'Open local file: overwrite it directly after editing',
+ '儲存 (Ctrl+S)：覆蓋已連結的本地檔案，否則另存新檔':'Save (Ctrl+S): overwrite the linked local file, otherwise Save As',
+ '已開啟「{n}」，儲存時將覆蓋原檔':'Opened “{n}” — saving will overwrite it',
+ '已覆蓋「{n}」':'Overwrote “{n}”',
+ '已另存為「{n}」':'Saved as “{n}”',
+ '此環境不支援直接覆蓋本機檔，將改以「匯入」建立新筆記':'This browser cannot overwrite local files directly — importing as a new note instead',
+ '已連結本機檔：儲存時將覆蓋原檔':'Linked to a local file — saving will overwrite it',
+ '已連結「{n}」，之後儲存將覆蓋此檔':'Linked “{n}” — future saves will overwrite it',
+ '開啟失敗：不是有效的筆記 JSON 檔':'Open failed: not a valid note JSON file',
+ '已拒絕寫入權限，無法覆蓋檔案':'Write permission denied — cannot overwrite the file',
+ '寫入檔案失敗':'Failed to write the file',
+ '此環境不支援本機覆蓋儲存，改以下載 JSON':'This browser cannot overwrite local files — downloading JSON instead',
+ 'NEXUS 筆記檔 (.json / .noteapp)':'NEXUS note file (.json / .noteapp)',
+ 'NEXUS 筆記檔 (.json)':'NEXUS note file (.json)',
+
+ '已儲存到瀏覽器':'Saved to browser'
+});
 /* ===== 翻譯 helpers ===== */
 function t(s){ if(!s||LANG==='zh-TW')return s; const d=I18N[LANG]; if(!d)return s;
  if(d[s]!=null)return d[s];
@@ -1091,7 +1134,8 @@ const S={docs:[],curId:null,tool:'select',pen:{c:'#e53935',s:4,a:1,hl:false},
  dselArrow:null,  /* 自繪圖表：目前選取的箭頭 index */
  zoom:1, panX:0, panY:0, cat:'tools',
  hist:[], hi:-1,
- dlgMode:'insert' /* 圖表對話框: insert|edit */
+ dlgMode:'insert', /* 圖表對話框: insert|edit */
+ fsHandles:{}        /* doc.id -> FileSystemFileHandle（本機檔案連結：工作階段快取 + IndexedDB 持久化） */
 };
 function curDoc(){return S.docs.find(d=>d.id===S.curId);}
 function blankPage(){return {id:uid(),bg:null,strokes:[],els:[],flow:''};}
@@ -1108,6 +1152,146 @@ function loadPersisted(){
  }catch(e){}
  return false;
 }
+/* ===== 本機檔案連結（File System Access API）=====
+   支援的瀏覽器（Mac 版 Chrome / Edge）可直接「開啟」本機 .json / .noteapp 檔，
+   編輯後按「儲存」會覆蓋原檔，不再另存新檔。Safari 與 Android WebView 不支援，
+   自動退回舊行為（匯入建立新筆記 / 下載另存）。fileHandle 存於 IndexedDB（依 doc.id），
+   連結的檔名 doc.fileName 隨筆記存於 localStorage，因此重新載入後仍會顯示連結徽章。 */
+const FSA=(function(){
+ const DB='nexus-fs', STORE='handles', VER=1;
+ const has=(typeof window.showOpenFilePicker==='function');
+ let dbp=null;
+ function openDB(){
+  if(dbp)return dbp;
+  dbp=new Promise((res,rej)=>{
+   let rq;try{rq=indexedDB.open(DB,VER);}catch(e){return rej(e);}
+   rq.onupgradeneeded=()=>{const db=rq.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE);};
+   rq.onsuccess=()=>res(rq.result);
+   rq.onerror=()=>rej(rq.error);
+  });
+  return dbp;
+ }
+ async function put(id,handle){
+  try{const db=await openDB();return await new Promise((res,rej)=>{
+   const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(handle,id);
+   tx.oncomplete=res;tx.onerror=()=>rej(tx.error);
+  });}catch(e){console.warn('FSA put',e);}
+ }
+ async function get(id){
+  try{const db=await openDB();return await new Promise((res,rej)=>{
+   const r=db.transaction(STORE,'readonly').objectStore(STORE).get(id);
+   r.onsuccess=()=>res(r.result||null);r.onerror=()=>rej(r.error);
+  });}catch(e){return null;}
+ }
+ async function del(id){
+  try{const db=await openDB();return await new Promise((res,rej)=>{
+   const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(id);
+   tx.oncomplete=res;tx.onerror=()=>rej(tx.error);
+  });}catch(e){}
+ }
+ async function ensureRW(handle){
+  try{
+   const o={mode:'readwrite'};
+   if(await handle.queryPermission(o)==='granted')return true;
+   if(await handle.requestPermission(o)==='granted')return true;
+  }catch(e){}
+  return false;
+ }
+ return {
+  supported:has,
+  /* 取得 doc 已連結的 fileHandle（會先讀取 IndexedDB 並快取） */
+  async handleFor(docId){
+   if(!has)return null;
+   if(!S.fsHandles[docId])S.fsHandles[docId]=await get(docId);
+   return S.fsHandles[docId]||null;
+  },
+  async clear(docId){ if(!has)return; delete S.fsHandles[docId]; await del(docId); },
+  /* 把 handle 連結到 doc：記下檔名、寫入 IndexedDB、刷新側欄徽章 */
+  async link(docId,handle){
+   if(!has)return;
+   S.fsHandles[docId]=handle;
+   const d=S.docs.find(x=>x.id===docId);
+   if(d)d.fileName=handle.name||d.fileName;
+   await put(docId,handle);
+   renderDocList();
+  },
+  /* 開啟本機檔案：解析後建立新筆記並連結該檔（之後儲存即覆蓋原檔） */
+  async open(){
+   if(!has)return false;
+   let handle;
+   try{
+    [handle]=await window.showOpenFilePicker({
+     types:[{description:t('NEXUS 筆記檔 (.json / .noteapp)'),accept:{'application/json':['.json','.noteapp.json','.noteapp']}}],
+     multiple:false
+    });
+   }catch(e){ if(e&&e.name==='AbortError')return null; console.error(e); return false; }
+   if(!handle)return null;
+   let text;
+   try{ text=await (await handle.getFile()).text(); }catch(e){console.error(e);return false;}
+   let doc;
+   try{
+    const o=JSON.parse(text); doc=(o&&o.doc)?o.doc:o;
+    if(!doc||!Array.isArray(doc.pages))throw new Error('格式不符');
+   }catch(e){ alert(t('開啟失敗：不是有效的筆記 JSON 檔')); return null; }
+   doc.id=uid(); doc.updated=Date.now();
+   if(!doc.name)doc.name=(handle.name||t('筆記')).replace(/\.(noteapp\.)?json$/i,'');
+   S.docs.unshift(doc); S.curId=doc.id; S.sel=null; S.editing=null;
+   initHist(); renderAll(); persist();
+   await FSA.link(doc.id,handle);
+   toast(tN('已開啟「{n}」，儲存時將覆蓋原檔',{n:doc.name}));
+   return true;
+  },
+  /* 另存到本機檔案：以「另存新檔」選檔並連結（之後儲存即覆蓋此檔） */
+  async saveAs(){
+   if(!has)return false;
+   const d=curDoc(); if(!d)return false;
+   let handle;
+   try{
+    handle=await window.showSaveFilePicker({
+     suggestedName:(d.fileName||(safeName()+'.noteapp.json')),
+     types:[{description:t('NEXUS 筆記檔 (.json)'),accept:{'application/json':['.json','.noteapp.json']}}]
+    });
+   }catch(e){ if(e&&e.name==='AbortError')return null; console.error(e); return false; }
+   if(!handle)return null;
+   const ok=await FSA.writeTo(d,handle);
+   if(ok)toast(tN('已連結「{n}」，之後儲存將覆蓋此檔',{n:handle.name||d.name}));
+   return ok;
+  },
+  /* 將筆記寫入指定 handle（覆寫） */
+  async writeTo(d,handle){
+   if(!(await ensureRW(handle))){ toast(t('已拒絕寫入權限，無法覆蓋檔案')); return false; }
+   try{
+    const w=await handle.createWritable();
+    await w.write(JSON.stringify({app:'noteapp',v:1,doc:d},null,1));
+    await w.close();
+   }catch(e){ console.error(e); toast(t('寫入檔案失敗')); return false; }
+   d.fileName=handle.name||d.fileName;
+   d.updated=Date.now();
+   await FSA.link(d.id,handle);
+   persist();
+   toast(tN('已覆蓋「{n}」',{n:handle.name||d.name}));
+   return true;
+  },
+  /* 儲存：已連結→覆蓋原檔（不另存新檔）；未連結/不支援→回傳 false 由呼叫端改存瀏覽器 */
+  async save(){
+   if(!has)return false;
+   const d=curDoc(); if(!d)return false;
+   const handle=await this.handleFor(d.id);
+   if(!handle)return false;
+   return await FSA.writeTo(d,handle);
+  }
+ };
+})();
+/* 儲存（Ctrl+S 與儲存鈕共用）：已連結本機檔→覆蓋原檔；否則存到瀏覽器 */
+async function doSave(){
+ persist(); /* 一律先更新瀏覽器內的備份 */
+ if(FSA.supported){
+  const d=curDoc();
+  if(d && await FSA.handleFor(d.id)){ await FSA.save(); return; }
+ }
+ toast(t('已儲存到瀏覽器'));
+}
+
 /* ===== 復原/重做 ===== */
 function snap(){return JSON.stringify(curDoc());}
 function initHist(){S.hist=[snap()];S.hi=0;}
@@ -1322,6 +1506,7 @@ function renderDocList(){
   it.innerHTML='<div class="nm">'+esc(d.name)+'</div>'+
    '<div class="meta"><span class="rt">'+esc(rt)+'</span><span class="sep">·</span><span>'+tN('{n} 頁',{n:d.pages.length})+'</span></div>'+
    (pv?'<div class="pv">'+esc(pv)+'</div>':'')+
+   (d.fileName?'<div class="fNm" title="'+t('已連結本機檔：儲存時將覆蓋原檔')+'">📎 '+esc(d.fileName)+'</div>':'')+
    '<span class="acts"><button class="tip-u" data-a="dup" data-tip="'+t('複製筆記')+'" aria-label="'+t('複製筆記')+'"><svg class="ic"><use href="#i-copy"></use></svg></button>'+
    '<button class="tip-u danger" data-a="del" data-tip="'+t('刪除筆記')+'" aria-label="'+t('刪除筆記')+'"><svg class="ic"><use href="#i-trash"></use></svg></button></span>';
   it.addEventListener('click',ev=>{
@@ -1329,13 +1514,13 @@ function renderDocList(){
    if(a){
     ev.stopPropagation();
     if(a.dataset.a==='dup'){
-     const c=JSON.parse(JSON.stringify(d));c.id=uid();c.name=d.name+' (副本)';c.updated=Date.now();
+     const c=JSON.parse(JSON.stringify(d));c.id=uid();c.name=d.name+' (副本)';c.updated=Date.now();delete c.fileName;
      S.docs.unshift(c);persist();renderDocList();toast('已複製筆記');
     }else{
      if(!confirm(tN('刪除筆記「{n}」？此動作無法復原。',{n:d.name})))return;
      S.docs=S.docs.filter(x=>x.id!==d.id);
      if(S.curId===d.id){if(!S.docs.length)newDoc();else{S.curId=S.docs[0].id;S.sel=null;initHist();renderAll();}}
-     persist();renderDocList();toast('已刪除');
+     FSA.clear(d.id);persist();renderDocList();toast('已刪除');
     }
     return;
    }
@@ -3177,6 +3362,7 @@ $('#exportMenu').addEventListener('click',ev=>{
  $('#exportMenu').classList.remove('open');
  const k=b.dataset.x;
  if(k==='json')exportJSON();
+ if(k==='saveas'){ if(!FSA.supported){ toast(t('此環境不支援本機覆蓋儲存，改以下載 JSON')); exportJSON(); } else FSA.saveAs(); }
  if(k==='html')exportHTML();
  if(k==='txt')exportTXT();
  if(k==='png')exportPNG();
@@ -3251,13 +3437,13 @@ $('#homeGrid').addEventListener('click',ev=>{
  if(a){
   ev.stopPropagation();
   if(a.dataset.a==='dup'){
-   const c=JSON.parse(JSON.stringify(d));c.id=uid();c.name=d.name+' (副本)';c.updated=Date.now();
+   const c=JSON.parse(JSON.stringify(d));c.id=uid();c.name=d.name+' (副本)';c.updated=Date.now();delete c.fileName;
    S.docs.unshift(c);persist();renderHome();toast('已複製筆記');
   }else{
    if(!confirm(tN('刪除筆記「{n}」？此動作無法復原。',{n:d.name})))return;
    S.docs=S.docs.filter(x=>x.id!==id);
    if(S.curId===id){if(S.docs.length)S.curId=S.docs[0].id;else newDoc('我的筆記');}
-   persist();renderHome();toast('已刪除');
+   FSA.clear(id);persist();renderHome();toast('已刪除');
   }
   return;
  }
@@ -3364,7 +3550,11 @@ $('#pgOk').addEventListener('click',()=>{
 });
 /* ===== 文件 / 頁面管理 ===== */
 $('#btnNewDoc').addEventListener('click',()=>{newDoc();toast('已建立新筆記');});
-$('#btnSave').addEventListener('click',()=>{persist();toast('已儲存到瀏覽器');});
+$('#btnSave').addEventListener('click',()=>doSave());
+$('#btnOpenLocal').addEventListener('click',()=>{
+ if(!FSA.supported){ toast(t('此環境不支援直接覆蓋本機檔，將改以「匯入」建立新筆記')); $('#jsonInput').click(); return; }
+ FSA.open();
+});
 $('#docName').addEventListener('change',e=>{
  const d=curDoc();if(!d)return;
  d.name=(e.target.value||'').trim()||'未命名筆記';
@@ -3464,11 +3654,17 @@ $('#btnZoomFit').addEventListener('click',zoomFit);
 $('#zbIn').addEventListener('click',()=>zoomStep(1));
 $('#zbOut').addEventListener('click',()=>zoomStep(-1));
 $('#zbRange').addEventListener('input',e=>setZoom((+e.target.value)/100));
-/* Ctrl/⌘ + 滾輪 縮放 */
+/* 滾輪手勢：Ctrl/⌘＋滾輪（含觸控板雙指縮放）→ 縮放；一般滾輪／觸控板雙指滑動 → 平移文件 */
 $('#workspace').addEventListener('wheel',ev=>{
- if(!(ev.ctrlKey||ev.metaKey))return;
  ev.preventDefault();
- zoomStep(ev.deltaY<0?1:-1);
+ if(ev.ctrlKey||ev.metaKey){ zoomStep(ev.deltaY<0?1:-1); return; }
+ /* 一般滾動＝平移（垂直／水平、Shift+滾輪皆可） */
+ let dx=ev.deltaX||0, dy=ev.deltaY||0;
+ if(ev.deltaMode===1){dx*=16;dy*=16;}            /* 以「行」為單位（部分 Firefox） */
+ else if(ev.deltaMode===2){const el=ev.currentTarget;dx*=el.clientWidth;dy*=el.clientHeight;} /* 以「頁」為單位 */
+ if(!dx&&!dy)return;
+ S.panX-=dx; S.panY-=dy;
+ clampPan();applyPagesTransform();
 },{passive:false});
 /* ===== 雙指手勢：同時縮放 + 平移（Google Docs 式自由移動） ===== */
 window.NexusPinch=(function(){
@@ -3526,7 +3722,7 @@ window.addEventListener('keydown',ev=>{
  const mod=ev.ctrlKey||ev.metaKey;
  if(mod&&ev.key.toLowerCase()==='z'){ev.preventDefault();ev.shiftKey?redo():undo();return;}
  if(mod&&ev.key.toLowerCase()==='y'){ev.preventDefault();redo();return;}
- if(mod&&ev.key.toLowerCase()==='s'){ev.preventDefault();persist();toast('已儲存 (Ctrl+S)');return;}
+ if(mod&&ev.key.toLowerCase()==='s'){ev.preventDefault();doSave();return;}
  if(mod&&(ev.key==='+'||ev.key==='=')){ev.preventDefault();zoomStep(1);return;}
  if(mod&&ev.key==='-'||mod&&ev.key==='_'){ev.preventDefault();zoomStep(-1);return;}
  if(mod&&ev.key==='0'){ev.preventDefault();setZoom(1);return;}

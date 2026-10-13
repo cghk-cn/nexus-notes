@@ -8,3 +8,8 @@ android/debug.keystore
 
 # 截圖驗證產物
 shot-*.png
+# 桌面版（Electron）建置產物與依賴
+desktop/node_modules/
+desktop/release/
+desktop/index.html
+desktop/app/index.html
