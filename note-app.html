@@ -102,8 +102,10 @@ button.tcat:hover{background:var(--surface-2);color:var(--text);transform:scale(
 button.tcat.on{background:linear-gradient(135deg,var(--accent),#7b5cf0);color:#fff;box-shadow:0 5px 14px rgba(66,133,244,.34)}
 button.tcat.on:hover{filter:brightness(1.06)}
 #tbPanel{position:relative;z-index:55;background:var(--surface);border-bottom:1px solid var(--border);padding:7px calc(12px + var(--safe-right)) 7px calc(12px + var(--safe-left));box-shadow:0 8px 18px rgba(16,24,40,.05);display:flex;align-items:center;gap:10px}
-.tbPane{display:none;align-items:center;gap:8px;flex-wrap:wrap}
+.tbPane{display:none;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;min-width:0;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
 .tbPane.on{display:flex}
+.tbPane::-webkit-scrollbar{display:none}
+.tbPane>*{flex:none}
 .tbSep{width:1px;align-self:stretch;min-height:24px;background:var(--border);flex:none;opacity:.9}
 .tbtns{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .tspace{flex:1;min-width:8px}
@@ -389,7 +391,8 @@ body.tool-pen .flow,body.tool-eraser .flow,body.tool-text .flow{pointer-events:n
 #tbPanel .tbPane{flex:0 1 auto}
 #elbarHost{margin-left:auto;display:flex;align-items:center;min-width:0;flex:0 1 auto}
 #elbarHost:empty{display:none}
-#elbarHost .elbar{position:static;max-width:min(96vw,760px);box-shadow:var(--shadow-sm);background:var(--surface-2)}
+#elbarHost .elbar{position:static;max-width:min(96vw,760px);box-shadow:var(--shadow-sm);background:var(--surface-2);flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+#elbarHost .elbar::-webkit-scrollbar{display:none}
 #elbarHost .elgrip{display:none}
 /* ================= 屬性面板 ================= */
 #panel{width:254px;background:var(--surface);border-left:1px solid var(--border);overflow:auto;padding:16px 14px 28px;flex:none;font-size:12.5px;display:flex;flex-direction:column}
@@ -899,7 +902,7 @@ function closeModal(id){$('#'+id).classList.remove('open');}
 /* ===== 檢查更新（GitHub Releases） =====
    APP_VERSION 為目前版本；檢查時向 GitHub Releases API 取最新版並比對。
    發佈仓库：cghk-cn/nexus-notes。 */
-const APP_VERSION='1.1.0';
+const APP_VERSION='1.2.0';
 const UPD=(function(){
  const OWNER='cghk-cn', REPO='nexus-notes';
  const API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/latest';
@@ -1854,7 +1857,7 @@ function elbarHTML(e){
  '<button class="ib xdel" data-b="del" title="'+L('刪除元素')+'" aria-label="'+L('刪除元素')+'"><svg class="ic"><use href="#i-x"></use></svg></button>';
  if(e.type==='text'){
   h+='<span class="vsep"></span><input type="number" data-b="fs" value="'+(e.fs||16)+'" min="8" max="120" title="'+L('字級')+'" aria-label="'+L('字級')+'">'+
-   '<input type="color" data-b="color" value="'+(e.color||'#111111')+'" title="'+L('顏色')+'" aria-label="'+L('顏色')+'">'+
+   '<button type="button" class="dswatch" data-b="tcolor" style="background:'+(e.color||'#111111')+'" title="'+L('顏色')+'" aria-label="'+L('顏色')+'"></button>'+
    '<span class="seg">'+
     '<button data-b="bold" class="'+(e.bold?'active':'')+'" title="'+L('粗體 Ctrl+B')+'" aria-label="'+L('粗體 Ctrl+B')+'"><b>B</b></button>'+
     '<button data-b="italic" class="'+(e.italic?'active':'')+'" title="'+L('斜體 Ctrl+I')+'" aria-label="'+L('斜體 Ctrl+I')+'"><i>I</i></button>'+
@@ -1957,7 +1960,13 @@ function wireElbar(box,e){
   }
   else if(k==='del'){page.els.splice(i,1);S.sel=null;if(S.elbarOff)delete S.elbarOff[e.id];commit();renderAll();toast('已刪除元素');}
   else if(k==='fs'){el.fs=clamp(+b.value||16,8,120);commit();renderAll();}
-  else if(k==='color'){el.color=b.value;commit();renderAll();}
+  else if(k==='tcolor'){
+   ev.stopPropagation();
+   const pop=$('#colorPop');
+   const same=pop&&pop.classList.contains('open')&&cpTarget&&cpTarget.elId===e.id&&cpTarget.text;
+   if(same)closeColorPop();
+   else openColorPop(b,{elId:e.id,text:true});
+  }
   else if(k==='bold'){el.bold=!el.bold;commit();renderAll();}
   else if(k==='italic'){el.italic=!el.italic;commit();renderAll();}
   else if(k==='underline'){el.underline=!el.underline;commit();renderAll();}
@@ -1989,7 +1998,6 @@ function wireElbar(box,e){
   const b=ev.target;if(!b.dataset||!b.dataset.b)return;
   const f=findEl(e.id);if(!f)return;
   if(b.dataset.b==='fs'){f.el.fs=clamp(+b.value||16,8,120);commit();renderAll();}
-  if(b.dataset.b==='color'){f.el.color=b.value;commit();renderAll();}
   if(b.dataset.b==='font'){applyTextFont(f.el,b.value);}
   if(b.dataset.b==='dname'||b.dataset.b==='dnfs'){
    const L=f.el.cfg.lines;if(!L||!L.length)return;
@@ -2145,11 +2153,18 @@ function cpSyncUI(){
  const hex=hsvToHex(cp.h,cp.s,cp.v);
  const cur=$('#cpCur');if(cur)cur.style.background=hex;
  if(cpTarget){
-  /* 線條顏色：寫入 cfg 並即時重繪（調色盤在 body 層，不受影響） */
   const f=findEl(cpTarget.elId);
-  const L=f&&f.el.cfg&&f.el.cfg.lines;
-  if(L&&L[cpTarget.lineIdx]&&L[cpTarget.lineIdx].color!==hex){
-   L[cpTarget.lineIdx].color=hex;cpChanged=true;renderAll();
+  if(cpTarget.text){
+   /* 文字顏色：即時更新元素值與畫面節點顏色（保留編輯游標，不重繪） */
+   if(f&&f.el.color!==hex){f.el.color=hex;cpChanged=true;}
+   const node=document.querySelector('.el[data-id="'+cpTarget.elId+'"]');
+   if(node)node.style.color=hex;
+  }else{
+   /* 線條顏色：寫入 cfg 並即時重繪（調色盤在 body 層，不受影響） */
+   const L=f&&f.el.cfg&&f.el.cfg.lines;
+   if(L&&L[cpTarget.lineIdx]&&L[cpTarget.lineIdx].color!==hex){
+    L[cpTarget.lineIdx].color=hex;cpChanged=true;renderAll();
+   }
   }
   const sw=document.querySelector('.elbar .dswatch');
   if(sw)sw.style.background=hex;
@@ -2171,8 +2186,11 @@ function openColorPop(anchor,target){
  let init=S.pen.c||'#e53935';
  if(cpTarget){
   const f=findEl(cpTarget.elId);
-  const L=f&&f.el.cfg&&f.el.cfg.lines;
-  if(L&&L[cpTarget.lineIdx])init=L[cpTarget.lineIdx].color||'#d32f2f';
+  if(cpTarget.text)init=(f&&f.el.color)||'#111111';
+  else{
+   const L=f&&f.el.cfg&&f.el.cfg.lines;
+   if(L&&L[cpTarget.lineIdx])init=L[cpTarget.lineIdx].color||'#d32f2f';
+  }
  }
  const hsv=hexToHSV(init);
  cp.h=hsv.h;cp.s=hsv.s;cp.v=hsv.v;
@@ -2222,7 +2240,7 @@ $('#cpEye').addEventListener('click',async ev=>{
 document.addEventListener('click',ev=>{
  const pop=$('#colorPop');
  if(!pop||!pop.classList.contains('open'))return;
- if(ev.target.closest('#colorPop')||ev.target.closest('#penSwatch'))return;
+ if(ev.target.closest('#colorPop')||ev.target.closest('#penSwatch')||ev.target.closest('.elbar .dswatch'))return;
  closeColorPop();
 });
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape')closeColorPop();});
