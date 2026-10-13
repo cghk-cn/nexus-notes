@@ -364,7 +364,20 @@ body.tool-pen .flow,body.tool-eraser .flow,body.tool-text .flow{pointer-events:n
 /* 刪除鍵：紅色叉叉（不用垃圾桶 emoji） */
 .elbar button.xdel{color:var(--danger);font-weight:800;font-size:15px;letter-spacing:0}
 .elbar button.xdel:hover{background:var(--danger-soft);border-color:transparent;color:var(--danger)}
-.elbar button{padding:4px 11px;font-size:13px;border-radius:9px}
+.elbar button{padding:4px 11px;font-size:13px;border-radius:9px;min-height:30px}
+/* 統一圖示按鈕：方形、置中 */
+.elbar button.ib{width:32px;height:30px;padding:0;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.elbar button.ib .ic{width:16px;height:16px}
+/* 字型樣式分段群組（粗體/斜體/底線）與對齊群組 */
+.elbar .seg{display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:11px;background:var(--surface-2);border:1px solid var(--border);flex:none}
+.elbar .seg button{width:30px;height:26px;min-height:26px;padding:0;border:none;background:transparent;box-shadow:none;font-size:14px;font-weight:700;color:var(--text-2);border-radius:8px}
+.elbar .seg button:hover{background:var(--surface);color:var(--text)}
+.elbar .seg button .ic{width:16px;height:16px}
+.elbar .seg button.on,.elbar .seg button.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px var(--accent-ring)}
+.elbar .seg button b{font-weight:800}
+.elbar .seg button i{font-style:italic;font-weight:700}
+.elbar .seg button u{text-decoration:underline;text-underline-offset:2px;font-weight:700}
+.elbar .vsep{width:1px;align-self:stretch;min-height:24px;background:var(--border);flex:none;margin:0 3px;opacity:.9}
 .elbar input[type=number]{width:64px;padding:3px 6px;font-size:13px}
 .elbar input[type=color]{width:30px;height:27px}
 .elbar button.dswatch{width:30px;height:27px;padding:0;border-radius:8px;border:1px solid var(--border-strong);box-shadow:inset 0 0 0 2px var(--surface);cursor:pointer;flex:none;transition:transform .14s cubic-bezier(.2,.8,.3,1.2)}
@@ -397,6 +410,22 @@ body.tool-pen .flow,body.tool-eraser .flow,body.tool-text .flow{pointer-events:n
 #propEmpty li:last-child{margin-bottom:0}
 #propBox{border:1px solid var(--border);border-radius:var(--r-lg);padding:13px 12px;background:var(--surface);box-shadow:var(--shadow-sm)}
 #propBox .hint{color:var(--text-3);font-size:11.5px;line-height:1.7;margin-top:4px}
+/* 位置方向鍵（D-pad）：以上下左右微調元素位置 */
+#propPosWrap{margin:2px 0 12px}
+#propPosWrap .ppHead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
+#propPosWrap .ppTitle{font-size:12px;font-weight:700;color:var(--text-2);letter-spacing:.02em}
+#propPosWrap .ppVal{font-size:11.5px;font-weight:700;color:var(--text-2);font-variant-numeric:tabular-nums;background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:2px 8px}
+#dpad{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:6px;width:120px;margin:0 auto}
+#dpad button{height:34px;min-height:34px;padding:0;border-radius:10px;color:var(--text);display:inline-flex;align-items:center;justify-content:center;background:var(--surface-2)}
+#dpad button .ic{width:16px;height:16px}
+#dpad button:hover{background:var(--accent-soft);border-color:transparent;color:var(--accent-text)}
+#dpad .dpad-u{grid-area:1/2}
+#dpad .dpad-l{grid-area:2/1}
+#dpad .dpad-c{grid-area:2/2;background:var(--accent-soft);color:var(--accent-text);border-color:transparent}
+#dpad .dpad-c:hover{background:var(--accent-soft);color:var(--accent-text);transform:none}
+#dpad .dpad-r{grid-area:2/3}
+#dpad .dpad-d{grid-area:3/2}
+#propPosWrap .ppHint{color:var(--text-3);font-size:11px;line-height:1.6;margin-top:8px;text-align:center}
 /* ================= Range sliders ================= */
 input[type=range]{-webkit-appearance:none;appearance:none;height:18px;background:transparent;cursor:pointer;padding:0;border:none;border-radius:0}
 input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:4px;background:var(--surface-3)}
@@ -538,6 +567,11 @@ body.dragging #dropHint{display:flex}
 <symbol id="i-eyedropper" viewBox="0 0 24 24"><path d="m2 22 1-4 11-11 3 3L6 21l-4 1z"/><path d="m15.5 5.5 3 3"/><path d="M18 3l3 3-2 2-3-3 2-2z"/></symbol>
 <symbol id="i-arrow-l" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="m11 6-6 6 6 6"/></symbol>
 <symbol id="i-arrow-r" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></symbol>
+<symbol id="i-arrow-u" viewBox="0 0 24 24"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></symbol>
+<symbol id="i-arrow-d" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></symbol>
+<symbol id="i-align-left" viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M4 11h10"/><path d="M4 16h13"/><path d="M4 21h7"/></symbol>
+<symbol id="i-align-center" viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M7 11h10"/><path d="M5.5 16h13"/><path d="M8.5 21h7"/></symbol>
+<symbol id="i-align-right" viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M10 11h10"/><path d="M7 16h13"/><path d="M13 21h7"/></symbol>
 <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
 <symbol id="i-page-plus" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 12v6M9 15h6"/></symbol>
 <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
@@ -710,10 +744,17 @@ body.dragging #dropHint{display:flex}
     </div>
     <div id="propBox" style="display:none">
      <div class="row"><label>類型</label><input id="pType" readonly></div>
-     <div class="row"><label>X (左)</label><input id="pX" type="number"></div>
-     <div class="row"><label>Y (上)</label><input id="pY" type="number"></div>
-     <div class="row"><label>寬</label><input id="pW" type="number"></div>
-     <div class="row"><label>高</label><input id="pH" type="number"></div>
+     <div id="propPosWrap">
+      <div class="ppHead"><span class="ppTitle">位置</span><span class="ppVal" id="propPosVal">0, 0</span></div>
+      <div id="dpad">
+       <button class="ib dpad-u" data-move="up" data-tip="向上移動 ↑" aria-label="向上移動"><svg class="ic"><use href="#i-arrow-u"></use></svg></button>
+       <button class="ib dpad-l" data-move="left" data-tip="向左移動 ←" aria-label="向左移動"><svg class="ic"><use href="#i-arrow-l"></use></svg></button>
+       <button class="ib dpad-c" data-move="center" data-tip="對齊左上角" aria-label="對齊左上角"><svg class="ic"><use href="#i-margins"></use></svg></button>
+       <button class="ib dpad-r" data-move="right" data-tip="向右移動 →" aria-label="向右移動"><svg class="ic"><use href="#i-arrow-r"></use></svg></button>
+       <button class="ib dpad-d" data-move="down" data-tip="向下移動 ↓" aria-label="向下移動"><svg class="ic"><use href="#i-arrow-d"></use></svg></button>
+      </div>
+      <div class="ppHint">方向鍵微調位置 · 按住 Shift 更快</div>
+     </div>
      <div id="propExtra"></div>
      <div class="btnrow">
       <button id="pUp">層級↑</button><button id="pDown">層級↓</button>
@@ -928,6 +969,17 @@ $('#btnCheckUpdate').addEventListener('click',()=>UPD.run());
 let LANG='zh-TW';
 try{const lv=localStorage.getItem('noteapp.lang');if(lv==='zh-Hans'||lv==='en')LANG=lv;}catch(e){}
 const I18N={'zh-Hans':{},'en':{}};
+/* 文字編輯 UI：底線 / 位置方向鍵 */
+Object.assign(I18N['zh-Hans'],{
+ '底線 Ctrl+U':'下划线 Ctrl+U','底線':'下划线',
+ '位置':'位置','向上移動 ↑':'向上移动 ↑','向下移動 ↓':'向下移动 ↓','向左移動 ←':'向左移动 ←','向右移動 →':'向右移动 →',
+ '對齊左上角':'对齐左上角','方向鍵微調位置 · 按住 Shift 更快':'方向键微调位置 · 按住 Shift 更快'
+});
+Object.assign(I18N['en'],{
+ '底線 Ctrl+U':'Underline Ctrl+U','底線':'Underline',
+ '位置':'Position','向上移動 ↑':'Move up ↑','向下移動 ↓':'Move down ↓','向左移動 ←':'Move left ←','向右移動 →':'Move right →',
+ '對齊左上角':'Align to top-left','方向鍵微調位置 · 按住 Shift 更快':'Arrows nudge position · hold Shift for bigger steps'
+});
 /* @I18N-START */
 Object.assign(I18N['zh-Hans'],{
 '筆記應用':'笔记应用','文件':'文件','新增筆記':'新增笔记','筆記名稱':'笔记名称',
@@ -1573,6 +1625,7 @@ function renderEl(e){
   n.style.color=e.color||'#111';
   n.style.fontWeight=e.bold?'700':'400';
   n.style.fontStyle=e.italic?'italic':'normal';
+  n.style.textDecoration=e.underline?'underline':'none';
   n.style.textAlign=e.align||'left';
   n.style.background=e.bg||'transparent';
   n.style.fontFamily=fontCss(e.font);
@@ -1795,19 +1848,26 @@ function updateSelUI(){
 function elbarHTML(e){
  const L=key=>t(key);
  let h='<i class="elgrip" data-grip="1" title="'+L('拖曳以移動工具列')+'">⠿</i>'+
- '<button data-b="up" title="'+L('把元素上移一層')+'">↑</button><button data-b="down" title="'+L('把元素下移一層')+'">↓</button>'+
- '<button data-b="dup" title="'+L('複製元素')+'">⧉</button><button data-b="del" class="danger xdel" title="'+L('刪除元素')+'">✕</button>';
+ '<button class="ib" data-b="up" title="'+L('把元素上移一層')+'" aria-label="'+L('把元素上移一層')+'"><svg class="ic"><use href="#i-arrow-u"></use></svg></button>'+
+ '<button class="ib" data-b="down" title="'+L('把元素下移一層')+'" aria-label="'+L('把元素下移一層')+'"><svg class="ic"><use href="#i-arrow-d"></use></svg></button>'+
+ '<button class="ib" data-b="dup" title="'+L('複製元素')+'" aria-label="'+L('複製元素')+'"><svg class="ic"><use href="#i-copy"></use></svg></button>'+
+ '<button class="ib xdel" data-b="del" title="'+L('刪除元素')+'" aria-label="'+L('刪除元素')+'"><svg class="ic"><use href="#i-x"></use></svg></button>';
  if(e.type==='text'){
-  h+='<span style="width:4px"></span><input type="number" data-b="fs" value="'+(e.fs||16)+'" min="8" max="120" title="'+L('字級')+'">'+
-   '<input type="color" data-b="color" value="'+(e.color||'#111111')+'">'+
-   '<button data-b="bold" class="'+(e.bold?'active':'')+'" title="'+L('粗體 Ctrl+B')+'"><b>B</b></button>'+
-   '<button data-b="italic" class="'+(e.italic?'active':'')+'" title="'+L('斜體 Ctrl+I')+'"><i>I</i></button>'+
+  h+='<span class="vsep"></span><input type="number" data-b="fs" value="'+(e.fs||16)+'" min="8" max="120" title="'+L('字級')+'" aria-label="'+L('字級')+'">'+
+   '<input type="color" data-b="color" value="'+(e.color||'#111111')+'" title="'+L('顏色')+'" aria-label="'+L('顏色')+'">'+
+   '<span class="seg">'+
+    '<button data-b="bold" class="'+(e.bold?'active':'')+'" title="'+L('粗體 Ctrl+B')+'" aria-label="'+L('粗體 Ctrl+B')+'"><b>B</b></button>'+
+    '<button data-b="italic" class="'+(e.italic?'active':'')+'" title="'+L('斜體 Ctrl+I')+'" aria-label="'+L('斜體 Ctrl+I')+'"><i>I</i></button>'+
+    '<button data-b="underline" class="'+(e.underline?'active':'')+'" title="'+L('底線 Ctrl+U')+'" aria-label="'+L('底線 Ctrl+U')+'"><u>U</u></button>'+
+   '</span>'+
    '<select data-b="font" title="'+L('字體，先選字體再打字或先選文字再改')+'">'+fontSelHTML(e.font)+
    '</select>'+
-   '<span style="width:4px"></span>'+
-   '<button data-b="align-left" class="'+((e.align||'left')==='left'?'on':'')+'" title="'+L('靠左對齊')+'">⇤左</button>'+
-   '<button data-b="align-center" class="'+((e.align||'left')==='center'?'on':'')+'" title="'+L('置中對齊')+'">⇔中</button>'+
-   '<button data-b="align-right" class="'+((e.align||'left')==='right'?'on':'')+'" title="'+L('靠右對齊')+'">⇥右</button>';
+   '<span class="vsep"></span>'+
+   '<span class="seg">'+
+    '<button data-b="align-left" class="'+((e.align||'left')==='left'?'on':'')+'" title="'+L('靠左對齊')+'" aria-label="'+L('靠左對齊')+'"><svg class="ic"><use href="#i-align-left"></use></svg></button>'+
+    '<button data-b="align-center" class="'+((e.align||'left')==='center'?'on':'')+'" title="'+L('置中對齊')+'" aria-label="'+L('置中對齊')+'"><svg class="ic"><use href="#i-align-center"></use></svg></button>'+
+    '<button data-b="align-right" class="'+((e.align||'left')==='right'?'on':'')+'" title="'+L('靠右對齊')+'" aria-label="'+L('靠右對齊')+'"><svg class="ic"><use href="#i-align-right"></use></svg></button>'+
+   '</span>';
  }
  if(e.type==='table'){
   h+='<span style="width:4px"></span>'+
@@ -1900,6 +1960,7 @@ function wireElbar(box,e){
   else if(k==='color'){el.color=b.value;commit();renderAll();}
   else if(k==='bold'){el.bold=!el.bold;commit();renderAll();}
   else if(k==='italic'){el.italic=!el.italic;commit();renderAll();}
+  else if(k==='underline'){el.underline=!el.underline;commit();renderAll();}
   else if(k==='align'){el.align={left:'center',center:'right',right:'left'}[el.align||'left'];commit();renderAll();}
   else if(k.indexOf('align-')===0){el.align=k.slice(6);commit();renderAll();}
   else if(k==='tedit'){toggleTableEdit(el,f.pi);}
@@ -1979,8 +2040,7 @@ function renderPanel(){
  if(!has)return;
  const {el:e}=findEl(S.sel.id);
  $('#pType').value=TYPENAME[e.type]||e.type;
- $('#pX').value=Math.round(e.x);$('#pY').value=Math.round(e.y);
- $('#pW').value=Math.round(e.w);$('#pH').value=Math.round(e.h);
+ syncPosUI();
  let x='';
  if(e.type==='table')x='<div class="row"><label>格數 X×Y</label><input value="'+e.cols+' × '+e.rows+'" readonly></div>'+
   '<div class="hint">選取表格後可直接<b>拖曳格線</b>調整每欄寬 / 每列高（像 Excel）。</div>';
@@ -1993,15 +2053,22 @@ function renderPanel(){
  const pf=$('#pFs');
  if(pf)pf.addEventListener('change',()=>{const f=findEl(S.sel.id);if(f){f.el.fs=clamp(+pf.value||16,8,120);commit();renderAll();}});
 }
-function bindProp(id,key){
- $(id).addEventListener('change',()=>{
-  if(!S.sel)return;const f=findEl(S.sel.id);if(!f)return;
-  let v=+$(id).value;if(isNaN(v))return;
-  if(key==='w'||key==='h')v=Math.max(20,v);
-  f.el[key]=v;commit();renderAll();
- });
+/* 位置讀值 + 方向鍵微調（取代原本的 X/Y 數字輸入） */
+function syncPosUI(){
+ if(!S.sel)return;const f=findEl(S.sel.id);if(!f)return;
+ const v=$('#propPosVal');if(v)v.textContent=Math.round(f.el.x)+', '+Math.round(f.el.y);
 }
-bindProp('#pX','x');bindProp('#pY','y');bindProp('#pW','w');bindProp('#pH','h');
+function nudgeEl(dir,step){
+ if(!S.sel)return;const f=findEl(S.sel.id);if(!f)return;
+ const el=f.el;const s=step||2;
+ if(dir==='up')el.y-=s;else if(dir==='down')el.y+=s;else if(dir==='left')el.x-=s;else if(dir==='right')el.x+=s;
+ else if(dir==='center'){el.x=40;el.y=40;}
+ commit();renderAll();
+}
+$$('#dpad button').forEach(b=>b.addEventListener('click',ev=>{
+ const dir=b.dataset.move;if(!dir)return;
+ nudgeEl(dir,ev.shiftKey?10:2);
+}));
 $('#pUp').addEventListener('click',()=>elbarAction('up'));
 $('#pDown').addEventListener('click',()=>elbarAction('down'));
 $('#pDup').addEventListener('click',()=>elbarAction('dup'));
@@ -2349,7 +2416,7 @@ window.addEventListener('pointermove',ev=>{
   const sb=$('#selbox');if(sb&&S.sel&&S.sel.id===drag.id)Object.assign(sb.style,{width:e.w+'px',height:e.h+'px'});
   const bar=document.getElementById('elbar');
   if(bar)bar.style.left=clamp(e.x,2,Math.max(2,d.w-300))+'px';
-  $('#pW').value=Math.round(e.w);$('#pH').value=Math.round(e.h);
+  syncPosUI();
   return;
  }
  
@@ -2429,7 +2496,7 @@ if(drag.mode==='cnode'){
   const sb=$('#selbox');if(sb&&S.sel&&S.sel.id===drag.id){sb.style.left=nx+'px';sb.style.top=ny+'px';}
   const bar=document.getElementById('elbar');
   if(bar){bar.style.left=clamp(nx,2,Math.max(2,d.w-300))+'px';bar.style.top=(ny>40?ny-38:ny+f.el.h+6)+'px';}
-  $('#pX').value=Math.round(nx);$('#pY').value=Math.round(ny);
+  syncPosUI();
   return;
  }
  if(drag.mode==='resize'){
@@ -2460,7 +2527,7 @@ if(drag.mode==='cnode'){
    if(e.type==='table'&&S.sel&&S.sel.id===e.id&&!e.editing)node.innerHTML=tableHTML(e)+tableHandles(e);
   }
   const sb=$('#selbox');if(sb){Object.assign(sb.style,{left:nx+'px',top:ny+'px',width:nw+'px',height:nh+'px'});}
-  $('#pW').value=Math.round(nw);$('#pH').value=Math.round(nh);
+  syncPosUI();
   return;
  }
  });
@@ -3910,6 +3977,17 @@ window.addEventListener('keydown',ev=>{
  if(mod&&ev.key==='-'||mod&&ev.key==='_'){ev.preventDefault();zoomStep(-1);return;}
  if(mod&&ev.key==='0'){ev.preventDefault();setZoom(1);return;}
  if(mod&&ev.key.toLowerCase()==='d'&&!inEdit&&S.sel){ev.preventDefault();elbarAction('dup');return;}
+ /* 粗體 / 斜體 / 底線：對選取的文字元素切換 */
+ if(mod&&!inEdit&&S.sel&&['b','i','u'].includes(ev.key.toLowerCase())){
+  const f=findEl(S.sel.id);
+  if(f&&f.el.type==='text'){
+   ev.preventDefault();
+   const kk=ev.key.toLowerCase();
+   if(kk==='b')f.el.bold=!f.el.bold;else if(kk==='i')f.el.italic=!f.el.italic;else f.el.underline=!f.el.underline;
+   commit();renderAll();
+  }
+  return;
+ }
  if(ev.key==='Escape'){
   const open=$('.modal.open');
   if(open){open.classList.remove('open');return;}
