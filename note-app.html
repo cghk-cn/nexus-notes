@@ -106,7 +106,7 @@ button.tcat.on{background:linear-gradient(135deg,var(--accent),#7b5cf0);color:#f
 button.tcat.on:hover{filter:brightness(1.06)}
 /* z-index 必須低於 #topbar(60)，否則 topbar 的 tooltip（z:400）會被工具列蓋住、看不到按鈕資訊。
    topbar 不可有向下投影，否則會污染工具列（見 #topbar 註解） */
-#tbPanel{position:relative;z-index:55;background:var(--surface);border-bottom:1px solid var(--border);padding:7px calc(12px + var(--safe-right)) 7px calc(12px + var(--safe-left));box-shadow:0 8px 18px rgba(16,24,40,.05);display:flex;align-items:center;gap:10px}
+#tbPanel{position:relative;z-index:58;background:var(--surface);border-bottom:1px solid var(--border);padding:7px calc(12px + var(--safe-right)) 7px calc(12px + var(--safe-left));box-shadow:0 8px 18px rgba(16,24,40,.05);display:flex;align-items:center;gap:10px}
 /* 桌機版不要裁切：overflow 會把 hover 光效與 data-tip 提示平整裁掉（白邊問題）。
    單一 .tbPane 最寬約 593px，桌機可視寬 ≥745px，不會溢位；窄螢幕才在 media query 裡捲動。 */
 .tbPane{display:none;align-items:center;gap:8px;flex-wrap:nowrap;overflow:visible;min-width:0;padding-bottom:2px}
@@ -166,43 +166,46 @@ body.view-home #home{display:flex}
    z-index:-1 讓它畫在 #home 背景之上、內容之下；#home 自帶 stacking context 所以不會外洩 */
 .meteors{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-1;display:none;contain:paint}
 html[data-theme=dark] body.view-home .meteors{display:block}
-.meteor{position:absolute;display:block;top:-22%;width:2.5px;height:132px;border-radius:999px;opacity:0;
+.meteor{position:absolute;display:block;top:var(--y,-22%);width:2.5px;height:132px;border-radius:999px;opacity:0;
  background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,.2) 26%,rgba(255,255,255,.95) 74%,rgba(158,201,255,.6));
  box-shadow:0 0 10px rgba(170,206,255,.6);animation-timing-function:linear;animation-iteration-count:infinite}
 /* ===== 主頁流星：均勻分佈 =====
-   12 條等寬航道（每條 1/12 視窗寬）。關鍵：每顆的水平位移 --mx 設成「自己的航道位置」，
-   於是每顆都從所在航道斜掃到畫面左緣 —— 若固定飛 -46vw，左側航道的流星會立刻飞出畫面，
-   等距的 left 也就不會變成肉眼看到的均勻分佈。速度／延遲交錯避免整排同時出現。 */
-.meteors .meteor:nth-child(1){--x:1;animation-duration:3.6s;animation-delay:-0.2s}
-.meteors .meteor:nth-child(2){--x:2;animation-duration:4.9s;animation-delay:-1.7s}
-.meteors .meteor:nth-child(3){--x:3;animation-duration:3.9s;animation-delay:-3.1s}
-.meteors .meteor:nth-child(4){--x:4;animation-duration:5.6s;animation-delay:-0.9s}
-.meteors .meteor:nth-child(5){--x:5;animation-duration:4.3s;animation-delay:-2.6s}
-.meteors .meteor:nth-child(6){--x:6;animation-duration:6.1s;animation-delay:-4.4s}
-.meteors .meteor:nth-child(7){--x:7;animation-duration:3.4s;animation-delay:-1.3s}
-.meteors .meteor:nth-child(8){--x:8;animation-duration:5.2s;animation-delay:-3.7s}
-.meteors .meteor:nth-child(9){--x:9;animation-duration:4.6s;animation-delay:-0.5s}
-.meteors .meteor:nth-child(10){--x:10;animation-duration:6.4s;animation-delay:-2.2s}
-.meteors .meteor:nth-child(11){--x:11;animation-duration:4.1s;animation-delay:-5.0s}
-.meteors .meteor:nth-child(12){--x:12;animation-duration:5.7s;animation-delay:-1.1s}
-/* --x 為航道編號；left = 編號/12 視窗寬，水平位移 = -left（掃到左緣） */
-.meteors .meteor{left:calc(var(--x) * 8.3333%);animation-name:meteorFly}
+   12 顆，--x 決定水平航道（1/12 視窗寬），--y 決定「垂直起點」。
+   關鍵：上一版只等分 left，但所有流星都從 top:-22% 出發；可見的那 40% 行程
+   只涵蓋畫面上方一小段 → 肉眼看起來全擠在左上角。
+   現在 --y 也等距錯開（-30% ~ +52%），加上每顆水平位移 = 自己的航道寬，
+   於是流星同時在水平與垂直方向都鋪滿整個畫面；可見行程延長到 ~78%，
+   讓每顆真正橫掃它所在的那一段螢幕。速度／延遲交錯避免整排同時出現。 */
+.meteors .meteor:nth-child(1){--x:1;--y:-30%;animation-duration:3.6s;animation-delay:-0.2s}
+.meteors .meteor:nth-child(2){--x:2;--y:-10%;animation-duration:4.9s;animation-delay:-1.7s}
+.meteors .meteor:nth-child(3){--x:3;--y:10%;animation-duration:3.9s;animation-delay:-3.1s}
+.meteors .meteor:nth-child(4){--x:4;--y:30%;animation-duration:5.6s;animation-delay:-0.9s}
+.meteors .meteor:nth-child(5){--x:5;--y:-20%;animation-duration:4.3s;animation-delay:-2.6s}
+.meteors .meteor:nth-child(6){--x:6;--y:0%;animation-duration:6.1s;animation-delay:-4.4s}
+.meteors .meteor:nth-child(7){--x:7;--y:20%;animation-duration:3.4s;animation-delay:-1.3s}
+.meteors .meteor:nth-child(8){--x:8;--y:42%;animation-duration:5.2s;animation-delay:-3.7s}
+.meteors .meteor:nth-child(9){--x:9;--y:-14%;animation-duration:4.6s;animation-delay:-0.5s}
+.meteors .meteor:nth-child(10){--x:10;--y:8%;animation-duration:6.4s;animation-delay:-2.2s}
+.meteors .meteor:nth-child(11){--x:11;--y:28%;animation-duration:4.1s;animation-delay:-5.0s}
+.meteors .meteor:nth-child(12){--x:12;--y:50%;animation-duration:5.7s;animation-delay:-1.1s}
+.meteors .meteor{left:calc(var(--x) * 8.3333%);top:var(--y);animation-name:meteorFly}
 @keyframes meteorFly{
- 0%{opacity:0;transform:translate3d(0,-16vh,0) rotate(26deg)}
- 4%{opacity:.95}
- 24%{opacity:.6}
- 40%{opacity:0;transform:translate3d(calc(var(--x) * -8.3333vw),78vh,0) rotate(26deg)}
- 100%{opacity:0;transform:translate3d(calc(var(--x) * -8.3333vw),78vh,0) rotate(26deg)}
+ 0%{opacity:0;transform:translate3d(0,0,0) rotate(26deg)}
+ 6%{opacity:.95}
+ 46%{opacity:.8}
+ 78%{opacity:0;transform:translate3d(calc(var(--x) * -8.3333vw),96vh,0) rotate(26deg)}
+ 100%{opacity:0;transform:translate3d(calc(var(--x) * -8.3333vw),96vh,0) rotate(26deg)}
 }
+
 /* ===== 主頁白晝模式：高亮白色循環流光 =====
-   背景是近白的 #f8f9fa，純白低透明度會看不見 → 峰值拉到不透明 1、模糊收窄讓核心更亮，
-   兩翼帶一點冷色調（#eaf2ff）以在淺色背景上形成可辨識的高亮帶。
+   背景是近白的 #f8f9fa，純白光帶在上面幾乎沒有對比 → 兩翼改用可見的藍色階
+   （#3b82f6 → #93c5fd）包住不透明白核心，blur 收窄到 9px 並補一圈藍色光暈。
    三條寬版斜向光帶穿越整個畫面後無限循環；只在淺色主題 + 主頁顯示，深色主題改用流星。 */
 .beams{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-1;display:none;contain:paint}
 html[data-theme=light] body.view-home .beams{display:block}
 .beam{position:absolute;top:-35%;width:34vw;height:190%;opacity:0;
- background:linear-gradient(90deg,rgba(255,255,255,0),rgba(234,242,255,.55) 30%,rgba(255,255,255,1) 50%,rgba(234,242,255,.55) 70%,rgba(255,255,255,0));
- filter:blur(14px);transform:translate3d(-60vw,0,0) skewX(-14deg);animation:beamSweep linear infinite}
+ background:linear-gradient(90deg,rgba(255,255,255,0),rgba(59,130,246,.24) 26%,rgba(147,197,253,.72) 42%,rgba(255,255,255,1) 50%,rgba(147,197,253,.72) 58%,rgba(59,130,246,.24) 74%,rgba(255,255,255,0));
+ filter:blur(9px);box-shadow:0 0 26px rgba(59,130,246,.28);transform:translate3d(-60vw,0,0) skewX(-14deg);animation:beamSweep linear infinite}
 .beam:nth-child(1){animation-duration:11s;animation-delay:0s}
 .beam:nth-child(2){animation-duration:15s;animation-delay:-5s;width:22vw}
 .beam:nth-child(3){animation-duration:13s;animation-delay:-9s;width:46vw}
@@ -461,6 +464,8 @@ body.tool-pen .flow,body.tool-eraser .flow,body.tool-text .flow{pointer-events:n
 /* 元素編輯列：獨立一整條 contextual bar（只在選取元素時出現），
    以「零高度容器 + 絕對定位」浮覆在文件區上方，不會把版面推下去（畫面不會下移）。
    不塞進主工具列同一列，避免蓋住／擠掉原本的工具按鈕。 */
+/* z-index 56：高於文件區（auto）→ 編輯列浮在文件上；低於 #tbPanel(58)
+   → 工具列按鈕的 tooltip 不會被編輯列蓋住 */
 #elbarWrap{position:relative;height:0;flex:none;z-index:56}
 #elbarHost{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;min-width:0;padding:5px calc(12px + var(--safe-right)) 5px calc(12px + var(--safe-left));background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 6px 14px rgba(16,24,40,.04)}
 #elbarHost:empty{display:none}
@@ -579,7 +584,7 @@ body.dragging #dropHint{display:flex}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes popIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
 /* ================= Dropdown menu ================= */
-.menu{position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);display:none;z-index:250;min-width:212px;padding:6px;animation:popIn .14s ease both}
+.menu{position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);display:none;z-index:3000;min-width:212px;padding:6px;animation:popIn .14s ease both}
 .menu.open{display:block}
 .menu button{display:flex;align-items:center;gap:9px;width:100%;border:none;background:none;text-align:left;border-radius:8px;padding:8px 11px;font-size:13px;color:var(--text);transition:background .12s ease,color .12s ease}
 .menu button:hover{background:var(--surface-2);color:var(--accent-text)}
@@ -738,6 +743,7 @@ body.dragging #dropHint{display:flex}
      <button id="btnOpenLocal" class="ibtn" data-tip="開啟本地檔案：編輯後可直接覆蓋原檔" aria-label="開啟本地檔案"><svg class="ic"><use href="#i-folder"></use></svg></button>
       <button id="btnImport" class="ibtn" data-tip="匯入先前匯出的 JSON 筆記檔（建立新筆記）" aria-label="匯入"><svg class="ic"><use href="#i-import"></use></svg></button>
      <button id="btnUploadDoc" class="ibtn" data-tip="上載檔案到目前筆記" aria-label="上載檔案"><svg class="ic"><use href="#i-upload"></use></svg></button>
+     <button id="btnAdapt" class="ibtn" data-tip="自適應頁面尺寸：上載 PDF／圖片時，頁面長寬比改用檔案本身的比例（例如 16:9 簡報），而非固定 A4。只在目標筆記還是空白頁時套用。" aria-label="自適應頁面尺寸"><svg class="ic"><use href="#i-fit"></use></svg></button>
     </div>
     <div class="tbPane" data-cat="page">
      <button id="btnAddPage" class="ibtn" data-tip="於結尾新增一頁" aria-label="新增頁面"><svg class="ic"><use href="#i-page-plus"></use></svg></button>
@@ -784,16 +790,18 @@ body.dragging #dropHint{display:flex}
       <option value="en">English</option>
      </select>
     </div>
-    <div class="menu" id="exportMenu">
-     <button data-x="json"><svg class="ic"><use href="#i-doc-json"></use></svg>JSON（可再匯入）</button>
-     <button data-x="saveas"><svg class="ic"><use href="#i-folder"></use></svg>另存到本機檔案（可覆蓋）</button>
-     <button data-x="html"><svg class="ic"><use href="#i-globe"></use></svg>獨立 HTML 檔</button>
-     <button data-x="txt"><svg class="ic"><use href="#i-txt"></use></svg>純文字 TXT</button>
-     <button data-x="png"><svg class="ic"><use href="#i-image"></use></svg>每頁 PNG 圖片</button>
-     <button data-x="print"><svg class="ic"><use href="#i-print"></use></svg>列印 / 存成 PDF</button>
-    </div>
    </section>
    <div id="elbarWrap"><div id="elbarHost" aria-live="polite"></div></div>
+   <!-- 匯出選單：必須是 #tbPanel 之外、#app 的直接子元素，
+        否則會被困在工具列的堆疊上下文裡、被編輯列蓋住（z-index 3000） -->
+   <div class="menu" id="exportMenu">
+    <button data-x="json"><svg class="ic"><use href="#i-doc-json"></use></svg>JSON（可再匯入）</button>
+    <button data-x="saveas"><svg class="ic"><use href="#i-folder"></use></svg>另存到本機檔案（可覆蓋）</button>
+    <button data-x="html"><svg class="ic"><use href="#i-globe"></use></svg>獨立 HTML 檔</button>
+    <button data-x="txt"><svg class="ic"><use href="#i-txt"></use></svg>純文字 TXT</button>
+    <button data-x="png"><svg class="ic"><use href="#i-image"></use></svg>每頁 PNG 圖片</button>
+    <button data-x="print"><svg class="ic"><use href="#i-print"></use></svg>列印 / 存成 PDF</button>
+   </div>
 
  <div id="main">
      <aside id="sidebar">
@@ -979,7 +987,7 @@ function closeModal(id){$('#'+id).classList.remove('open');}
 /* ===== 檢查更新（GitHub Releases） =====
    APP_VERSION 為目前版本；檢查時向 GitHub Releases API 取最新版並比對。
    發佈仓库：cghk-cn/nexus-notes。 */
-const APP_VERSION='1.2.2';
+const APP_VERSION='1.2.3';
 const UPD=(function(){
  const OWNER='cghk-cn', REPO='nexus-notes';
  const API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/latest';
@@ -3451,6 +3459,38 @@ function revealPage(pi){
   setTimeout(()=>pe.classList.remove('flash'),1700);
  });
 }
+/* ===== 自適應頁面尺寸（跨工作階段記憶）=====
+   開啟後，匯入 PDF／圖片會把「空白筆記」的頁面長寬比改成符合檔案本身
+   （例如 PPT 匯出的 16:9 PDF → 頁面變 16:9，而不是被塞進 A4）。
+   目標筆記已有內容時不套用，以免破壞既有版面。 */
+try{S.adapt=localStorage.getItem('noteapp.adapt')==='1';}catch(e){S.adapt=false;}
+function syncAdaptBtn(){const b=$('#btnAdapt');if(b)b.classList.toggle('on',!!S.adapt);}
+$('#btnAdapt').addEventListener('click',()=>{
+ S.adapt=!S.adapt;
+ try{localStorage.setItem('noteapp.adapt',S.adapt?'1':'0');}catch(e){}
+ syncAdaptBtn();
+ toast(S.adapt?t('已開啟自適應頁面尺寸'):t('已關閉自適應頁面尺寸（回到 A4）'));
+});
+syncAdaptBtn();
+
+/* 依來源檔案的長寬比重算頁面尺寸（面積接近原本 A4，避免忽大忽小）。
+   ar = 寬/高。只在目標筆記仍是單一空白頁時套用。 */
+function applyAdaptiveSize(ar){
+ if(!isFinite(ar)||ar<=0)return false;
+ const d=curDoc();if(!d)return false;
+ const p0=d.pages[0];
+ const empty=(d.pages.length===1&&p0&&!p0.flow&&!p0.els.length&&!p0.strokes.length&&!p0.bg);
+ if(!empty)return false;
+ const area=PW*PH;
+ let w=Math.round(Math.sqrt(area*ar)),h=Math.round(w/ar);
+ w=clamp(w,320,2400);h=clamp(h,320,3000);
+ if(w===d.w&&h===d.h)return false;
+ d.w=w;d.h=h;
+ renderAll();
+ toast(tN('已自適應頁面尺寸：{w}×{h}',{w:w,h:h}));
+ return true;
+}
+
 /* 上載檔案：主頁＝每個檔案建立一份新筆記；編輯頁＝匯入目前筆記 */
 let uploadMode='doc';
 $('#btnHomeUpload').addEventListener('click',()=>{
@@ -3504,6 +3544,8 @@ function importImage(file,t){
    const img=new Image();
    img.onload=()=>{
     const d=curDoc();if(!d)return reject('no doc');
+    /* 自適應頁面尺寸：頁面長寬比改用圖片本身（對空白頁才生效） */
+    if(S.adapt&&img.width&&img.height)applyAdaptiveSize(img.width/img.height);
     const scale=Math.min(1,(d.w*0.8)/img.width,(d.h*0.7)/img.height);
     const w=Math.round(img.width*scale),h=Math.round(img.height*scale);
     const pos=centerPos(w,h);
@@ -3569,6 +3611,14 @@ async function importPDF(file,t){
  toast('正在解析 PDF…');
  const data=await file.arrayBuffer();
  const pdf=await pdfjsLib.getDocument({data}).promise;
+ /* 自適應頁面尺寸：以第一頁的長寬比重算頁面（例如 PPT 匯出的 16:9 PDF）。
+    必須在 clearEmptyPages 之前呼叫，applyAdaptiveSize 只對「單一空白頁」生效。 */
+ if(S.adapt){
+  try{
+   const v0=(await pdf.getPage(1)).getViewport({scale:1});
+   if(v0&&v0.width&&v0.height)applyAdaptiveSize(v0.width/v0.height);
+  }catch(e){}
+ }
  clearEmptyPages(d);
  const fromPage=d.pages.length;
  let added=0;
@@ -3708,6 +3758,22 @@ async function exportPNG(){
  }catch(err){console.error(err);toast('PNG 匯出失敗');}
  holder.remove();
 }
+/* 另存到本機檔案：
+   若這份筆記「已經連結」到本機檔案（DESK 的 filePath / FSA 的 fileHandle），
+   就直接覆蓋原檔 —— 像「預覽」按儲存一樣，不再跳出選檔對話框。
+   只有尚未連結時才開啟「另存新檔」對話框來建立連結。
+   兩邊都不支援時才退回下載 JSON（舊行為）。 */
+async function saveAsLocal(){
+ const d=curDoc();if(!d)return false;
+ if(DESK.supported){
+  if(d.filePath){ return DESK.save(); }   /* 已連結 → 直接覆蓋原檔 */
+  return DESK.saveAs();                    /* 未連結 → 選檔並建立連結 */
+ }
+ if(!FSA.supported){ toast(t('此環境不支援本機覆蓋儲存，改以下載 JSON')); exportJSON(); return false; }
+ const h=await FSA.handleFor(d.id);
+ if(h){ return FSA.save(); }               /* 已連結 → 直接覆蓋原檔 */
+ return FSA.saveAs();                      /* 未連結 → 選檔並建立連結 */
+}
 $('#btnExport').addEventListener('click',ev=>{
  ev.stopPropagation();
  $('#exportMenu').classList.toggle('open');
@@ -3722,7 +3788,7 @@ $('#exportMenu').addEventListener('click',ev=>{
  $('#exportMenu').classList.remove('open');
  const k=b.dataset.x;
  if(k==='json')exportJSON();
- if(k==='saveas'){ if(DESK.supported)DESK.saveAs(); else if(!FSA.supported){ toast(t('此環境不支援本機覆蓋儲存，改以下載 JSON')); exportJSON(); } else FSA.saveAs(); }
+ if(k==='saveas')saveAsLocal();
  if(k==='html')exportHTML();
  if(k==='txt')exportTXT();
  if(k==='png')exportPNG();
@@ -3785,8 +3851,16 @@ function openDoc(id){
  S.curId=id;S.sel=null;S.editing=null;
  document.body.classList.remove('view-home');
  setCat(S.cat||'tools');
- initHist();renderAll(true);persist();
+ initHist();
+ /* 先標記為已知文件，renderAll 就不會自動置中，改由 restoreView 還原上次位置 */
+ S._docId=id;
+ renderAll();
+ restoreView(id);
+ persist();
 }
+/* 離開／切換分頁時把目前檢視位置存起來 */
+window.addEventListener('pagehide',persist);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persist();});
 $('#homeGrid').addEventListener('click',ev=>{
  const nb=ev.target.closest('#ncardNew');
  if(nb){const d=newDoc('筆記 '+(S.docs.length+1));openDoc(d.id);toast('已建立新筆記');return;}
@@ -3954,6 +4028,8 @@ function pagesSize(){
 function applyPagesTransform(){
  const p=$('#pages');if(!p)return;
  p.style.transform='translate('+S.panX+'px,'+S.panY+'px) scale('+S.zoom+')';
+ /* 把目前的捲動＋縮放記到這份筆記上，下次打開時回到原處 */
+ const d=curDoc();if(d)d.view={x:S.panX,y:S.panY,z:S.zoom};
 }
 function clampPan(){
  const ws=$('#workspace');if(!ws)return;
@@ -3968,6 +4044,17 @@ function centerPages(){
  S.panX=(ws.clientWidth-w*S.zoom)/2;
  S.panY=16;
  clampPan();applyPagesTransform();
+}
+
+/* 還原某份筆記上次離開時的檢視位置（捲動＋縮放）；沒有紀錄就置中 */
+function restoreView(id){
+ const d=S.docs.find(x=>x.id===id);
+ const v=d&&d.view;
+ if(!v||!isFinite(v.z)||v.z<=0){centerPages();return;}
+ S.zoom=clamp(v.z,0.25,4);
+ S.panX=isFinite(v.x)?v.x:0;
+ S.panY=isFinite(v.y)?v.y:0;
+ clampPan();applyPagesTransform();syncZoomUI();
 }
 function syncZoomUI(){
  const sel=$('#zoomSel');

@@ -23,7 +23,7 @@ echo "== 2/7 連結資源+資產 (aapt2 link) =="
   -A assets \
   --java build/gen \
   --min-sdk-version 24 --target-sdk-version 35 \
-  --version-code 5 --version-name 1.2.2 \
+  --version-code 6 --version-name 1.2.3 \
   --auto-add-overlay
 
 echo "== 3/7 編譯 Java (javac) =="
