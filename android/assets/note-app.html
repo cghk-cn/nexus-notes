@@ -1019,6 +1019,7 @@ body.dragging #dropHint{display:flex}
 <div id="toast"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script>
 /* ===== 基礎工具 ===== */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -1031,7 +1032,7 @@ function closeModal(id){$('#'+id).classList.remove('open');}
 /* ===== 檢查更新（GitHub Releases） =====
    APP_VERSION 為目前版本；檢查時向 GitHub Releases API 取最新版並比對。
    發佈仓库：cghk-cn/nexus-notes。 */
-const APP_VERSION='1.2.5';
+const APP_VERSION='1.2.6';
 const UPD=(function(){
  const OWNER='cghk-cn', REPO='nexus-notes';
  const API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/latest';
@@ -1646,18 +1647,31 @@ const DESK=(function(){
   else file=new File([b64ToBlob(r.base64,MIME[ext])],name,{type:MIME[ext]||'application/octet-stream'});
   const base=name.replace(/\.[^.]+$/,'')||name;
   const isText=/^(txt|md|markdown)$/.test(ext);
-  /* PDF／圖片無法把註記寫回原檔（會毀掉二進位）→ 改用旁邊的 sidecar 筆記檔：
-     <原檔名>.noteapp.json，內容就是「頁面底圖＋筆跡＋元素」的完整筆記。
-     儲存時覆蓋 sidecar；之後再「以 NEXUS 開啟」原 PDF 就會自動載入這份註記。 */
+  /* PDF：用 pdf-lib 把註記「直接寫回原檔」（writeBackToPdf），不產生 sidecar；
+   圖片無法寫回二進位 → 仍用旁邊的 sidecar 筆記檔 <原檔名>.noteapp.json。 */
   const isDoc=/^(pdf|png|jpe?g|webp)$/.test(ext);
   const sc=isDoc?(p+'.noteapp.json'):null;
   const dupSc=sc?S.docs.find(x=>x.filePath===sc):null;
+  /* PDF 的註記是直接燒回原檔的 → 重開時一定要重新渲染底圖，
+     否則會看到沒有註記的舊點陣圖（上一版留下的 strokes 也已清空）。 */
+  const isPdf=/^pdf$/i.test(ext);
   if(isText&&dup){ openDoc(dup.id); toast(tN('已開啟「{n}」，儲存時將覆寫原檔',{n:dup.name})); persist(); return; }
-  /* 已存過 sidecar（上次畫過並按了儲存）→ 直接載入那份註記，筆跡才會留下來 */
+  /* 重開同一個 PDF：底圖必須重畫（原檔已被寫入註記），否則看到的是舊快取。 */
+  if(isPdf&&dup){ await reimportPdfInto(dup,p,name); return; }
+  /* 已存過 sidecar（上次畫過並按了儲存）→ 直接載入那份註記，筆跡才會留下來。
+   1.2.5 舊版把 PDF 也存在 sidecar → 遷移：連結改回 PDF 本體，儲存改走寫回。 */
   if(dupSc){
+   if(isPdf){
+    dupSc.filePath=p; dupSc.fileName=name;
+    const hasInk=dupSc.pages.some(pg=>(pg.strokes&&pg.strokes.length)||(pg.els&&pg.els.length)||pg.flow);
+    /* sidecar 沒有未燒入的註記（例如上次成功寫回後 sidecar 沒刪乾淨）→
+       直接重渲染 PDF 底圖，避免看到沒有註記的舊點陣圖 */
+    if(!hasInk){ await reimportPdfInto(dupSc,p,name); return; }
+   }
    openDoc(dupSc.id);
-   toast(tN('已開啟「{n}」的註記，儲存時將覆寫',{n:dupSc.srcName||base}));
-   persist(); return;
+   toast(isPdf?tN('已開啟「{n}」的註記，儲存時將直接寫回原 PDF',{n:dupSc.srcName||base})
+               :tN('已開啟「{n}」的註記，儲存時將覆寫',{n:dupSc.srcName||base}));
+   persist(); if(isPdf)renderDocList(); return;
   }
   if(sc){
    const sr=await api.readFile(sc);
@@ -1666,23 +1680,40 @@ const DESK=(function(){
     try{ const o=JSON.parse(sr.text); sdoc=(o&&o.doc)?o.doc:o; if(!sdoc||!Array.isArray(sdoc.pages))throw new Error('x'); }catch(e){ sdoc=null; }
     if(sdoc){
      sdoc.id=uid(); sdoc.updated=sdoc.updated||Date.now();
-     sdoc.filePath=sc; sdoc.fileName=base+'.noteapp.json'; sdoc.srcPath=p; sdoc.srcName=name;
+     /* 1.2.5 舊版把 PDF 也存在 sidecar → 遷移：連結改回 PDF 本體；圖片仍存 sidecar */
+     sdoc.filePath=isPdf?p:sc; sdoc.fileName=isPdf?name:base+'.noteapp.json';
+     sdoc.srcPath=p; sdoc.srcName=name;
      if(!sdoc.name)sdoc.name=base;
-     S.docs.unshift(sdoc); openDoc(sdoc.id); persist(); renderDocList();
-     toast(tN('已開啟「{n}」的註記，儲存時將覆寫',{n:name}));
+     const sInk=sdoc.pages.some(pg=>(pg.strokes&&pg.strokes.length)||(pg.els&&pg.els.length)||pg.flow);
+     if(isPdf&&!sInk){
+      /* 空的舊 PDF sidecar（沒有未燒入的註記）→ 捨棄它，往下直接匯入原 PDF，
+         底圖由 pdf.js 重新畫，自然含已燒入的註記 */
+     }else{
+      S.docs.unshift(sdoc); openDoc(sdoc.id); persist(); renderDocList();
+      toast(isPdf?tN('已開啟「{n}」的註記，儲存時將直接寫回原 PDF',{n:name})
+                  :tN('已開啟「{n}」的註記，儲存時將覆寫',{n:name}));
+      return;
+     }
      return;
     }
    }
   }
   const d=newDoc(base); openDoc(d.id);
   if(isText){ d.filePath=p; d.fileName=name; d.textSrc=ext; }
-  if(isDoc){ d.filePath=sc; d.fileName=base+'.noteapp.json'; d.srcPath=p; d.srcName=name; }
+  if(isDoc){
+   /* PDF 走「直接寫回原檔」→ 連結原檔本身；
+      圖片（無法寫回二進位）仍用旁邊的 sidecar。 */
+   d.srcPath=p; d.srcName=name;
+   if(/^pdf$/i.test(ext)){ d.filePath=p; d.fileName=name; }
+   else{ d.filePath=sc; d.fileName=base+'.noteapp.json'; }
+  }
   uploadMode='doc'; /* 已在上面建好筆記，匯入目前這份即可 */
   await handleFiles([file]);
   if(isText||isDoc){
    persist(); renderDocList();
    toast(isText?tN('已開啟「{n}」，儲存時將覆寫原檔',{n:name})
-                 :tN('註記將存在旁邊的「{n}」，原檔不會被修改',{n:base+'.noteapp.json'}));
+            :(isPdf?tN('已開啟「{n}」，儲存時把註記直接寫回原 PDF',{n:name})
+                    :tN('註記將存在旁邊的「{n}」，原檔不會被修改',{n:base+'.noteapp.json'})));
   }
  }
  return {
@@ -1692,13 +1723,47 @@ const DESK=(function(){
   async open(){ const p=await api.pickOpen(); if(p)await openPath(p); },
   async save(){
    const d=curDoc(); if(!d||!d.filePath)return false;
-   /* 筆記檔存 JSON；純文字檔（txt/md，開啟時記下 textSrc）存回原文字格式 */
-   const payload=d.textSrc?docToText(d):JSON.stringify({app:'noteapp',v:1,doc:d},null,1);
-   const r=await api.writeFile(d.filePath,payload);
-   if(!r||!r.ok){ toast(t('寫入檔案失敗')+(r&&r.error?('：'+r.error):'')); return false; }
-   d.fileName=r.name||d.fileName; d.updated=Date.now(); persist(); renderDocList();
-   toast(tN('已覆蓋「{n}」',{n:d.fileName||d.name}));
-   return true;
+   let fellBack=false;
+    /* 連結的是 PDF（srcPath 是 .pdf）→ 把註記直接燒進原檔後覆寫，
+       不再產生旁邊的 .noteapp.json（除非寫入失敗才退回 sidecar）。 */
+    if(d.srcPath&&/\.pdf$/i.test(d.srcPath)){
+     const ok=await writeBackToPdf(d);
+     if(ok){
+      /* 註記已燒進 PDF → 先用磁碟上（含註記的）PDF 重畫底圖，畫面立刻看到結果，
+         再清空筆跡（下次儲存才不會重複疊加）；1.2.5 舊 sidecar 檔一併刪除。
+         底圖刷新失敗 → 保留筆跡（寧可重複，也不要畫面上的註記憑空消失）。
+         20s 超時保險：刷新卡住就當失敗，儲存永遠不會吊死。 */
+      let refreshed=false;
+      try{ refreshed=await Promise.race([refreshPdfBgs(d),
+           new Promise(res=>setTimeout(()=>res(false),20000))]); }catch(e){ console.warn('refreshPdfBgs',e); }
+      const hasInkLeft=(d.pages||[]).some(pg=>(pg.strokes&&pg.strokes.length)||(pg.els&&pg.els.length)||pg.flow);
+      if(refreshed||!hasInkLeft){ d.pages.forEach(pg=>{ pg.strokes=[]; pg.els=[]; pg.flow=''; }); }
+      else toast(t('底圖刷新失敗：畫面筆跡保留，重新載入後可見燒入結果'));
+      d.filePath=d.srcPath; d.fileName=d.srcName||d.fileName;
+      d.updated=Date.now(); persist(); renderAll(true);
+      killSidecar(d.srcPath+'.noteapp.json');
+      return true;
+     }
+     /* 寫不進 PDF（被鎖住／pdf-lib 沒載入）→ 退回 sidecar，至少註記不丟。
+        ⚠️ 連結必須先改到 <原檔>.noteapp.json —— 絕不能把 JSON 寫進 .pdf 本體！ */
+     d.filePath=d.srcPath+'.noteapp.json';
+     d.fileName=(d.srcName||d.name||'note').replace(/\.[^.]+$/,'')+'.noteapp.json';
+     fellBack=true;
+    }
+    /* 保險：任何情況下都不把 JSON payload 寫進 .pdf（會毀掉原檔） */
+    if(/\.pdf$/i.test(d.filePath||'')){
+     d.filePath=(d.srcPath||d.filePath)+'.noteapp.json';
+     d.fileName=(d.srcName||d.name||'note').replace(/\.[^.]+$/,'')+'.noteapp.json';
+     fellBack=true;
+    }
+    /* 筆記檔存 JSON；純文字檔（txt/md，開啟時記下 textSrc）存回原文字格式 */
+    const payload=d.textSrc?docToText(d):JSON.stringify({app:'noteapp',v:1,doc:d},null,1);
+    const r=await api.writeFile(d.filePath,payload);
+    if(!r||!r.ok){ toast(t('寫入檔案失敗')+(r&&r.error?('：'+r.error):'')); return false; }
+    d.fileName=r.name||d.fileName; d.updated=Date.now(); persist(); renderDocList();
+    toast(fellBack?tN('⚠️ 無法寫入 PDF，註記已備份到「{n}」',{n:d.fileName})
+                  :tN('已覆蓋「{n}」',{n:d.fileName||d.name}));
+    return true;
   },
   async saveAs(){
    const d=curDoc(); if(!d)return false;
@@ -1712,6 +1777,212 @@ const DESK=(function(){
   }
  };
 })();
+/* 重開同一個 PDF：註記已經燒在原檔裡，所以重新渲染底圖即可。
+   做法：把原檔當成「新檔案」匯入成新筆記（底圖由 pdf.js 重新畫，自然含註記），
+   再用它取代舊筆記（保留名稱與連結），最後刪掉舊的 —— 避免就地改動 pages 造成的邊角案例。 */
+async function reimportPdfInto(oldDoc,p,name){
+ toast(tN('正在重新載入「{n}」…',{n:name}));
+ try{
+  const rd=await window.nexus.readFile(p);
+  if(!rd||!rd.ok||rd.base64==null)throw new Error('read failed');
+  const bin=atob(rd.base64);const u8=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+  const file=new File([u8],name,{type:'application/pdf'});
+  const keepName=oldDoc.name;
+  const nd=newDoc(keepName||name.replace(/\.[^.]+$/,''));
+  nd.filePath=p;nd.fileName=name;nd.srcPath=p;nd.srcName=name;
+  S.docs.unshift(nd);openDoc(nd.id);
+  uploadMode='doc';
+  await importPDF(file,{name:name});
+  const now=curDoc();
+  if(now&&now.id===nd.id){
+   now.filePath=p;now.fileName=name;now.srcPath=p;now.srcName=name;
+   now.name=keepName||now.name;
+  }
+  S.docs=S.docs.filter(x=>x.id!==oldDoc.id);
+  persist();renderAll(true);renderDocList();
+  toast(tN('已重新載入「{n}」',{n:name}));
+ }catch(e){
+  console.error('reimportPdfInto',e);
+  toast(t('重新載入 PDF 失敗')+(e&&e.message?('：'+e.message):''));
+ }
+}
+async function writeBackToPdf(d){
+ if(typeof PDFLib==='undefined'){ toast(t('無法載入 pdf-lib（首次使用需網路）')); return false; }
+ if(!d.srcPath)return false;
+ const rd=await window.nexus.readFile(d.srcPath);
+ if(!rd||!rd.ok||rd.base64==null){ toast(t('寫入失敗：讀不到原 PDF')); return false; }
+ toast(t('正在寫入 PDF…'));
+ try{
+  const bin=atob(rd.base64);const u8=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+  const pdf=await PDFLib.PDFDocument.load(u8,{ignoreEncryption:true});
+  const pages=pdf.getPages();
+  const rgb=h=>{const m=/^#?([0-9a-f]{6})$/i.exec(h||'#000');if(!m)return[0,0,0];
+   const n=parseInt(m[1],16);return[(n>>16&255)/255,(n>>8&255)/255,(n&255)/255];};
+  for(let pi=0;pi<d.pages.length;pi++){
+   const p=d.pages[pi];
+   const flowTxt=p.flow?stripHtml(p.flow).trim():'';
+   const hasInk=(p.strokes&&p.strokes.length)||(p.els&&p.els.length)||flowTxt;
+   if(!hasInk)continue;
+/* 必須對得到原 PDF 頁（bg.page）；手動新增／圖片頁稍後整頁附加成新頁 */
+if(!(p.bg&&p.bg.page))continue;
+const idx=p.bg.page-1;                          /* 筆記頁 ↔ 原 PDF 第 bg.page 頁 */
+const page=pages[idx]; if(!page)continue;
+   const {width:PW,height:PH}=page.getSize();
+   const rot=page.getRotation().angle;
+   const swap=(rot===90||rot===270);                /* 旋轉時可用框的長寬要對調 */
+   const boxW=swap?PH:PW, boxH=swap?PW:PH;
+   const sx=boxW/d.w, sy=boxH/d.h;
+   /* --- 筆畫：畫成 PDF 向量直線（PDF 的 y 軸向上，要翻轉） --- */
+   if(p.strokes&&p.strokes.length){
+    for(const s of p.strokes){
+     if(!s.pts||!s.pts.length)continue;
+     const [r,g,b]=rgb(s.c);
+     const alpha=(s.a!=null?s.a:1);
+     const lw=Math.max(0.35,(s.s||2)*((sx+sy)/2));
+     const pts=s.pts.map(pt=>[pt[0]*sx,PH-(pt[1]*sy)]);
+     const op=s.hl?Math.min(0.4,alpha*0.5):alpha;
+     for(let i=1;i<pts.length;i++){
+      page.drawLine({start:{x:pts[i-1][0],y:pts[i-1][1]},end:{x:pts[i][0],y:pts[i][1]},
+       thickness:lw,color:PDFLib.rgb(r,g,b),opacity:op});
+     }
+    }
+   }
+   /* --- 元素＋文字流：點陣化後嵌入（embedPng 回傳的是圖片物件 → 用 drawImage） --- */
+   const overlay=await rasterizeAnnotations(p,d.w,d.h);
+   if(overlay){
+    const img=await pdf.embedPng(overlay);
+    page.drawImage(img,{x:0,y:0,width:boxW,height:boxH,opacity:1});
+   }
+  }
+    /* --- 沒有對應原 PDF 頁的頁面（手動新增／圖片頁）：整頁點陣化 → 附加成 PDF 新頁 --- */
+  const added=[];
+  for(const p of d.pages){
+   const flowTxt=p.flow?stripHtml(p.flow).trim():'';
+   const hasInk=(p.strokes&&p.strokes.length)||(p.els&&p.els.length)||flowTxt;
+   if(!hasInk||(p.bg&&p.bg.page))continue;
+   const png=await rasterizeFullPage(p,d);
+   if(!png)throw new Error('頁面點陣化失敗');
+   const img=await pdf.embedPng(png);
+   let W=d.w,H=d.h;
+   if(pages[0]){
+    const s0=pages[0].getSize(),r0=pages[0].getRotation().angle;
+    W=(r0===90||r0===270)?s0.height:s0.width; H=Math.round(W*d.h/d.w);
+   }
+   pdf.addPage([W,H]).drawImage(img,{x:0,y:0,width:W,height:H});
+   added.push(p);
+  }
+  const out=await pdf.save();
+  let b64='';const CH=0x8000;                     /* 分塊轉 base64，避免字串過長 */
+  for(let i=0;i<out.length;i+=CH)b64+=String.fromCharCode.apply(null,out.subarray(i,i+CH));
+  const wr=await window.nexus.writeBinary(d.srcPath,btoa(b64));
+  if(!wr||!wr.ok){ toast(t('寫入檔案失敗')+(wr&&wr.error?('：'+wr.error):'')); return false; }
+  /* 附加頁現在有自己的 PDF 頁碼 → 補上 bg.page */
+  if(added.length){
+   const baseNum=pdf.getPageCount()-added.length;
+   added.forEach((pg,i)=>{ pg.bg=Object.assign({},pg.bg||{},{page:baseNum+i+1,name:d.srcName||d.fileName||''}); });
+  }
+  toast(tN('已把註記寫回「{n}」',{n:d.srcName||d.name}));
+  return true;
+ }catch(e){
+  console.error('writeBackToPdf',e);
+  toast(t('寫入 PDF 失敗')+(e&&e.message?('：'+e.message):''));
+  return false;
+ }
+}
+/* 把一頁的「元素 + Word 式文字流」畫成透明背景 PNG（不含 PDF 底圖、不含筆畫） */
+async function rasterizeAnnotations(p,w,h){
+ const flowTxt=p.flow?stripHtml(p.flow).trim():'';
+ const hasEls=p.els&&p.els.length;
+ if(!hasEls&&!flowTxt)return null;
+ const SC=2;
+ if(typeof html2canvas==='undefined'){
+  /* 沒有 html2canvas 就只畫純文字流，元素略過（至少文字不丟） */
+  if(!flowTxt)return null;
+  const cv=document.createElement('canvas');
+  cv.width=Math.ceil(w*SC);cv.height=Math.ceil(h*SC);
+  const ctx=cv.getContext('2d');ctx.scale(SC,SC);
+  ctx.fillStyle='#111';ctx.font='16px system-ui,-apple-system,sans-serif';
+  stripHtml(p.flow).split(/\n+/).forEach((ln,i)=>ctx.fillText(ln,40,60+i*24));
+  return cv.toDataURL('image/png');
+ }
+ try{
+  const host=document.createElement('div');
+  host.style.cssText='position:fixed;left:-100000px;top:0;width:'+w+'px;height:'+h+'px;background:transparent;z-index:-1';
+  const layer=document.createElement('div');
+  layer.className='els';layer.style.cssText='position:absolute;inset:0';
+  host.appendChild(layer);
+  if(p.flow){
+   const f=document.createElement('div');
+   f.className='flow';f.innerHTML=p.flow||'';
+   f.style.padding=(docMargin(curDoc())||60)+'px';
+   f.style.fontSize=((curDoc()&&curDoc().ffs)||16)+'px';
+   layer.appendChild(f);
+  }
+  (p.els||[]).forEach(e=>layer.appendChild(renderEl(e)));
+  document.body.appendChild(host);
+  try{
+   const shot=await html2canvas(host,{scale:SC,backgroundColor:null,logging:false,width:w,height:h,windowWidth:w,windowHeight:h});
+   return shot.toDataURL('image/png');   /* pdf-lib 的 embedPng 要吃完整 data URL */
+  }finally{ host.remove(); }
+ }catch(e){ console.warn('rasterize failed',e); throw e; }  /* 報錯 → 儲存退回 sidecar，註記不丟 */
+}
+function stripHtml(h){const t=document.createElement('div');t.innerHTML=h||'';return t.innerText||'';}
+/* 整頁點陣化（底圖＋筆畫＋元素＋文字流）→ 給 pdf-lib 當成 PDF 新頁嵌入 */
+async function rasterizeFullPage(p,d){
+ const SC=2,w=d.w,h=d.h;
+ const cv=document.createElement('canvas');
+ cv.width=Math.ceil(w*SC);cv.height=Math.ceil(h*SC);
+ const ctx=cv.getContext('2d');ctx.scale(SC,SC);
+ ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);
+ if(p.bg&&p.bg.src){
+  const im=new Image();
+  await new Promise((res,rej)=>{im.onload=res;im.onerror=rej;im.src=p.bg.src;});
+  ctx.drawImage(im,0,0,w,h);
+ }
+ /* 注意：不可用 drawStrokes（它會 clearRect 清掉底圖），逐筆 drawStroke */
+ (p.strokes||[]).forEach(s=>drawStroke(ctx,s));
+ const ov=await rasterizeAnnotations(p,w,h);
+ if(ov){
+  const im2=new Image();
+  await new Promise((res,rej)=>{im2.onload=res;im2.onerror=rej;im2.src=ov;});
+  ctx.drawImage(im2,0,0,w,h);
+ }
+ return cv.toDataURL('image/png');
+}
+/* 寫回成功後：用磁碟上（已含註記的）PDF 重畫各頁底圖 → 畫面立刻看到燒入結果 */
+async function refreshPdfBgs(d){
+ if(typeof pdfjsLib==='undefined'||!d.srcPath)return false;
+ const rd=await window.nexus.readFile(d.srcPath);
+ if(!rd||!rd.ok||rd.base64==null)return false;
+ const bin=atob(rd.base64);const u8=new Uint8Array(bin.length);
+ for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+ const pdf=await pdfjsLib.getDocument({data:u8}).promise;
+ let n=0;
+ for(const pg of d.pages){
+  if(!(pg.bg&&pg.bg.page))continue;
+  const page=await pdf.getPage(pg.bg.page);
+  if(!page)continue;
+  const base=page.getViewport({scale:1});
+  const scale=Math.min(4,Math.max(2,(d.w*2)/base.width));   /* 與 importPDF 同參數 */
+  const vp=page.getViewport({scale});
+  const cv=document.createElement('canvas');
+  cv.width=Math.ceil(vp.width);cv.height=Math.ceil(vp.height);
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
+  await page.render({canvasContext:ctx,viewport:vp}).promise;
+  let src=cv.toDataURL('image/webp',0.92);
+  if(src.indexOf('data:image/webp')!==0)src=cv.toDataURL('image/jpeg',0.96);
+  pg.bg.src=src;n++;
+ }
+ return n>0;
+}
+/* 刪掉 1.2.5 遺留的 sidecar 檔（最佳努力；檔案不存在就算了） */
+function killSidecar(sc){
+ try{ if(window.nexus&&window.nexus.deleteFile)window.nexus.deleteFile(sc); }catch(e){}
+}
 /* 儲存（Ctrl+S 與儲存鈕共用）：桌面版已連結本機檔→覆蓋原檔；瀏覽器已連結→FSA 覆蓋；否則存到瀏覽器 */
 async function doSave(){
  persist(); /* 一律先更新瀏覽器內的備份 */
@@ -1769,7 +2040,7 @@ function renderPage(p,i,d){
  const el=document.createElement('div');
  el.className='page';el.dataset.pi=i;el.dataset.n=i+1;
  el.style.width=d.w+'px';el.style.height=d.h+'px';
- el.innerHTML='<div class="bg">'+(p.bg?'<img src="'+p.bg.src+'" alt="">':'')+'</div>'+
+ el.innerHTML='<div class="bg">'+((p.bg&&p.bg.src)?'<img src="'+p.bg.src+'" alt="">':'')+'</div>'+
   '<canvas class="draw"></canvas><div class="els"></div>';
  const cv=el.querySelector('canvas');
  cv.width=d.w*2;cv.height=d.h*2;cv.style.width=d.w+'px';cv.style.height=d.h+'px';

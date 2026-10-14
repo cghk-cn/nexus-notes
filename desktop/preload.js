@@ -26,6 +26,12 @@ contextBridge.exposeInMainWorld('nexus', {
   /* 以文字內容覆寫（overwrite）指定路徑的檔案 */
   writeFile(p, content) { return ipcRenderer.invoke('nexus:write', { path: p, content }); },
 
+  /* 以 base64 內容寫入二進位檔（原子覆寫，用於把註記燒回 PDF） */
+  writeBinary(p, base64) { return ipcRenderer.invoke('nexus:write-binary', { path: p, base64 }); },
+
+  /* 刪除本機檔（清掉 1.2.5 遺留的 sidecar；不存在時回報 ok:false） */
+  deleteFile(p) { return ipcRenderer.invoke('nexus:delete', { path: p }); },
+
   /* 原生「開啟舊檔」對話框 → 回傳絕對路徑或 null */
   pickOpen() { return ipcRenderer.invoke('nexus:pick-open'); },
 

@@ -52,6 +52,9 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      /* 背景（視窗被遮蔽）不節流：否則 html2canvas/pdf.js 的排程被凍，
+         一次「儲存」會從 4 秒變 3 分鐘（實測），使用者會以為當掉 */
+      backgroundThrottling: false,
       preload: path.join(__dirname, 'preload.js'),
     },
   });
@@ -131,6 +134,31 @@ ipcMain.handle('nexus:write', async (_e, { path: p, content }) => {
   try {
     fs.writeFileSync(p, content, 'utf8');
     return { ok: true, name: path.basename(p) };
+  } catch (e) {
+    return { ok: false, error: String((e && e.message) || e) };
+  }
+});
+
+ipcMain.handle('nexus:write-binary', async (_e, { path: p, base64 }) => {
+  try {
+    /* 寫入二進位（例如把註記燒回 PDF）。先寫同目錄的暫存檔再原子改名，
+       避免中途失敗把原本可以開的 PDF 截斷。 */
+    const buf = Buffer.from(base64 || '', 'base64');
+    const tmp = p + '.nexus-tmp';
+    fs.writeFileSync(tmp, buf);
+    fs.renameSync(tmp, p);
+    return { ok: true, name: path.basename(p), size: buf.length };
+  } catch (e) {
+    try { fs.unlinkSync(p + '.nexus-tmp'); } catch (_) {}
+    return { ok: false, error: String((e && e.message) || e) };
+  }
+});
+
+ipcMain.handle('nexus:delete', async (_e, { path: p }) => {
+  try {
+    /* 刪除本機檔（用於清掉 1.2.5 遺留的 .noteapp.json sidecar） */
+    fs.unlinkSync(p);
+    return { ok: true };
   } catch (e) {
     return { ok: false, error: String((e && e.message) || e) };
   }
