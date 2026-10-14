@@ -83,8 +83,11 @@ kbd{font-family:var(--font);font-size:10.5px;background:var(--surface-2);border:
 @keyframes tipInR{from{opacity:0}to{opacity:1}}
 /* 按鈕 hover 會建立堆疊上下文，讓整個按鈕連同 tooltip 一起浮到最上層，避免被其他按鈕遮擋 */
 [data-tip]:hover{z-index:600}
+/* 工具列內的提示一律朝下：朝上(tip-u)會被 #topbar 蓋住而看不到 */
+#tbPanel [data-tip].tip-u:hover::after{top:calc(100% + 8px);bottom:auto}
 /* ================= Topbar（Google 風：磨砂+膠囊分組+漸變強調） ================= */
-#topbar{display:flex;align-items:center;gap:8px;padding:calc(5px + var(--safe-top)) calc(12px + var(--safe-right)) 5px calc(12px + var(--safe-left));background:var(--glass);border-bottom:1px solid var(--border);position:relative;z-index:60;backdrop-filter:blur(20px) saturate(1.7);-webkit-backdrop-filter:blur(20px) saturate(1.7);box-shadow:0 1px 0 rgba(255,255,255,.45) inset,0 10px 26px rgba(16,24,40,.07)}
+/* 注意：不可加向下投影 —— 它會畫到下方 #tbPanel 上，讓整條工具列上半部出現同色色塊 */
+#topbar{display:flex;align-items:center;gap:8px;padding:calc(5px + var(--safe-top)) calc(12px + var(--safe-right)) 5px calc(12px + var(--safe-left));background:var(--glass);border-bottom:1px solid var(--border);position:relative;z-index:60;backdrop-filter:blur(20px) saturate(1.7);-webkit-backdrop-filter:blur(20px) saturate(1.7);box-shadow:0 1px 0 rgba(255,255,255,.45) inset}
 .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:16px;letter-spacing:.06em;margin-right:2px;padding:6px 15px 6px 7px;border-radius:999px;background:linear-gradient(135deg,#0b0b0e 0%,#2a2a31 46%,#585860 100%);white-space:nowrap;color:#fff;cursor:pointer;border:1px solid rgba(255,255,255,.16);box-shadow:0 4px 14px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(1.25);-webkit-backdrop-filter:blur(10px) saturate(1.25);transition:transform .16s cubic-bezier(.2,.8,.3,1.2),box-shadow .18s ease}
 .brand:hover{transform:scale(1.04);box-shadow:0 8px 22px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.2)}
 .brand:active{transform:scale(.96)}
@@ -101,8 +104,12 @@ button.tcat{flex:none;height:34px;min-width:74px;padding:0 14px;border:none;bord
 button.tcat:hover{background:var(--surface-2);color:var(--text);transform:scale(1.04)}
 button.tcat.on{background:linear-gradient(135deg,var(--accent),#7b5cf0);color:#fff;box-shadow:0 5px 14px rgba(66,133,244,.34)}
 button.tcat.on:hover{filter:brightness(1.06)}
+/* z-index 必須低於 #topbar(60)，否則 topbar 的 tooltip（z:400）會被工具列蓋住、看不到按鈕資訊。
+   topbar 不可有向下投影，否則會污染工具列（見 #topbar 註解） */
 #tbPanel{position:relative;z-index:55;background:var(--surface);border-bottom:1px solid var(--border);padding:7px calc(12px + var(--safe-right)) 7px calc(12px + var(--safe-left));box-shadow:0 8px 18px rgba(16,24,40,.05);display:flex;align-items:center;gap:10px}
-.tbPane{display:none;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;min-width:0;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+/* 桌機版不要裁切：overflow 會把 hover 光效與 data-tip 提示平整裁掉（白邊問題）。
+   單一 .tbPane 最寬約 593px，桌機可視寬 ≥745px，不會溢位；窄螢幕才在 media query 裡捲動。 */
+.tbPane{display:none;align-items:center;gap:8px;flex-wrap:nowrap;overflow:visible;min-width:0;padding-bottom:2px}
 .tbPane.on{display:flex}
 .tbPane::-webkit-scrollbar{display:none}
 .tbPane>*{flex:none}
@@ -117,10 +124,12 @@ button.ibtn .ic{width:17px;height:17px}
 #topbar input[type=text],#topbar input[type=number],#topbar select{height:34px;padding:0 12px;font-size:14px;border-radius:999px}
 #docName{width:150px;font-weight:600}
 @media (min-width:1600px){#docName{width:180px}}
-.zoomgrp{display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:999px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow-sm);transition:box-shadow .18s ease,transform .16s cubic-bezier(.2,.8,.3,1.2)}
+.zoomgrp{display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:999px;background:var(--surface);box-shadow:var(--shadow-sm);transition:box-shadow .18s ease,transform .16s cubic-bezier(.2,.8,.3,1.2)}
 .zoomgrp:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
 .zoomgrp>*{border:none;border-radius:0;box-shadow:none;height:34px;padding:0 10px;background:transparent;font-size:13px}
 .zoomgrp>*+*{border-left:1px solid var(--border)}
+.zoomgrp>*:first-child{border-radius:999px 0 0 999px}
+.zoomgrp>*:last-child{border-radius:0 999px 999px 0}
 .zoomgrp>button:hover{background:var(--surface-2);transform:none}
 .zoomgrp select{padding:0 6px;font-size:13.5px}
 .zoomgrp select option{background:var(--surface);color:var(--text)}
@@ -146,6 +155,20 @@ html[data-theme=dark] #home{background:
  radial-gradient(700px 420px at 55% 115%,rgba(52,168,83,.1),transparent 60%),
  var(--bg)}
 body.view-home #home{display:flex}
+/* ===== 主頁流星背景（僅深色模式、無限循環）=====
+   z-index:-1 讓它畫在 #home 背景之上、內容之下；#home 自帶 stacking context 所以不會外洩 */
+.meteors{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-1;display:none;contain:paint}
+html[data-theme=dark] body.view-home .meteors{display:block}
+.meteor{position:absolute;display:block;top:-22%;width:2.5px;height:132px;border-radius:999px;opacity:0;
+ background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,.2) 26%,rgba(255,255,255,.95) 74%,rgba(158,201,255,.6));
+ box-shadow:0 0 10px rgba(170,206,255,.6);animation-name:meteorFly;animation-timing-function:linear;animation-iteration-count:infinite}
+@keyframes meteorFly{
+ 0%{opacity:0;transform:translate3d(0,-16vh,0) rotate(26deg)}
+ 4%{opacity:.95}
+ 24%{opacity:.6}
+ 40%{opacity:0;transform:translate3d(-46vw,78vh,0) rotate(26deg)}
+ 100%{opacity:0;transform:translate3d(-46vw,78vh,0) rotate(26deg)}
+}
 body.view-home #app{display:none}
 .homeTop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:calc(9px + var(--safe-top)) calc(18px + var(--safe-right)) 4px calc(18px + var(--safe-left))}
 .homeTop .brand{margin-right:0;font-size:16px;height:44px;padding:0 8px 0 9px;gap:9px}
@@ -389,9 +412,11 @@ body.tool-pen .flow,body.tool-eraser .flow,body.tool-text .flow{pointer-events:n
 .elbar select.fontSel{width:116px;padding:3px 6px;font-size:13px}
 /* 元素編輯列改駐留於頂部工具列右側空白處，不再浮在文件上遮擋內容 */
 #tbPanel .tbPane{flex:0 1 auto}
-#elbarHost{margin-left:auto;display:flex;align-items:center;min-width:0;flex:0 1 auto}
+/* 元素編輯列：獨立成一整條 contextual bar（只在選取元素時出現），
+   不塞進主工具列同一列，避免蓋住／擠掉原本的工具按鈕 */
+#elbarHost{display:flex;align-items:center;min-width:0;padding:5px calc(12px + var(--safe-right)) 5px calc(12px + var(--safe-left));background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 6px 14px rgba(16,24,40,.04);position:relative;z-index:56}
 #elbarHost:empty{display:none}
-#elbarHost .elbar{position:static;max-width:min(96vw,760px);box-shadow:var(--shadow-sm);background:var(--surface-2);flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+#elbarHost .elbar{position:static;flex:1 1 auto;min-width:0;max-width:none;height:32px;padding:0;gap:5px;background:transparent;border:none;border-radius:0;box-shadow:none;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;align-items:center;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 #elbarHost .elbar::-webkit-scrollbar{display:none}
 #elbarHost .elgrip{display:none}
 /* ================= 屬性面板 ================= */
@@ -530,7 +555,7 @@ body.dragging #dropHint{display:flex}
  #topbar .brand span{display:none} /* 手機版只留圖示（仍可點回主頁），騰出空間給分類列 */
  #tbCats{mask-image:linear-gradient(to right,#000 calc(100% - 32px),rgba(0,0,0,.08));-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 32px),rgba(0,0,0,.08))}
  #tbPanel{padding:6px calc(10px + var(--safe-right)) 6px calc(10px + var(--safe-left));flex-wrap:wrap;row-gap:6px}
- #elbarHost{margin-left:0;flex-basis:100%}
+ #elbarHost{padding:5px calc(10px + var(--safe-right)) 5px calc(10px + var(--safe-left))}
  .tbPane.on{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
  .tbPane.on::-webkit-scrollbar{display:none}
  .tbPane>*{flex:none}
@@ -543,7 +568,7 @@ body.dragging #dropHint{display:flex}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 /* ================= Print ================= */
 @media print{
- #topbar,#tbPanel,#sidebar,#panel,#home,.elbar,#selbox,#toast,#sideHead,#sideFoot,#sideToggle,.sprite,#dropHint,.printbar{display:none!important}
+ #topbar,#tbPanel,#elbarHost,#sidebar,#panel,#home,.elbar,#selbox,#toast,#sideHead,#sideFoot,#sideToggle,.sprite,#dropHint,.printbar{display:none!important}
  body,#app,#main,#workspace{background:#fff;height:auto;overflow:visible;display:block}
  #pages{position:static;transform:none!important;gap:0;width:auto}
  .page{box-shadow:none;border-radius:0;margin:0 auto;page-break-after:always;break-after:page}
@@ -607,6 +632,16 @@ body.dragging #dropHint{display:flex}
 </defs></svg>
 
 <div id="home">
+ <div class="meteors" aria-hidden="true">
+  <i class="meteor" style="left:74%;animation-duration:3.4s;animation-delay:-0.4s"></i>
+  <i class="meteor" style="left:89%;animation-duration:4.6s;animation-delay:-2.8s"></i>
+  <i class="meteor" style="left:58%;animation-duration:5.4s;animation-delay:-4.1s"></i>
+  <i class="meteor" style="left:96%;animation-duration:3.9s;animation-delay:-1.7s"></i>
+  <i class="meteor" style="left:67%;animation-duration:6.2s;animation-delay:-5.3s"></i>
+  <i class="meteor" style="left:42%;animation-duration:4.2s;animation-delay:-3.6s"></i>
+  <i class="meteor" style="left:81%;animation-duration:5.8s;animation-delay:-0.9s"></i>
+  <i class="meteor" style="left:51%;animation-duration:7.1s;animation-delay:-6.4s"></i>
+ </div>
  <div class="homeTop">
   <div class="brand" id="homeBrand"><svg class="ic nx"><use href="#i-nexus"></use></svg><span>NEXUS</span><button class="chkUpd" id="btnCheckUpdate" data-tip="檢查更新" aria-label="檢查更新"><svg class="ic"><use href="#i-refresh"></use></svg><span class="chkUpdTx">檢查更新</span></button></div>
   <div class="homeSearch">
@@ -683,6 +718,7 @@ body.dragging #dropHint{display:flex}
      <button id="btnInsertTable" class="ibtn" data-tip="插入表格（可拖曳格線調整）" aria-label="插入表格"><svg class="ic"><use href="#i-table"></use></svg></button>
      <button id="btnInsertChart" class="ibtn" data-tip="插入經濟圖表（供給需求 / IS-LM / AD-AS）" aria-label="插入經濟圖表"><svg class="ic"><use href="#i-chart"></use></svg></button>
      <button id="btnInsertDraw" class="ibtn" data-tip="自繪圖表：只給 XY 軸，線條自行繪製" aria-label="插入自繪圖表"><svg class="ic"><use href="#i-spline"></use></svg></button>
+     <button id="btnInsertImage" class="ibtn" data-tip="插入圖片（PNG / JPG）" aria-label="插入圖片"><svg class="ic"><use href="#i-image"></use></svg></button>
     </div>
     <div class="tbPane" data-cat="view">
      <button id="btnUndo" class="ibtn" data-tip="復原 (Ctrl+Z)" aria-label="復原"><svg class="ic"><use href="#i-undo"></use></svg></button>
@@ -715,8 +751,8 @@ body.dragging #dropHint{display:flex}
       <button data-x="print"><svg class="ic"><use href="#i-print"></use></svg>列印 / 存成 PDF</button>
      </div>
     </div>
-    <div id="elbarHost" aria-live="polite"></div>
    </section>
+   <div id="elbarHost" aria-live="polite"></div>
 
  <div id="main">
      <aside id="sidebar">
@@ -902,7 +938,7 @@ function closeModal(id){$('#'+id).classList.remove('open');}
 /* ===== 檢查更新（GitHub Releases） =====
    APP_VERSION 為目前版本；檢查時向 GitHub Releases API 取最新版並比對。
    發佈仓库：cghk-cn/nexus-notes。 */
-const APP_VERSION='1.2.0';
+const APP_VERSION='1.2.1';
 const UPD=(function(){
  const OWNER='cghk-cn', REPO='nexus-notes';
  const API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/latest';
@@ -991,7 +1027,7 @@ Object.assign(I18N['zh-Hans'],{
 '頁面邊距：內容與頁緣的留白（可自訂）':'页面边距：内容与页缘的留白（可自订）','工具':'工具','選取：移動 / 縮放元素 (V)':'选取：移动 / 缩放元素 (V)',
 '畫筆：自由塗鴉 (P)':'画笔：自由涂鸦 (P)','橡皮擦：擦除筆跡 (E)':'橡皮擦：擦除笔迹 (E)','文字工具：點擊頁面輸入 (T)':'文字工具：点击页面输入 (T)',
 '畫筆屬性':'画笔属性','筆畫粗細':'笔画粗细','透明度':'透明度','螢光筆（半透明標示）':'荧光笔（半透明标示）','插入':'插入',
-'插入文字框（置中）':'插入文字框（居中）','插入表格（可拖曳格線調整）':'插入表格（可拖拽格线调整）','插入經濟圖表（供給需求 / IS-LM / AD-AS）':'插入经济图表（供给需求 / IS-LM / AD-AS）',
+'插入文字框（置中）':'插入文字框（居中）','插入圖片（PNG / JPG）':'插入图片（PNG / JPG）','插入圖片':'插入图片','插入表格（可拖曳格線調整）':'插入表格（可拖拽格线调整）','插入經濟圖表（供給需求 / IS-LM / AD-AS）':'插入经济图表（供给需求 / IS-LM / AD-AS）',
 '自繪圖表：只給 XY 軸，線條自行繪製':'自绘图表：只给 XY 轴，线条自行绘制','編輯 / 檢視':'编辑 / 视图','復原 (Ctrl+Z)':'撤销 (Ctrl+Z)','重做 (Ctrl+Y)':'重做 (Ctrl+Y)',
 '縮小 (Ctrl+-)':'缩小 (Ctrl+-)','放大 (Ctrl++)':'放大 (Ctrl++)','適合頁寬':'适合页宽','切換深色模式':'切换深色模式','切換淺色模式':'切换浅色模式',
 '匯出：JSON / HTML / TXT / PNG / 列印':'导出：JSON / HTML / TXT / PNG / 打印','JSON（可再匯入）':'JSON（可再导入）','獨立 HTML 檔':'独立 HTML 文件',
@@ -1094,7 +1130,7 @@ Object.assign(I18N['en'],{
 '頁面邊距：內容與頁緣的留白（可自訂）':'Page margin: whitespace between content and edge (custom)','工具':'Tools','選取：移動 / 縮放元素 (V)':'Select: move / resize (V)',
 '畫筆：自由塗鴉 (P)':'Pen: free drawing (P)','橡皮擦：擦除筆跡 (E)':'Eraser: wipe strokes (E)','文字工具：點擊頁面輸入 (T)':'Text tool: click page to type (T)',
 '畫筆屬性':'Pen style','筆畫粗細':'Stroke size','透明度':'Opacity','螢光筆（半透明標示）':'Highlighter (translucent)','插入':'Insert',
-'插入文字框（置中）':'Insert text box (centered)','插入表格（可拖曳格線調整）':'Insert table (drag borders to resize)','插入經濟圖表（供給需求 / IS-LM / AD-AS）':'Insert chart (Supply–Demand / IS–LM / AD–AS)',
+'插入文字框（置中）':'Insert text box (centered)','插入圖片（PNG / JPG）':'Insert image (PNG / JPG)','插入圖片':'Insert image','插入表格（可拖曳格線調整）':'Insert table (drag borders to resize)','插入經濟圖表（供給需求 / IS-LM / AD-AS）':'Insert chart (Supply–Demand / IS–LM / AD–AS)',
 '自繪圖表：只給 XY 軸，線條自行繪製':'Draw chart: axes only, draw lines yourself','編輯 / 檢視':'Edit / View','復原 (Ctrl+Z)':'Undo (Ctrl+Z)','重做 (Ctrl+Y)':'Redo (Ctrl+Y)',
 '縮小 (Ctrl+-)':'Zoom out (Ctrl+-)','放大 (Ctrl++)':'Zoom in (Ctrl++)','適合頁寬':'Fit width','切換深色模式':'Toggle dark mode','切換淺色模式':'Toggle light mode',
 '匯出：JSON / HTML / TXT / PNG / 列印':'Export: JSON / HTML / TXT / PNG / Print','JSON（可再匯入）':'JSON (re-importable)','獨立 HTML 檔':'Standalone HTML file',
@@ -1842,7 +1878,7 @@ function updateSelUI(){
  box.innerHTML=elbarHTML(e);
  const host=$('#elbarHost');
  if(host){
-  /* 編輯列駐留於頂部工具列右側空白處，不再浮在文件上遮擋內容 */
+  /* 編輯列放在工具列下方獨立一整條（#elbarHost），不與原工具列重疊、也不浮在文件上遮擋內容 */
   host.appendChild(box);
   wireElbar(box,e);
  }
@@ -2432,8 +2468,6 @@ window.addEventListener('pointermove',ev=>{
    node.innerHTML=tableHTML(e)+tableHandles(e);
   }
   const sb=$('#selbox');if(sb&&S.sel&&S.sel.id===drag.id)Object.assign(sb.style,{width:e.w+'px',height:e.h+'px'});
-  const bar=document.getElementById('elbar');
-  if(bar)bar.style.left=clamp(e.x,2,Math.max(2,d.w-300))+'px';
   syncPosUI();
   return;
  }
@@ -2512,8 +2546,6 @@ if(drag.mode==='cnode'){
   const node=document.querySelector('.el[data-id="'+drag.id+'"]');
   if(node){node.style.left=nx+'px';node.style.top=ny+'px';}
   const sb=$('#selbox');if(sb&&S.sel&&S.sel.id===drag.id){sb.style.left=nx+'px';sb.style.top=ny+'px';}
-  const bar=document.getElementById('elbar');
-  if(bar){bar.style.left=clamp(nx,2,Math.max(2,d.w-300))+'px';bar.style.top=(ny>40?ny-38:ny+f.el.h+6)+'px';}
   syncPosUI();
   return;
  }
@@ -2846,6 +2878,21 @@ function openChartDialog(mode,el,pi){
 }
 $('#btnInsertChart').addEventListener('click',()=>openChartDialog('insert'));
 $('#btnInsertDraw').addEventListener('click',()=>{$('#cType').value='draw';openChartDialog('insert');});
+/* 插入圖片：獨立檔案選擇器 → 沿用 importImage() 直接放進目前筆記 */
+const btnInsertImageInput=document.createElement('input');
+btnInsertImageInput.type='file';btnInsertImageInput.accept='image/png,image/jpeg,.png,.jpg,.jpeg';
+btnInsertImageInput.multiple=true;btnInsertImageInput.style.display='none';
+btnInsertImageInput.setAttribute('aria-hidden','true');btnInsertImageInput.tabIndex=-1;
+document.body.appendChild(btnInsertImageInput);
+$('#btnInsertImage').addEventListener('click',()=>{btnInsertImageInput.value='';btnInsertImageInput.click();});
+btnInsertImageInput.addEventListener('change',async ev=>{
+ const files=[...ev.target.files];ev.target.value='';
+ for(const f of files){
+  const tr=trackFile(f.name,{size:f.size});
+  try{ await importImage(f,tr); }
+  catch(err){ console.error(err); finishTrack(tr,0,null,''); toast(tN('匯入失敗：{f}',{f:f.name})); }
+ }
+});
 $('#cType').addEventListener('change',e=>{
  dlgShowFields(e.target.value);
  if(S.dlgMode!=='edit')applyDefaults(e.target.value);
@@ -3923,9 +3970,15 @@ $('#zbIn').addEventListener('click',()=>zoomStep(1));
 $('#zbOut').addEventListener('click',()=>zoomStep(-1));
 $('#zbRange').addEventListener('input',e=>setZoom((+e.target.value)/100));
 /* 滾輪手勢：Ctrl/⌘＋滾輪（含觸控板雙指縮放）→ 縮放；一般滾輪／觸控板雙指滑動 → 平移文件 */
+/* 觸控板捏合會連續送出大量小幅 delta，逐事件跳一級會靈敏度過高 → 累積到門檻才跳一級 */
+let wheelZoomAcc=0;const ZOOM_WHEEL_THRESHOLD=25;
 $('#workspace').addEventListener('wheel',ev=>{
  ev.preventDefault();
- if(ev.ctrlKey||ev.metaKey){ zoomStep(ev.deltaY<0?1:-1); return; }
+ if(ev.ctrlKey||ev.metaKey){
+  wheelZoomAcc+=ev.deltaY;
+  if(Math.abs(wheelZoomAcc)>=ZOOM_WHEEL_THRESHOLD){ zoomStep(wheelZoomAcc<0?1:-1); wheelZoomAcc=0; }
+  return;
+ }
  /* 一般滾動＝平移（垂直／水平、Shift+滾輪皆可） */
  let dx=ev.deltaX||0, dy=ev.deltaY||0;
  if(ev.deltaMode===1){dx*=16;dy*=16;}            /* 以「行」為單位（部分 Firefox） */
