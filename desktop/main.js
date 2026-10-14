@@ -11,18 +11,32 @@ const fs = require('fs');
 const OPEN_EXT = /\.(json|noteapp|txt|md|markdown|pdf|png|jpe?g|webp)$/i;
 
 let mainWindow = null;
-/* app 尚未就緒時，OS 可能已透過 open-file 傳來檔案，先暫存起來 */
-let pendingOpenFile = null;
+/* app 尚未就緒、或 renderer 尚未 notifyReady 時，先把路徑排隊，
+   否則 webContents.send 會在監聽器掛上之前就把訊息丟掉 → 檔案開不出來。
+   （macOS 的 open-file 可能在視窗已建立但 renderer 還沒 ready 時就抵達） */
+let pendingOpenFiles = [];
+let rendererReady = false;
 
 function focusAndRoute(filePath) {
   if (!filePath) return;
   if (mainWindow && !mainWindow.isDestroyed()) {
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.focus();
-    mainWindow.webContents.send('nexus:open-file', { path: filePath });
+    if (rendererReady) {
+      mainWindow.webContents.send('nexus:open-file', { path: filePath });
+    } else {
+      pendingOpenFiles.push(filePath);
+    }
   } else {
-    pendingOpenFile = filePath;
+    pendingOpenFiles.push(filePath);
   }
+}
+
+function flushPending(win) {
+  if (!rendererReady || !win || win.isDestroyed()) return;
+  const queue = pendingOpenFiles;
+  pendingOpenFiles = [];
+  for (const p of queue) win.webContents.send('nexus:open-file', { path: p });
 }
 
 function createWindow() {
@@ -46,14 +60,15 @@ function createWindow() {
   win.once('ready-to-show', () => win.show());
   win.loadFile(path.join(__dirname, 'app', 'index.html'));
 
-  /* 渲染進緒就緒後，若有待處理的開啟檔案就送過去 */
-  ipcMain.once('nexus:renderer-ready', () => {
-    if (pendingOpenFile) {
-      const p = pendingOpenFile;
-      pendingOpenFile = null;
-      win.webContents.send('nexus:open-file', { path: p });
-    }
+  /* 渲染進程就緒後，把排隊中的開啟檔案全部送過去 */
+  ipcMain.on('nexus:renderer-ready', () => {
+    rendererReady = true;
+    flushPending(win);
   });
+
+  /* 重新載入頁面（Cmd+R）時 renderer 的監聽器會消失，退回未就緒，
+     等它再次 notifyReady 才繼續送，避免訊息落在半路上遺失 */
+  win.webContents.on('did-start-loading', () => { rendererReady = false; });
 
   /* 外部連結改用系統瀏覽器開啟，不在 App 內開新視窗 */
   win.webContents.setWindowOpenHandler(({ url }) => {

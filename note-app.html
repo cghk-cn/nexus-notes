@@ -169,50 +169,41 @@ html[data-theme=dark] body.view-home .meteors{display:block}
 .meteor{position:absolute;display:block;top:var(--y,-22%);width:2.5px;height:132px;border-radius:999px;opacity:0;
  background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,.2) 26%,rgba(255,255,255,.95) 74%,rgba(158,201,255,.6));
  box-shadow:0 0 10px rgba(170,206,255,.6);animation-timing-function:linear;animation-iteration-count:infinite}
-/* ===== 主頁流星：均勻分佈 =====
-   12 顆，--x 決定水平航道（1/12 視窗寬），--y 決定「垂直起點」。
-   關鍵：上一版只等分 left，但所有流星都從 top:-22% 出發；可見的那 40% 行程
-   只涵蓋畫面上方一小段 → 肉眼看起來全擠在左上角。
-   現在 --y 也等距錯開（-30% ~ +52%），加上每顆水平位移 = 自己的航道寬，
-   於是流星同時在水平與垂直方向都鋪滿整個畫面；可見行程延長到 ~78%，
-   讓每顆真正橫掃它所在的那一段螢幕。速度／延遲交錯避免整排同時出現。 */
-.meteors .meteor:nth-child(1){--x:1;--y:-30%;animation-duration:3.6s;animation-delay:-0.2s}
-.meteors .meteor:nth-child(2){--x:2;--y:-10%;animation-duration:4.9s;animation-delay:-1.7s}
-.meteors .meteor:nth-child(3){--x:3;--y:10%;animation-duration:3.9s;animation-delay:-3.1s}
-.meteors .meteor:nth-child(4){--x:4;--y:30%;animation-duration:5.6s;animation-delay:-0.9s}
-.meteors .meteor:nth-child(5){--x:5;--y:-20%;animation-duration:4.3s;animation-delay:-2.6s}
-.meteors .meteor:nth-child(6){--x:6;--y:0%;animation-duration:6.1s;animation-delay:-4.4s}
-.meteors .meteor:nth-child(7){--x:7;--y:20%;animation-duration:3.4s;animation-delay:-1.3s}
-.meteors .meteor:nth-child(8){--x:8;--y:42%;animation-duration:5.2s;animation-delay:-3.7s}
-.meteors .meteor:nth-child(9){--x:9;--y:-14%;animation-duration:4.6s;animation-delay:-0.5s}
-.meteors .meteor:nth-child(10){--x:10;--y:8%;animation-duration:6.4s;animation-delay:-2.2s}
-.meteors .meteor:nth-child(11){--x:11;--y:28%;animation-duration:4.1s;animation-delay:-5.0s}
-.meteors .meteor:nth-child(12){--x:12;--y:50%;animation-duration:5.7s;animation-delay:-1.1s}
-.meteors .meteor{left:calc(var(--x) * 8.3333%);top:var(--y);animation-name:meteorFly}
+/* ===== 主頁流星 =====
+   6 顆。關鍵修正：所有流星用「同一條位移向量」，路徑彼此平行、不再收斂到左緣
+   （舊版每顆水平位移＝自己的 left，導致 12 條線全交會在 left:0 → 看起來偏左）。
+   橫向起點等距鋪滿 8%~88%，搭配 --y 垂直散開 → 水平＋垂直都均勻。
+   速度快：約 0.7s 就橫掃完；其餘時間隱形 → 流星出現的間隔被拉長。 */
+.meteors .meteor:nth-child(1){left:8%;--y:-25%;animation-duration:5s;animation-delay:0s}
+.meteors .meteor:nth-child(2){left:24%;--y:-8%;animation-duration:5s;animation-delay:-1.3s}
+.meteors .meteor:nth-child(3){left:40%;--y:9%;animation-duration:5s;animation-delay:-2.6s}
+.meteors .meteor:nth-child(4){left:56%;--y:26%;animation-duration:5s;animation-delay:-3.9s}
+.meteors .meteor:nth-child(5){left:72%;--y:-16%;animation-duration:5s;animation-delay:-5.2s}
+.meteors .meteor:nth-child(6){left:88%;--y:4%;animation-duration:5s;animation-delay:-6.5s}
+.meteors .meteor{top:var(--y);animation-name:meteorFly}
 @keyframes meteorFly{
  0%{opacity:0;transform:translate3d(0,0,0) rotate(26deg)}
- 6%{opacity:.95}
- 46%{opacity:.8}
- 78%{opacity:0;transform:translate3d(calc(var(--x) * -8.3333vw),96vh,0) rotate(26deg)}
- 100%{opacity:0;transform:translate3d(calc(var(--x) * -8.3333vw),96vh,0) rotate(26deg)}
+ 3%{opacity:.95}
+ 13%{opacity:0;transform:translate3d(-34vw,92vh,0) rotate(26deg)}
+ 100%{opacity:0;transform:translate3d(-34vw,92vh,0) rotate(26deg)}
 }
 
 /* ===== 主頁白晝模式：高亮白色循環流光 =====
-   背景是近白的 #f8f9fa，純白光帶在上面幾乎沒有對比 → 兩翼改用可見的藍色階
-   （#3b82f6 → #93c5fd）包住不透明白核心，blur 收窄到 9px 並補一圈藍色光暈。
+   背景是近白的 #f8f9fa，純白光帶在上面幾乎沒有對比 → 兩翼用一點低飽和淡藍
+   襯出不透明白核心即可，blur 放寬、藍色與光暈都調淡，整體效果收斂不搶戲。
    三條寬版斜向光帶穿越整個畫面後無限循環；只在淺色主題 + 主頁顯示，深色主題改用流星。 */
 .beams{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-1;display:none;contain:paint}
 html[data-theme=light] body.view-home .beams{display:block}
 .beam{position:absolute;top:-35%;width:34vw;height:190%;opacity:0;
- background:linear-gradient(90deg,rgba(255,255,255,0),rgba(59,130,246,.24) 26%,rgba(147,197,253,.72) 42%,rgba(255,255,255,1) 50%,rgba(147,197,253,.72) 58%,rgba(59,130,246,.24) 74%,rgba(255,255,255,0));
- filter:blur(9px);box-shadow:0 0 26px rgba(59,130,246,.28);transform:translate3d(-60vw,0,0) skewX(-14deg);animation:beamSweep linear infinite}
+ background:linear-gradient(90deg,rgba(255,255,255,0),rgba(125,160,205,.10) 28%,rgba(180,205,235,.30) 43%,rgba(255,255,255,1) 50%,rgba(180,205,235,.30) 57%,rgba(125,160,205,.10) 72%,rgba(255,255,255,0));
+ filter:blur(12px);box-shadow:0 0 16px rgba(125,160,205,.14);transform:translate3d(-60vw,0,0) skewX(-14deg);animation:beamSweep linear infinite}
 .beam:nth-child(1){animation-duration:11s;animation-delay:0s}
 .beam:nth-child(2){animation-duration:15s;animation-delay:-5s;width:22vw}
 .beam:nth-child(3){animation-duration:13s;animation-delay:-9s;width:46vw}
 @keyframes beamSweep{
  0%{opacity:0;transform:translate3d(-60vw,0,0) skewX(-14deg)}
- 8%{opacity:1}
- 55%{opacity:.6}
+ 8%{opacity:.6}
+ 55%{opacity:.34}
  78%{opacity:0}
  100%{opacity:0;transform:translate3d(150vw,0,0) skewX(-14deg)}
 }
@@ -692,12 +683,6 @@ body.dragging #dropHint{display:flex}
   <i class="meteor"></i>
   <i class="meteor"></i>
   <i class="meteor"></i>
-  <i class="meteor"></i>
-  <i class="meteor"></i>
-  <i class="meteor"></i>
-  <i class="meteor"></i>
-  <i class="meteor"></i>
-  <i class="meteor"></i>
  </div>
  <div class="beams" aria-hidden="true">
   <i class="beam"></i><i class="beam"></i><i class="beam"></i>
@@ -859,7 +844,7 @@ body.dragging #dropHint{display:flex}
 
  </div>
 </div>
-<input type="file" id="fileInput" accept=".pdf,.txt,.jpg,.jpeg,.png" multiple style="display:none">
+<input type="file" id="fileInput" accept=".pdf,.txt,.md,.markdown,.jpg,.jpeg,.png" multiple style="display:none">
 <input type="file" id="jsonInput" accept=".json,.noteapp" style="display:none">
 <div class="modal" id="mTable"><div class="card">
  <h3>⊞ 插入表格</h3>
@@ -987,7 +972,7 @@ function closeModal(id){$('#'+id).classList.remove('open');}
 /* ===== 檢查更新（GitHub Releases） =====
    APP_VERSION 為目前版本；檢查時向 GitHub Releases API 取最新版並比對。
    發佈仓库：cghk-cn/nexus-notes。 */
-const APP_VERSION='1.2.3';
+const APP_VERSION='1.2.4';
 const UPD=(function(){
  const OWNER='cghk-cn', REPO='nexus-notes';
  const API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/latest';
@@ -1569,10 +1554,26 @@ const DESK=(function(){
   if(!r||!r.ok){ toast(t('開啟失敗')+(r&&r.error?('：'+r.error):'')); return; }
   const name=r.name||(String(p).split('/').pop()||'file');
   const ext=r.ext||(name.split('.').pop()||'').toLowerCase();
+  /* 同一條路徑已經開過 → 複用既有筆記，避免每次「以 NEXUS 開啟」都多一份副本 */
+  const dup=S.docs.find(x=>x.filePath===p);
   if(isNote(ext)){
    let doc;
    try{ const o=JSON.parse(r.text); doc=(o&&o.doc)?o.doc:o; if(!doc||!Array.isArray(doc.pages))throw new Error('格式不符'); }
    catch(e){ alert(t('開啟失敗：不是有效的筆記 JSON 檔')); return; }
+   /* 若磁碟上的版本比較新（例如別的視窗／程式改過），就以磁碟為準覆寫內文；
+      否則保留 localStorage 裡可能尚未存檔的編輯。 */
+   if(dup){
+    if(doc.updated&&dup.updated&&doc.updated>dup.updated){
+     doc.id=dup.id; doc.filePath=p; doc.fileName=name;
+     if(!doc.name)doc.name=dup.name;
+     S.docs[S.docs.indexOf(dup)]=doc;
+     renderAll(true);
+    }
+    openDoc(dup.id);
+    toast(tN('已開啟「{n}」，儲存時將覆蓋原檔',{n:(curDoc()||dup).name}));
+    persist();
+    return;
+   }
    doc.id=uid(); doc.updated=Date.now(); doc.filePath=p; doc.fileName=name;
    if(!doc.name)doc.name=name.replace(/\.(noteapp\.)?json$/i,'');
    S.docs.unshift(doc);
@@ -1585,9 +1586,18 @@ const DESK=(function(){
   if(r.text!=null)file=new File([r.text],name,{type:MIME[ext]||'text/plain'});
   else file=new File([b64ToBlob(r.base64,MIME[ext])],name,{type:MIME[ext]||'application/octet-stream'});
   const base=name.replace(/\.[^.]+$/,'')||name;
+  /* 純文字檔（txt/md）可回寫 → 連結原檔；開啟過就複用，不再堆副本 */
+  const isText=/^(txt|md|markdown)$/.test(ext);
+  if(isText&&dup){
+   openDoc(dup.id);
+   toast(tN('已開啟「{n}」，儲存時將覆蓋原檔',{n:dup.name}));
+   persist(); return;
+  }
   const d=newDoc(base); openDoc(d.id);
+  if(isText){ d.filePath=p; d.fileName=name; d.textSrc=ext; }
   uploadMode='doc'; /* 已在上面建好筆記，匯入目前這份即可 */
   await handleFiles([file]);
+  if(isText){ persist(); renderDocList(); toast(tN('已開啟「{n}」，儲存時將覆蓋原檔',{n:name})); }
  }
  return {
   supported:true,
@@ -1596,7 +1606,9 @@ const DESK=(function(){
   async open(){ const p=await api.pickOpen(); if(p)await openPath(p); },
   async save(){
    const d=curDoc(); if(!d||!d.filePath)return false;
-   const r=await api.writeFile(d.filePath,JSON.stringify({app:'noteapp',v:1,doc:d},null,1));
+   /* 筆記檔存 JSON；純文字檔（txt/md，開啟時記下 textSrc）存回原文字格式 */
+   const payload=d.textSrc?docToText(d):JSON.stringify({app:'noteapp',v:1,doc:d},null,1);
+   const r=await api.writeFile(d.filePath,payload);
    if(!r||!r.ok){ toast(t('寫入檔案失敗')+(r&&r.error?('：'+r.error):'')); return false; }
    d.fileName=r.name||d.fileName; d.updated=Date.now(); persist(); renderDocList();
    toast(tN('已覆蓋「{n}」',{n:d.fileName||d.name}));
@@ -1848,7 +1860,7 @@ function renderDocList(){
    if(a){
     ev.stopPropagation();
     if(a.dataset.a==='dup'){
-     const c=JSON.parse(JSON.stringify(d));c.id=uid();c.name=d.name+' (副本)';c.updated=Date.now();delete c.fileName;delete c.filePath;
+     const c=JSON.parse(JSON.stringify(d));c.id=uid();c.name=d.name+' (副本)';c.updated=Date.now();delete c.fileName;delete c.filePath;delete c.textSrc;
      S.docs.unshift(c);persist();renderDocList();toast('已複製筆記');
     }else{
      if(!confirm(tN('刪除筆記「{n}」？此動作無法復原。',{n:d.name})))return;
@@ -2637,6 +2649,12 @@ if(drag.mode==='cnode'){
   if(dd.mode==='pen'||dd.mode==='erase'){commit();}
   else if(dd.mode==='move'){
    if(dd.moved){commit();updateSelUI();}
+   else{
+    /* 單擊（沒有拖動）文字框 → 直接進入編輯，不必再雙擊。
+       圖片／表格／圖表維持雙擊編輯（見 #pages dblclick）。 */
+    const f=findEl(dd.id);
+    if(f&&f.el.type==='text'&&S.editing!==dd.id)enterEdit(dd.id);
+   }
   }
   else if(dd.mode==='tresize'){
    const f=findEl(dd.id);
@@ -2833,6 +2851,9 @@ function insertTextBtn(){
  e.x=pos.x;e.y=pos.y;
  d.pages[pos.pi].els.push(e);
  S.sel={pi:pos.pi,id:e.id};
+ /* 插入後回到選取工具：否則若原本停在文字工具，
+    接下來的單擊會「再插一個文字框」而不是編輯這一個。 */
+ if(S.tool!=='select')setTool('select');
  commit();renderAll();enterEdit(e.id);
 }
 /* ===== 表格對話框 ===== */
@@ -3511,7 +3532,7 @@ async function handleFiles(files){
   const t=trackFile(f.name,{size:f.size});
   try{
    if(n.endsWith('.pdf'))await importPDF(f,t);
-   else if(n.endsWith('.txt'))await importTXT(f,t);
+   else if(/\.(txt|md|markdown)$/.test(n))await importTXT(f,t);
    else if(/\.(png|jpe?g)$/.test(n))await importImage(f,t);
    else{finishTrack(t,0,null,'');toast(tN('不支援的格式：{f}',{f:f.name}));}
   }catch(err){console.error(err);toast(tN('匯入失敗：{f}',{f:f.name})+(err&&err.message?'（'+err.message+'）':''));}
@@ -3521,14 +3542,14 @@ async function handleFilesAsNewDocs(files){
  let made=0;
  for(const f of files){
   const n=f.name.toLowerCase();
-  if(!/\.(pdf|txt|png|jpe?g)$/.test(n)){toast(tN('不支援的格式：{f}',{f:f.name}));continue;}
+  if(!/\.(pdf|txt|md|markdown|png|jpe?g)$/.test(n)){toast(tN('不支援的格式：{f}',{f:f.name}));continue;}
   const base=f.name.replace(/\.[^.]+$/,'')||f.name;
   const d=newDoc(base);
   openDoc(d.id);
   const tr=trackFile(f.name,{size:f.size});
   try{
    if(n.endsWith('.pdf'))await importPDF(f,tr);
-   else if(n.endsWith('.txt'))await importTXT(f,tr);
+   else if(/\.(txt|md|markdown)$/.test(n))await importTXT(f,tr);
    else await importImage(f,tr);
    made++;
   }catch(err){console.error(err);toast(tN('匯入失敗：{f}',{f:f.name})+(err&&err.message?'（'+err.message+'）':''));}
@@ -3695,8 +3716,8 @@ function exportJSON(){
  dl(safeName()+'.noteapp.json',JSON.stringify({app:'noteapp',v:1,doc:d},null,1),'application/json');
  toast('已匯出 JSON（可再匯入）');
 }
-function exportTXT(){
- const d=curDoc();if(!d)return;
+/* 筆記 → 純文字（「匯出 TXT」與「儲存回 .txt/.md 原檔」共用） */
+function docToText(d){
  let out='';
  d.pages.forEach((p,i)=>{
   if(i)out+='\n----- 第 '+(i+1)+' 頁 -----\n';
@@ -3717,7 +3738,11 @@ function exportTXT(){
    }
   });
  });
- dl(safeName()+'.txt',out,'text/plain;charset=utf-8');
+ return out;
+}
+function exportTXT(){
+ const d=curDoc();if(!d)return;
+ dl(safeName()+'.txt',docToText(d),'text/plain;charset=utf-8');
  toast('已匯出純文字');
 }
 function exportHTML(){
@@ -3871,7 +3896,7 @@ $('#homeGrid').addEventListener('click',ev=>{
  if(a){
   ev.stopPropagation();
   if(a.dataset.a==='dup'){
-   const c=JSON.parse(JSON.stringify(d));c.id=uid();c.name=d.name+' (副本)';c.updated=Date.now();delete c.fileName;delete c.filePath;
+   const c=JSON.parse(JSON.stringify(d));c.id=uid();c.name=d.name+' (副本)';c.updated=Date.now();delete c.fileName;delete c.filePath;delete c.textSrc;
    S.docs.unshift(c);persist();renderHome();toast('已複製筆記');
   }else{
    if(!confirm(tN('刪除筆記「{n}」？此動作無法復原。',{n:d.name})))return;
