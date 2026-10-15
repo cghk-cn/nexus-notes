@@ -4125,9 +4125,9 @@ async function importTXT(file,t){
 }
 /* Word .docx → mammoth 轉 HTML → 依區塊轉純文字 → 依高度分頁（v1.2.9） */
 async function importDOCX(file,t){
- if(typeof mammoth==='undefined'){finishTrack(t,0,null,'');toast(t('無法載入 Word 解析器（首次使用需網路）'));return;}
+ if(typeof mammoth==='undefined'){finishTrack(t,0,null,'');toast('無法載入 Word 解析器（首次使用需網路）');return;}
  const d=curDoc();if(!d)return;
- toast(t('正在解析 Word 文件…'));
+ toast('正在解析 Word 文件…');
  let html;
  try{
   const ab=await file.arrayBuffer();
@@ -4160,9 +4160,9 @@ async function importDOCX(file,t){
 }
 /* 簡報 .pptx（OOXML zip）→ JSZip 逐頁擷取 <a:t> 文字 → 每頁一則（v1.2.9，內容為文字） */
 async function importPPTX(file,t){
- if(typeof JSZip==='undefined'){finishTrack(t,0,null,'');toast(t('無法載入簡報解析器（首次使用需網路）'));return;}
+ if(typeof JSZip==='undefined'){finishTrack(t,0,null,'');toast('無法載入簡報解析器（首次使用需網路）');return;}
  const d=curDoc();if(!d)return;
- toast(t('正在解析簡報…'));
+ toast('正在解析簡報…');
  let zip;
  try{zip=await JSZip.loadAsync(file);}catch(e){console.error(e);finishTrack(t,0,null,'');toast(tN('匯入失敗：{f}',{f:file.name}));return;}
  clearEmptyPages(d);
