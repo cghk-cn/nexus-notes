@@ -17,6 +17,8 @@ const REPLACEMENTS = [
   ['https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', './vendor/html2canvas.min.js'],
   ['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js', './vendor/pdf.worker.min.js'],
   ['https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js', './vendor/pdf-lib.min.js'],
+  ['https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js', './vendor/mammoth.browser.min.js'],
+  ['https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js', './vendor/jszip.min.js'],
 ];
 
 let html = fs.readFileSync(SRC, 'utf8');

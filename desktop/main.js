@@ -47,6 +47,9 @@ function createWindow() {
     minWidth: 900,
     minHeight: 600,
     title: 'NEXUS',
+    /* 隱藏 macOS 原生標題列（那條顯示文件標題的白邊），保留紅綠燈；
+       renderer 用 body.electron-mac 設拖曳區＋左留白避開紅綠燈 */
+    titleBarStyle: 'hiddenInset',
     backgroundColor: '#f8f9fa',
     show: false,
     webPreferences: {

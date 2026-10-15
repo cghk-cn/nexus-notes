@@ -7,6 +7,8 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('nexus', {
+  /* 平台（'darwin' | 'win32' | 'linux'），供 renderer 判斷是否需 macOS 標題列留白 */
+  platform: process.platform,
   isDesktop: true,
   platform: process.platform,
 

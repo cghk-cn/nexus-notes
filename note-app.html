@@ -88,6 +88,10 @@ kbd{font-family:var(--font);font-size:10.5px;background:var(--surface-2);border:
 /* ================= Topbar（Google 風：磨砂+膠囊分組+漸變強調） ================= */
 /* 注意：不可加向下投影 —— 它會畫到下方 #tbPanel 上，讓整條工具列上半部出現同色色塊 */
 #topbar{display:flex;align-items:center;gap:8px;padding:calc(5px + var(--safe-top)) calc(12px + var(--safe-right)) 5px calc(12px + var(--safe-left));background:var(--glass);border-bottom:1px solid var(--border);position:relative;z-index:60;backdrop-filter:blur(20px) saturate(1.7);-webkit-backdrop-filter:blur(20px) saturate(1.7);box-shadow:0 1px 0 rgba(255,255,255,.45) inset}
+/* macOS 無邊框標題列（v1.2.9）：topbar/homeTop 空白處可拖曳視窗、左側留白避開紅綠燈 */
+html.electron-mac #topbar,html.electron-mac .homeTop{-webkit-app-region:drag;padding-left:calc(78px + var(--safe-left))}
+html.electron-mac #topbar button,html.electron-mac #topbar .brand,html.electron-mac #topbar input,html.electron-mac #topbar select,html.electron-mac #topbar [data-tip],
+html.electron-mac .homeTop button,html.electron-mac .homeTop .brand,html.electron-mac .homeTop input,html.electron-mac .homeTop select,html.electron-mac .homeTop [data-tip]{-webkit-app-region:no-drag}
 .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:16px;letter-spacing:.06em;margin-right:2px;padding:6px 15px 6px 7px;border-radius:999px;background:linear-gradient(135deg,#0b0b0e 0%,#2a2a31 46%,#585860 100%);white-space:nowrap;color:#fff;cursor:pointer;border:1px solid rgba(255,255,255,.16);box-shadow:0 4px 14px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(1.25);-webkit-backdrop-filter:blur(10px) saturate(1.25);transition:transform .16s cubic-bezier(.2,.8,.3,1.2),box-shadow .18s ease}
 .brand:hover{transform:scale(1.04);box-shadow:0 8px 22px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.2)}
 .brand:active{transform:scale(.96)}
@@ -714,6 +718,7 @@ body.dragging #dropHint{display:flex}
 }
 </style>
 <script>try{var t=localStorage.getItem('noteapp.theme');if(t!=='light'&&t!=='dark')t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}</script>
+<script>try{if(window.nexus&&window.nexus.platform==='darwin')document.documentElement.classList.add('electron-mac');}catch(e){}</script>
 
 </head>
 <body class="tool-select view-home">
@@ -975,7 +980,7 @@ body.dragging #dropHint{display:flex}
 
  </div>
 </div>
-<input type="file" id="fileInput" accept=".pdf,.txt,.md,.markdown,.jpg,.jpeg,.png" multiple style="display:none">
+<input type="file" id="fileInput" accept=".pdf,.txt,.md,.markdown,.jpg,.jpeg,.png,.docx,.pptx,.doc,.ppt" multiple style="display:none">
 <input type="file" id="jsonInput" accept=".json,.noteapp" style="display:none">
 <div class="modal" id="mTable"><div class="card">
  <h3>⊞ 插入表格</h3>
@@ -1098,6 +1103,8 @@ body.dragging #dropHint{display:flex}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 /* ===== 基礎工具 ===== */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -1110,7 +1117,7 @@ function closeModal(id){$('#'+id).classList.remove('open');}
 /* ===== 檢查更新（GitHub Releases） =====
    APP_VERSION 為目前版本；檢查時向 GitHub Releases API 取最新版並比對。
    發佈仓库：cghk-cn/nexus-notes。 */
-const APP_VERSION='1.2.8';
+const APP_VERSION='1.2.9';
 const UPD=(function(){
  const OWNER='cghk-cn', REPO='nexus-notes';
  const API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/latest';
@@ -1285,7 +1292,7 @@ Object.assign(I18N['zh-Hans'],{
 '刪除筆記「{n}」？此動作無法復原。':'删除笔记「{n}」？此操作无法恢复。','已選 {n} 份':'已选 {n} 份','點擊筆記進行多選':'点击笔记进行多选','刪除選取（{n}）':'删除选取（{n}）','刪除選取':'删除选取','刪除選取的 {n} 份筆記？此動作無法復原。':'删除选取的 {n} 份笔记？此操作无法恢复。','已刪除選取筆記':'已删除选取笔记','管理':'管理','完成':'完成','重新命名筆記：':'重命名笔记：','輸入交點標籤（留空＝自動顯示均衡點 E）：':'输入交点标签（留空＝自动显示均衡点 E）：',
 '拖到另一條線以建立箭頭':'拖到另一条线以建立箭头',
 '正在解析 PDF…':'正在解析 PDF…','正在輸出 PNG…':'正在输出 PNG…','已匯出 {n} 張 PNG':'已导出 {n} 张 PNG','PNG 匯出失敗':'PNG 导出失败',
-'已匯入文字檔 {f}（{n} 頁 → 第 {a}–{b} 頁）':'已导入文字档 {f}（{n} 页 → 第 {a}–{b} 页）',
+'已匯入文字檔 {f}（{n} 頁 → 第 {a}–{b} 頁）':'已导入文字档 {f}（{n} 页 → 第 {a}–{b} 页）','正在解析 Word 文件…':'正在解析 Word 文档…','無法載入 Word 解析器（首次使用需網路）':'无法加载 Word 解析器（首次使用需网络）','已匯入 Word 檔 {f}（{n} 頁 → 第 {a}–{b} 頁）':'已导入 Word 档 {f}（{n} 页 → 第 {a}–{b} 页）','正在解析簡報…':'正在解析简报…','無法載入簡報解析器（首次使用需網路）':'无法加载简报解析器（首次使用需网络）','已匯入簡報 {f}（{n} 頁 → 第 {a}–{b} 頁）':'已导入简报 {f}（{n} 页 → 第 {a}–{b} 页）','（第 {n} 頁無文字）':'（第 {n} 页无文字）','無法讀取簡報內容：{f}':'无法读取简报内容：{f}','舊版「{f}」無法直接讀取，請先另存為 .docx／.pptx 或 PDF':'旧版「{f}」无法直接读取，请先另存为 .docx／.pptx 或 PDF',
 '已匯入 PDF「{f}」共 {n} 頁 → 第 {a}–{b} 頁（左側「上載的檔案」可跳轉）':'已导入 PDF「{f}」共 {n} 页 → 第 {a}–{b} 页（左侧「上传的文件」可跳转）'
 });
 
@@ -1416,7 +1423,7 @@ Object.assign(I18N['en'],{
 '刪除筆記「{n}」？此動作無法復原。':'Delete note “{n}”? This cannot be undone.','重新命名筆記：':'Rename note:','輸入交點標籤（留空＝自動顯示均衡點 E）：':'Intersection label (blank = auto “E”):',
 '拖到另一條線以建立箭頭':'Drag onto another line to create an arrow',
 '正在解析 PDF…':'Parsing PDF…','正在輸出 PNG…':'Rendering PNG…','已匯出 {n} 張 PNG':'Exported {n} PNG images','PNG 匯出失敗':'PNG export failed',
-'已匯入文字檔 {f}（{n} 頁 → 第 {a}–{b} 頁）':'Imported text file {f} ({n} pages → pages {a}–{b})',
+'已匯入文字檔 {f}（{n} 頁 → 第 {a}–{b} 頁）':'Imported text file {f} ({n} pages → pages {a}–{b})','正在解析 Word 文件…':'Parsing Word document…','無法載入 Word 解析器（首次使用需網路）':'Could not load the Word parser (needs network on first use)','已匯入 Word 檔 {f}（{n} 頁 → 第 {a}–{b} 頁）':'Imported Word file {f} ({n} pages → pages {a}–{b})','正在解析簡報…':'Parsing presentation…','無法載入簡報解析器（首次使用需網路）':'Could not load the presentation parser (needs network on first use)','已匯入簡報 {f}（{n} 頁 → 第 {a}–{b} 頁）':'Imported presentation {f} ({n} pages → pages {a}–{b})','（第 {n} 頁無文字）':'(page {n} has no text)','無法讀取簡報內容：{f}':'Could not read presentation content: {f}','舊版「{f}」無法直接讀取，請先另存為 .docx／.pptx 或 PDF':'Legacy “{f}” can’t be read directly — please save it as .docx/.pptx or PDF first',
 '已匯入 PDF「{f}」共 {n} 頁 → 第 {a}–{b} 頁（左側「上載的檔案」可跳轉）':'Imported PDF “{f}” — {n} pages → pages {a}–{b} (use “Uploaded files” on the left to jump)'
 });
 
@@ -4018,8 +4025,11 @@ async function handleFiles(files){
   const t=trackFile(f.name,{size:f.size});
   try{
    if(n.endsWith('.pdf'))await importPDF(f,t);
+   else if(n.endsWith('.docx'))await importDOCX(f,t);
+   else if(n.endsWith('.pptx'))await importPPTX(f,t);
    else if(/\.(txt|md|markdown)$/.test(n))await importTXT(f,t);
    else if(/\.(png|jpe?g)$/.test(n))await importImage(f,t);
+   else if(/\.(doc|ppt)$/.test(n)){finishTrack(t,0,null,'');toast(tN('舊版「{f}」無法直接讀取，請先另存為 .docx／.pptx 或 PDF',{f:f.name}));}
    else{finishTrack(t,0,null,'');toast(tN('不支援的格式：{f}',{f:f.name}));}
   }catch(err){console.error(err);toast(tN('匯入失敗：{f}',{f:f.name})+(err&&err.message?'（'+err.message+'）':''));}
  }
@@ -4028,13 +4038,15 @@ async function handleFilesAsNewDocs(files){
  let made=0;
  for(const f of files){
   const n=f.name.toLowerCase();
-  if(!/\.(pdf|txt|md|markdown|png|jpe?g)$/.test(n)){toast(tN('不支援的格式：{f}',{f:f.name}));continue;}
+  if(!/\.(pdf|txt|md|markdown|png|jpe?g|docx|pptx)$/.test(n)){toast(tN('不支援的格式：{f}',{f:f.name}));continue;}
   const base=f.name.replace(/\.[^.]+$/,'')||f.name;
   const d=newDoc(base);
   openDoc(d.id);
   const tr=trackFile(f.name,{size:f.size});
   try{
    if(n.endsWith('.pdf'))await importPDF(f,tr);
+   else if(n.endsWith('.docx'))await importDOCX(f,tr);
+   else if(n.endsWith('.pptx'))await importPPTX(f,tr);
    else if(/\.(txt|md|markdown)$/.test(n))await importTXT(f,tr);
    else await importImage(f,tr);
    made++;
@@ -4110,6 +4122,69 @@ async function importTXT(file,t){
  revealPage(fromPage);
  finishTrack(t,pages.length,fromPage,'txt');
  toast(tN('已匯入文字檔 {f}（{n} 頁 → 第 {a}–{b} 頁）',{f:file.name,n:pages.length,a:fromPage+1,b:fromPage+pages.length}));
+}
+/* Word .docx → mammoth 轉 HTML → 依區塊轉純文字 → 依高度分頁（v1.2.9） */
+async function importDOCX(file,t){
+ if(typeof mammoth==='undefined'){finishTrack(t,0,null,'');toast('無法載入 Word 解析器（首次使用需網路）');return;}
+ const d=curDoc();if(!d)return;
+ toast('正在解析 Word 文件…');
+ let html;
+ try{
+  const ab=await file.arrayBuffer();
+  const res=await mammoth.convertToHtml({arrayBuffer:ab});
+  html=res.value||'';
+ }catch(e){console.error(e);finishTrack(t,0,null,'');toast(tN('匯入失敗：{f}',{f:file.name}));return;}
+ const tmp=document.createElement('div');tmp.innerHTML=html;
+ tmp.querySelectorAll('p,div,h1,h2,h3,h4,h5,h6,li,tr,blockquote,pre').forEach(el=>el.appendChild(document.createElement('br')));
+ const text=(tmp.innerText||tmp.textContent||'').replace(/\n{3,}/g,'\n\n').trim();
+ clearEmptyPages(d);
+ const fromPage=d.pages.length;
+ const fs=15,lh=fs*1.5,maxH=d.h-80;
+ const cpl=Math.max(4,Math.floor((d.w-92)/(fs*0.62)));
+ const logical=text.split('\n');
+ let pages=[],cur=[],used=0;
+ const lineH=ln=>{let len=0;for(const ch of ln)len+=(ch.charCodeAt(0)>0x2000?1:0.55);return Math.max(1,Math.ceil(len/cpl))*lh;};
+ logical.forEach(ln=>{const hh=lineH(ln);if(used+hh>maxH&&cur.length){pages.push(cur);cur=[];used=0;}cur.push(ln);used+=hh;});
+ if(cur.length)pages.push(cur);
+ if(!pages.length)pages=[['']];
+ pages.forEach(pl=>{
+  const pi=d.pages.length;d.pages.push(blankPage());
+  const content=pl.join('\n');
+  const h=clamp(textLinesNeeded(content,d.w-80,fs)*lh+14,40,maxH+40);
+  d.pages[pi].els.push(makeText(40,40,esc(content).replace(/\n/g,'<br>'),d.w-80,h,fs));
+ });
+ S.sel=null;commit();renderAll();
+ revealPage(fromPage);
+ finishTrack(t,pages.length,fromPage,'docx');
+ toast(tN('已匯入 Word 檔 {f}（{n} 頁 → 第 {a}–{b} 頁）',{f:file.name,n:pages.length,a:fromPage+1,b:fromPage+pages.length}));
+}
+/* 簡報 .pptx（OOXML zip）→ JSZip 逐頁擷取 <a:t> 文字 → 每頁一則（v1.2.9，內容為文字） */
+async function importPPTX(file,t){
+ if(typeof JSZip==='undefined'){finishTrack(t,0,null,'');toast('無法載入簡報解析器（首次使用需網路）');return;}
+ const d=curDoc();if(!d)return;
+ toast('正在解析簡報…');
+ let zip;
+ try{zip=await JSZip.loadAsync(file);}catch(e){console.error(e);finishTrack(t,0,null,'');toast(tN('匯入失敗：{f}',{f:file.name}));return;}
+ clearEmptyPages(d);
+ const fromPage=d.pages.length;
+ const dec=s=>s.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&amp;/g,'&');
+ const slideFiles=Object.keys(zip.files).filter(p=>/^ppt\/slides\/slide\d+\.xml$/.test(p))
+  .sort((a,b)=>(+a.match(/\d+/)[0])-(+b.match(/\d+/)[0]));
+ let added=0;
+ for(const sp of slideFiles){
+  let xml='';try{xml=await zip.files[sp].async('string');}catch(e){continue;}
+  const texts=[...xml.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map(m=>dec(m[1])).filter(s=>s.trim());
+  const pi=d.pages.length;d.pages.push(blankPage());
+  const content=texts.join('\n')||tN('（第 {n} 頁無文字）',{n:added+1});
+  const h=clamp(textLinesNeeded(content,d.w-80,15)*15*1.5+14,40,d.h-40);
+  d.pages[pi].els.push(makeText(40,40,esc(content).replace(/\n/g,'<br>'),d.w-80,h,15));
+  added++;
+ }
+ if(!added){finishTrack(t,0,null,'');toast(tN('無法讀取簡報內容：{f}',{f:file.name}));return;}
+ S.sel=null;commit();renderAll();
+ revealPage(fromPage);
+ finishTrack(t,added,fromPage,'pptx');
+ toast(tN('已匯入簡報 {f}（{n} 頁 → 第 {a}–{b} 頁）',{f:file.name,n:added,a:fromPage+1,b:fromPage+added}));
 }
 async function importPDF(file,t){
  if(typeof pdfjsLib==='undefined'){finishTrack(t,0,null,'');toast('無法載入 pdf.js（首次使用需網路）');return;}
