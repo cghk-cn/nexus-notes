@@ -51,7 +51,7 @@ html,body{margin:0;height:100%;font-family:var(--font);color:var(--text);backgro
 :root{--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px);--safe-right:env(safe-area-inset-right,0px)}
 #app{display:flex;flex-direction:column;height:100vh}
 .sprite{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
-.ic{width:16px;height:16px;display:block;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.ic{width:16px;height:16px;display:block;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
 .ic.sm{width:13px;height:13px}
 .ic.lg{width:22px;height:22px}
 .ic.caret{width:11px;height:11px;stroke-width:2.4;opacity:.75}
@@ -104,9 +104,10 @@ html.electron-mac .homeTop button,html.electron-mac .homeTop .brand,html.electro
 /* 分類列 + 分類工具面板（編輯頁頂部） */
 #tbCats{display:flex;align-items:center;gap:6px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex:1;min-width:0;padding:2px}
 #tbCats::-webkit-scrollbar{display:none}
-button.tcat{flex:none;height:34px;min-width:74px;padding:0 14px;border:none;border-radius:999px;background:var(--chip);color:var(--text-2);font-size:14px;font-weight:700;letter-spacing:.02em;justify-content:center;box-shadow:none;white-space:nowrap}
+button.tcat{flex:none;height:34px;min-width:74px;padding:0 14px;border:none;border-radius:999px;background:var(--chip);color:var(--text-2);font-size:14px;font-weight:700;letter-spacing:.02em;justify-content:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.5);white-space:nowrap}
+html[data-theme=dark] button.tcat{box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
 button.tcat:hover{background:var(--surface-2);color:var(--text);transform:scale(1.04)}
-button.tcat.on{background:linear-gradient(135deg,var(--accent),#7b5cf0);color:#fff;box-shadow:0 5px 14px rgba(66,133,244,.34)}
+button.tcat.on{background:linear-gradient(135deg,var(--accent),#7b5cf0);color:#fff;box-shadow:0 5px 14px rgba(66,133,244,.34),inset 0 1px 0 rgba(255,255,255,.22)}
 button.tcat.on:hover{filter:brightness(1.06)}
 /* z-index 必須低於 #topbar(60)，否則 topbar 的 tooltip（z:400）會被工具列蓋住、看不到按鈕資訊。
    topbar 不可有向下投影，否則會污染工具列（見 #topbar 註解） */
@@ -128,8 +129,9 @@ button.tcat.on:hover{filter:brightness(1.06)}
 #brandHome #btnExport{width:auto;height:30px;margin-left:6px;padding:0 11px;gap:6px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.14);color:#fff;font-size:12.5px;font-weight:700;border-radius:999px;box-shadow:none;letter-spacing:.02em}
 #brandHome #btnExport:hover{background:rgba(255,255,255,.26);transform:translateY(-1px)}
 #brandHome #btnExport .ic{width:15px;height:15px}
-button.ibtn{width:34px;height:34px;padding:0;border-radius:999px;flex:none}
+button.ibtn{width:34px;height:34px;padding:0;border-radius:11px;flex:none;background:linear-gradient(180deg,var(--surface),var(--surface-2));border:1px solid var(--border);color:var(--text-2);box-shadow:0 1px 2px rgba(16,24,40,.07),inset 0 1px 0 rgba(255,255,255,.65);transition:background .16s ease,border-color .16s ease,color .16s ease,box-shadow .18s ease,transform .16s cubic-bezier(.2,.8,.3,1.2)}
 button.ibtn .ic{width:17px;height:17px}
+html[data-theme=dark] button.ibtn{background:linear-gradient(180deg,var(--surface-2),var(--surface));box-shadow:0 1px 2px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.05)}
 #btnExport{width:auto;padding:0 15px;gap:7px;background:linear-gradient(135deg,var(--accent),#7b5cf0);color:#fff;border-color:transparent;box-shadow:0 5px 16px rgba(66,133,244,.38)}
 #btnExport:hover{background:linear-gradient(135deg,var(--accent),#7b5cf0);filter:brightness(1.08);box-shadow:0 8px 22px rgba(66,133,244,.45)}
 #topbar input[type=text],#topbar input[type=number],#topbar select{height:34px;padding:0 12px;font-size:14px;border-radius:999px}
@@ -154,10 +156,13 @@ button.ibtn .ic{width:17px;height:17px}
 button.active,button.on{background:linear-gradient(135deg,var(--accent-soft),rgba(155,114,243,.2));border-color:transparent;color:var(--accent-text);box-shadow:0 0 0 1px var(--accent-ring),0 5px 14px var(--accent-ring)}
 button.primary{background:linear-gradient(135deg,var(--accent),#7b5cf0);border-color:transparent;color:#fff;box-shadow:0 5px 16px rgba(66,133,244,.38)}
 button.primary:hover{background:linear-gradient(135deg,var(--accent),#7b5cf0);filter:brightness(1.08);box-shadow:0 8px 22px rgba(66,133,244,.45)}
-/* 工具列按鍵 UI 強化（v1.2.7）：圖示鍵 hover 淡染主題色＋圖示變色、按壓回饋；分類頁籤過場更滑順 */
-#tbPanel .ibtn:hover{background:var(--accent-soft);border-color:transparent;box-shadow:0 4px 12px var(--accent-ring)}
+/* 工具列按鍵 UI 強化（v1.4.0 進階版）：hover 抬升＋主題色描邊＋泛光、按壓內縮、focus ring；分類頁籤過場更滑順 */
+#tbPanel .ibtn:hover{background:linear-gradient(180deg,var(--accent-soft),var(--surface));border-color:var(--accent-ring);color:var(--accent-text);box-shadow:0 4px 12px var(--accent-ring),0 0 0 .5px var(--accent-ring);transform:translateY(-1px)}
 #tbPanel .ibtn:hover .ic{color:var(--accent)}
-#tbPanel .ibtn:active{transform:scale(.9)}
+#tbPanel .ibtn:active{transform:translateY(0) scale(.9)}
+#tbPanel .ibtn:focus-visible{outline:none;box-shadow:0 0 0 3px var(--accent-ring)}
+#tbPanel .ibtn.on{background:linear-gradient(135deg,var(--accent),#7b5cf0);border-color:transparent;color:#fff;box-shadow:0 4px 14px rgba(66,133,244,.4),inset 0 1px 0 rgba(255,255,255,.25)}
+#tbPanel .ibtn.on:hover{filter:brightness(1.07)}
 button.tcat{transition:background .16s ease,color .16s ease,transform .16s cubic-bezier(.2,.8,.3,1.2),box-shadow .2s ease}
 button.tcat:active{transform:scale(.96)}
 /* ================= 主頁 Home ================= */
@@ -323,6 +328,13 @@ body.view-home #app{display:none}
 .homeSearch input::placeholder{color:var(--text-3)}
 .homeSearch .ic{width:18px;height:18px;color:var(--text-3)}
 .homeActs{display:flex;align-items:center;gap:8px;margin-left:auto}
+/* 主頁排列格式分段切換（Grid/List，v1.4.0） */
+.segCtl{display:inline-flex;align-items:center;padding:3px;border-radius:999px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-sm);flex:none}
+.segCtl .sg{width:36px;height:36px;padding:0;border:none;border-radius:999px;background:transparent;color:var(--text-3);box-shadow:none}
+.segCtl .sg:hover{background:var(--surface-2);color:var(--text);transform:none;border-color:transparent}
+.segCtl .sg.on{background:linear-gradient(135deg,var(--accent),#7b5cf0);color:#fff;box-shadow:0 4px 12px rgba(66,133,244,.34)}
+.segCtl .sg.on:hover{filter:brightness(1.06)}
+.segCtl .sg .ic{width:17px;height:17px}
 .langSel{height:38px;border-radius:999px;padding:0 12px;font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:var(--shadow-sm)}
 .homeActs .langSel{height:44px;font-size:14px}
 .homeActs .ibtn{width:44px;height:44px}
@@ -369,6 +381,32 @@ html[data-theme=dark] .ncard .acts button{background:rgba(32,33,36,.82);color:#e
 .ncard.new .plus .ic{width:22px;height:22px}
 .ncard.new .nm{color:var(--text);text-shadow:none;font-size:15px}
 .ncard.new .m2{color:var(--text-3);text-shadow:none;opacity:1;justify-content:center}
+/* 卡片文字區（v1.4.0）：grid 模式 nm/m2 置底；pv 預覽列只在 list 模式顯示 */
+.ncard .tx{position:relative;display:flex;flex-direction:column;gap:5px;min-width:0}
+.ncard .pv{display:none;font-size:12.5px;font-weight:500;opacity:0;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.18);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ===== 主頁 List 排列（v1.4.0）：橫向長條 — icon｜名稱/日期｜預覽｜操作欄 ===== */
+#homeGrid.list{grid-template-columns:1fr;gap:10px}
+#homeGrid.list .ncard{height:auto;min-height:74px;border-radius:16px;flex-direction:row;align-items:center;gap:13px;padding:12px 16px;justify-content:flex-start}
+#homeGrid.list .ncard .cic{position:static;flex:none;width:42px;height:42px;border-radius:13px}
+#homeGrid.list .ncard .cic .ic{width:19px;height:19px}
+#homeGrid.list .ncard .tx{flex:1;min-width:0;gap:2px}
+#homeGrid.list .ncard .nm{font-size:14.5px}
+#homeGrid.list .ncard .pv{display:block}
+#homeGrid.list .ncard .acts{position:static;opacity:1;transform:none;flex:none;margin-left:auto}
+#homeGrid.list .ncard.new{gap:13px;padding:12px 16px;text-align:left}
+#homeGrid.list .ncard.new .plus{width:42px;height:42px;border-radius:13px;flex:none}
+#homeGrid.list .ncard.new .plus .ic{width:19px;height:19px}
+#homeGrid.list .ncard.new .tx{flex:1;min-width:0}
+#homeGrid.list .ncard.new .m2{justify-content:flex-start}
+@media (hover:hover){
+ #homeGrid.list .ncard:hover{transform:translateY(-2px) scale(1.005)}
+}
+@media (hover:none){#homeGrid.list .ncard .acts{opacity:1;transform:none}}
+@media (max-width:768px){
+ #homeGrid.list .ncard{min-height:68px;border-radius:15px;padding:10px 13px;gap:11px}
+ #homeGrid.list .ncard .cic{width:38px;height:38px;border-radius:12px}
+ #homeGrid.list .ncard .pv{font-size:12px}
+}
 /* 主頁批量管理（v1.2.7） */
 body.homeSel .ncard .acts{display:none}
 .ncard .pick{position:absolute;top:12px;left:14px;width:26px;height:26px;border-radius:999px;border:2px solid rgba(255,255,255,.9);background:rgba(0,0,0,.2);box-shadow:0 2px 8px rgba(0,0,0,.28);z-index:3;display:flex;align-items:center;justify-content:center}
@@ -739,31 +777,33 @@ body.dragging #dropHint{display:flex}
 <symbol id="i-arrow-r" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></symbol>
 <symbol id="i-arrow-u" viewBox="0 0 24 24"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></symbol>
 <symbol id="i-arrow-d" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></symbol>
-<symbol id="i-align-left" viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M4 11h10"/><path d="M4 16h13"/><path d="M4 21h7"/></symbol>
-<symbol id="i-align-center" viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M7 11h10"/><path d="M5.5 16h13"/><path d="M8.5 21h7"/></symbol>
-<symbol id="i-align-right" viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M10 11h10"/><path d="M7 16h13"/><path d="M13 21h7"/></symbol>
+<symbol id="i-align-left" viewBox="0 0 24 24"><path d="M21 6H3"/><path d="M15 12H3"/><path d="M17 18H3"/></symbol>
+<symbol id="i-align-center" viewBox="0 0 24 24"><path d="M21 6H3"/><path d="M17 12H7"/><path d="M19 18H5"/></symbol>
+<symbol id="i-align-right" viewBox="0 0 24 24"><path d="M21 6H3"/><path d="M21 12H9"/><path d="M21 18H7"/></symbol>
 <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
 <symbol id="i-page-plus" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 12v6M9 15h6"/></symbol>
 <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
-<symbol id="i-margins" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1.5"/><rect x="8.5" y="8.5" width="7" height="7" rx="1" stroke-dasharray="3 2.4"/></symbol>
+<symbol id="i-margins" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><rect x="7.5" y="6.5" width="9" height="11" rx="1.2" stroke-dasharray="2.8 2.2"/></symbol>
 <symbol id="i-cursor" viewBox="0 0 24 24"><path d="M4 3l7.2 17 2.4-6.4L20 11.2z"/></symbol>
 <symbol id="i-pen" viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.6 7.6"/><circle cx="11" cy="11" r="2"/></symbol>
 <symbol id="i-eraser" viewBox="0 0 24 24"><path d="M20 20H9.2L3.8 14.6a2 2 0 0 1 0-2.8l8.4-8.4a2 2 0 0 1 2.8 0l5.4 5.4a2 2 0 0 1 0 2.8L12.4 19"/><path d="M7.6 8.8l6.6 6.6"/><path d="M20 20h2"/></symbol>
 <symbol id="i-type" viewBox="0 0 24 24"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></symbol>
-<symbol id="i-marker" viewBox="0 0 24 24"><path d="M17.4 3.6l3 3L11.6 15.4 7 17l1.6-4.6z"/><path d="M14.4 6.6l3 3"/><path d="M3 21h8"/></symbol>
+<symbol id="i-marker" viewBox="0 0 24 24"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></symbol>
 <symbol id="i-table" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9.5h18M3 15h18M9.5 4v16M15.5 4v16"/></symbol>
-<symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 4v16h16"/><path d="M7.5 16c2.6 0 2.6-6.5 5-6.5s2.4 6.5 5 6.5"/></symbol>
-<symbol id="i-spline" viewBox="0 0 24 24"><path d="M4 4v16h16"/><path d="M7 16l4.5-7 3.5 4 4-7.5"/><circle cx="11.5" cy="9" r="1.7"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 4v16h16"/><path d="m7.5 16 3.6-5 3 2.6L18 8"/></symbol>
+<symbol id="i-spline" viewBox="0 0 24 24"><path d="M4 4v16h16"/><path d="M7 16c4 0 3-8 7-8"/><circle cx="14" cy="8" r="1.7"/></symbol>
 <symbol id="i-undo" viewBox="0 0 24 24"><path d="M4 9h11a4.5 4.5 0 0 1 0 9h-5"/><path d="M8 5L4 9l4 4"/></symbol>
 <symbol id="i-redo" viewBox="0 0 24 24"><path d="M20 9H9a4.5 4.5 0 0 0 0 9h5"/><path d="M16 5l4 4-4 4"/></symbol>
 <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20.5 12a8.5 8.5 0 1 1-2.49-6.01"/><path d="M20.5 3.5V9h-5.5"/></symbol>
 <symbol id="i-zoom-in" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M11 8v6M8 11h6"/><path d="M21 21l-4.4-4.4"/></symbol>
 <symbol id="i-zoom-out" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M8 11h6"/><path d="M21 21l-4.4-4.4"/></symbol>
-<symbol id="i-fit" viewBox="0 0 24 24"><path d="M3 8V5a2 2 0 0 1 2-2h3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2h-3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M9 12h6"/></symbol>
+<symbol id="i-fit" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m8.2 15.8 7.6-7.6"/><path d="M12.6 8.2h3.2v3.2"/><path d="M11.4 15.8H8.2v-3.2"/></symbol>
 <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></symbol>
 <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
 <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/></symbol>
 <symbol id="i-caret" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+<symbol id="i-view-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="2"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="2"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="2"/><rect x="13" y="13" width="7.5" height="7.5" rx="2"/></symbol>
+<symbol id="i-view-list" viewBox="0 0 24 24"><rect x="3.2" y="4.4" width="17.6" height="5.6" rx="2.2"/><rect x="3.2" y="14" width="17.6" height="5.6" rx="2.2"/><path d="M6.4 7.2h.01M6.4 16.8h.01"/></symbol>
 <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></symbol>
 <symbol id="i-doc-json" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M10 12l-1.5 1.5L10 15M14 12l1.5 1.5L14 15"/></symbol>
 <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></symbol>
@@ -792,6 +832,10 @@ body.dragging #dropHint{display:flex}
    <input id="homeSearchIn" type="text" placeholder="搜尋筆記…" aria-label="搜尋筆記">
   </div>
   <div class="homeActs">
+   <span class="segCtl" id="homeLayoutSeg" role="group" aria-label="筆記排列格式">
+    <button id="btnHomeGrid" class="sg on" data-tip="網格檢視" aria-label="網格檢視" aria-pressed="true"><svg class="ic"><use href="#i-view-grid"></use></svg></button>
+    <button id="btnHomeList" class="sg" data-tip="列表檢視" aria-label="列表檢視" aria-pressed="false"><svg class="ic"><use href="#i-view-list"></use></svg></button>
+   </span>
    <select id="langSelHome" class="langSel" data-nolang aria-label="語言 / Language">
     <option value="zh-TW">繁體中文</option>
     <option value="zh-Hans">简体中文</option>
@@ -846,7 +890,7 @@ body.dragging #dropHint{display:flex}
      <button id="btnOpenLocal" class="ibtn" data-tip="開啟本地檔案：編輯後可直接覆蓋原檔" aria-label="開啟本地檔案"><svg class="ic"><use href="#i-folder"></use></svg></button>
       <button id="btnImport" class="ibtn" data-tip="匯入先前匯出的 JSON 筆記檔（建立新筆記）" aria-label="匯入"><svg class="ic"><use href="#i-import"></use></svg></button>
      <button id="btnUploadDoc" class="ibtn" data-tip="上載檔案到目前筆記" aria-label="上載檔案"><svg class="ic"><use href="#i-upload"></use></svg></button>
-     <button id="btnAdapt" class="ibtn" data-tip="自適應頁面尺寸：上載 PDF／圖片時，頁面長寬比改用檔案本身的比例（例如 16:9 簡報），而非固定 A4。只在目標筆記還是空白頁時套用。" aria-label="自適應頁面尺寸"><svg class="ic"><use href="#i-fit"></use></svg></button>
+     <button id="btnAdapt" class="ibtn" data-tip="自適應頁面尺寸：匯入 PDF／圖片／pptx 時，頁面長寬比改用檔案本身的比例（例如 16:9 簡報），而非固定 A4。匯入時只對空白筆記套用；已匯入的純背景筆記，開啟此開關會立刻重算。" aria-label="自適應頁面尺寸"><svg class="ic"><use href="#i-fit"></use></svg></button>
     </div>
     <div class="tbPane" data-cat="page">
      <button id="btnAddPage" class="ibtn" data-tip="於結尾新增一頁" aria-label="新增頁面"><svg class="ic"><use href="#i-page-plus"></use></svg></button>
@@ -1117,7 +1161,7 @@ function closeModal(id){$('#'+id).classList.remove('open');}
 /* ===== 檢查更新（GitHub Releases） =====
    APP_VERSION 為目前版本；檢查時向 GitHub Releases API 取最新版並比對。
    發佈仓库：cghk-cn/nexus-notes。 */
-const APP_VERSION='1.3.0';
+const APP_VERSION='1.4.0';
 const UPD=(function(){
  const OWNER='cghk-cn', REPO='nexus-notes';
  const API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/latest';
@@ -1498,6 +1542,19 @@ Object.assign(I18N['en'],{
  '目前版本':'Current version','最新版本':'Latest version','未知':'Unknown',
  '有新版本 {v} 可供下載。':'A new version {v} is available to download.','你使用的已是最新版本。':'You are already on the latest version.','更新':'Update','正在下載…':'Downloading…','已下載完成：{p}':'Download complete: {p}','開啟檔案位置':'Show in Folder','下載失敗':'Download failed',
  '發布日期':'Released'
+});
+/* ===== v1.4.0 新增字串（排列切換＋自適應重算） ===== */
+Object.assign(I18N['zh-Hans'],{
+ '網格檢視':'网格视图','列表檢視':'列表视图','筆記排列格式':'笔记排列格式',
+ '已開啟自適應頁面尺寸':'已开启自适应页面尺寸','已關閉自適應頁面尺寸（回到 A4）':'已关闭自适应页面尺寸（回到 A4）',
+ '已自適應頁面尺寸：{w}×{h}':'已自适应页面尺寸：{w}×{h}',
+ '自適應頁面尺寸：匯入 PDF／圖片／pptx 時，頁面長寬比改用檔案本身的比例（例如 16:9 簡報），而非固定 A4。匯入時只對空白筆記套用；已匯入的純背景筆記，開啟此開關會立刻重算。':'自适应页面尺寸：导入 PDF／图片／pptx 时，页面长宽比改用文件本身的比例（例如 16:9 简报），而非固定 A4。导入时只对空白笔记套用；已导入的纯背景笔记，打开此开关会立刻重算。'
+});
+Object.assign(I18N['en'],{
+ '網格檢視':'Grid view','列表檢視':'List view','筆記排列格式':'Note layout',
+ '已開啟自適應頁面尺寸':'Adaptive page size enabled','已關閉自適應頁面尺寸（回到 A4）':'Adaptive page size disabled (back to A4)',
+ '已自適應頁面尺寸：{w}×{h}':'Adapted page size: {w}×{h}',
+ '自適應頁面尺寸：匯入 PDF／圖片／pptx 時，頁面長寬比改用檔案本身的比例（例如 16:9 簡報），而非固定 A4。匯入時只對空白筆記套用；已匯入的純背景筆記，開啟此開關會立刻重算。':'Adaptive page size: when importing PDF/images/pptx the page ratio follows the file itself (e.g. 16:9 slides) instead of fixed A4. At import it only applies to blank notes; for already-imported background-only notes, turning this on recalculates immediately.'
 });
 /* ===== 翻譯 helpers ===== */
 function t(s){ if(!s||LANG==='zh-TW')return s; const d=I18N[LANG]; if(!d)return s;
@@ -3997,29 +4054,51 @@ function revealPage(pi){
    目標筆記已有內容時不套用，以免破壞既有版面。 */
 try{S.adapt=localStorage.getItem('noteapp.adapt')==='1';}catch(e){S.adapt=false;}
 function syncAdaptBtn(){const b=$('#btnAdapt');if(b)b.classList.toggle('on',!!S.adapt);}
-$('#btnAdapt').addEventListener('click',()=>{
+$('#btnAdapt').addEventListener('click',async()=>{
  S.adapt=!S.adapt;
  try{localStorage.setItem('noteapp.adapt',S.adapt?'1':'0');}catch(e){}
  syncAdaptBtn();
- toast(S.adapt?t('已開啟自適應頁面尺寸'):t('已關閉自適應頁面尺寸（回到 A4）'));
+ if(!S.adapt){toast(t('已關閉自適應頁面尺寸（回到 A4）'));return;}
+ /* v1.4.0：已匯入的純背景筆記 → 開啟時立刻依來源比例重算（「先上載、後開啟」場景） */
+ const d=curDoc();
+ const ar=await docSourceAspect(d);
+ if(ar&&setDocAspect(d,ar)){commit();toast(tN('已自適應頁面尺寸：{w}×{h}',{w:d.w,h:d.h}));}
+ else toast(t('已開啟自適應頁面尺寸'));
 });
 syncAdaptBtn();
 
 /* 依來源檔案的長寬比重算頁面尺寸（面積接近原本 A4，避免忽大忽小）。
    ar = 寬/高。只在目標筆記仍是單一空白頁時套用。 */
-function applyAdaptiveSize(ar){
- if(!isFinite(ar)||ar<=0)return false;
- const d=curDoc();if(!d)return false;
- const p0=d.pages[0];
- const empty=(d.pages.length===1&&p0&&!p0.flow&&!p0.els.length&&!p0.strokes.length&&!p0.bg);
- if(!empty)return false;
+function setDocAspect(d,ar){ /* 核心：面積恆定重算長寬比（無內容檢查，供匯入後重算共用） */
+ if(!d||!isFinite(ar)||ar<=0)return false;
  const area=PW*PH;
  let w=Math.round(Math.sqrt(area*ar)),h=Math.round(w/ar);
  w=clamp(w,320,2400);h=clamp(h,320,3000);
  if(w===d.w&&h===d.h)return false;
  d.w=w;d.h=h;
  renderAll();
- toast(tN('已自適應頁面尺寸：{w}×{h}',{w:w,h:h}));
+ return true;
+}
+function docSourceAspect(d){ /* 來源比例：純匯入頁面（全頁 bg、無els/strokes/flow）才回傳比例 */
+ if(!d||!d.pages.length)return Promise.resolve(null);
+ const pure=d.pages.every(p=>p.bg&&p.bg.src&&!p.els.length&&!p.strokes.length&&!p.flow);
+ if(!pure)return Promise.resolve(null);
+ const T=d.pages[0].bg.text;
+ if(T&&T.direct&&T.vpw&&T.vph)return Promise.resolve(T.vpw/T.vph); /* pptx：EMU sldSz */
+ return new Promise(res=>{ /* PDF/圖片：讀底圖自然尺寸 */
+  const im=new Image();
+  im.onload=()=>res((im.naturalWidth&&im.naturalHeight)?(im.naturalWidth/im.naturalHeight):null);
+  im.onerror=()=>res(null);
+  im.src=d.pages[0].bg.src;
+ });
+}
+function applyAdaptiveSize(ar){
+ const d=curDoc();if(!d)return false;
+ const p0=d.pages[0];
+ const empty=(d.pages.length===1&&p0&&!p0.flow&&!p0.els.length&&!p0.strokes.length&&!p0.bg);
+ if(!empty)return false;
+ if(!setDocAspect(d,ar))return false;
+ toast(tN('已自適應頁面尺寸：{w}×{h}',{w:d.w,h:d.h}));
  return true;
 }
 
@@ -5051,13 +5130,32 @@ function updateSelBar(){
  const cnt=$('#homeSelCount'); if(cnt)cnt.textContent=n?tN('已選 {n} 份',{n:n}):t('點擊筆記進行多選');
  const del=$('#homeSelDel'); if(del){del.disabled=!n;del.textContent=n?tN('刪除選取（{n}）',{n:n}):t('刪除選取');}
 }
+/* 主頁排列格式（Grid/List，v1.4.0，跨工作階段記憶） */
+let homeLayout='grid';
+try{homeLayout=localStorage.getItem('noteapp.homeLayout')==='list'?'list':'grid';}catch(e){homeLayout='grid';}
+function applyHomeLayout(){
+ const grid=$('#homeGrid');
+ if(grid)grid.classList.toggle('list',homeLayout==='list');
+ const bg=$('#btnHomeGrid'),bl=$('#btnHomeList');
+ if(bg){bg.classList.toggle('on',homeLayout==='grid');bg.setAttribute('aria-pressed',homeLayout==='grid'?'true':'false');}
+ if(bl){bl.classList.toggle('on',homeLayout==='list');bl.setAttribute('aria-pressed',homeLayout==='list'?'true':'false');}
+}
+$('#btnHomeGrid').addEventListener('click',()=>setHomeLayout('grid'));
+$('#btnHomeList').addEventListener('click',()=>setHomeLayout('list'));
+function setHomeLayout(m){
+ if(m!=='list')m='grid';
+ if(homeLayout===m)return;
+ homeLayout=m;
+ try{localStorage.setItem('noteapp.homeLayout',m);}catch(e){}
+ applyHomeLayout();
+}
 function renderHome(){
  const grid=$('#homeGrid');if(!grid)return;
  const q=($('#homeSearchIn').value||'').trim().toLowerCase();
  const docs=S.docs.filter(d=>!q||d.name.toLowerCase().includes(q)||docPreview(d).toLowerCase().includes(q));
  let h='<div class="ncard new" id="ncardNew" role="button" tabindex="0">'+
   '<div class="plus"><svg class="ic"><use href="#i-plus"></use></svg></div>'+
-  '<div class="nm">新增筆記</div><div class="m2">建立一張新的空白頁面</div></div>';
+  '<div class="tx"><div class="nm">新增筆記</div><div class="m2">建立一張新的空白頁面</div></div></div>';
  docs.forEach(d=>{
   const dt=new Date(d.updated||Date.now());
   const ds=dt.toLocaleDateString('zh-TW')+' '+dt.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
@@ -5066,11 +5164,14 @@ function renderHome(){
   h+='<div class="ncard'+(picked?' picked':'')+'" data-id="'+d.id+'" role="button" tabindex="0" style="--c1:'+t[0]+';--c2:'+t[1]+';--csh:'+t[2]+'">'+
    (homeSel.on
     ? '<span class="pick" aria-hidden="true"></span>'
-    : '<span class="cic"><svg class="ic"><use href="#i-book"></use></svg></span>'+
-      '<span class="acts"><button data-a="dup" data-tip="複製筆記" aria-label="複製筆記"><svg class="ic"><use href="#i-copy"></use></svg></button>'+
-      '<button class="danger" data-a="del" data-tip="刪除筆記" aria-label="刪除筆記"><svg class="ic"><use href="#i-trash"></use></svg></button></span>')+
-   '<span class="nm">'+esc(d.name)+'</span>'+
-   '<span class="m2"><span>'+d.pages.length+' 頁</span><span class="sep">·</span><span>'+esc(relTime(d.updated)||ds)+'</span></span>'+
+    : '<span class="cic"><svg class="ic"><use href="#i-book"></use></svg></span>')+
+   '<span class="tx">'+
+    '<span class="nm">'+esc(d.name)+'</span>'+
+    '<span class="m2"><span>'+d.pages.length+' 頁</span><span class="sep">·</span><span>'+esc(relTime(d.updated)||ds)+'</span></span>'+
+    '<span class="pv">'+esc(docPreview(d))+'</span>'+ /* list 模式預覽列（v1.4.0；grid 隱藏） */
+   '</span>'+
+   (homeSel.on?'':'<span class="acts"><button data-a="dup" data-tip="複製筆記" aria-label="複製筆記"><svg class="ic"><use href="#i-copy"></use></svg></button>'+
+    '<button class="danger" data-a="del" data-tip="刪除筆記" aria-label="刪除筆記"><svg class="ic"><use href="#i-trash"></use></svg></button></span>')+
   '</div>';
  });
  if(!docs.length&&S.docs.length)h+='<div class="homeEmpty">找不到符合「'+esc(q)+'」的筆記</div>';
@@ -5481,6 +5582,7 @@ window.addEventListener('keydown',ev=>{
  setTool('text');   /* 進入編輯頁預設「文字工具」 */
  setCat('tools');
  renderHome();
+ applyHomeLayout();
  applyLang();
  document.body.classList.add('view-home');
   /* 桌面版：訂閱「以此打開」事件，並告知主進緒渲染已就緒（送出待處理的開啟檔案） */
