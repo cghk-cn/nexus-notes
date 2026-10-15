@@ -150,6 +150,12 @@ button.ibtn .ic{width:17px;height:17px}
 button.active,button.on{background:linear-gradient(135deg,var(--accent-soft),rgba(155,114,243,.2));border-color:transparent;color:var(--accent-text);box-shadow:0 0 0 1px var(--accent-ring),0 5px 14px var(--accent-ring)}
 button.primary{background:linear-gradient(135deg,var(--accent),#7b5cf0);border-color:transparent;color:#fff;box-shadow:0 5px 16px rgba(66,133,244,.38)}
 button.primary:hover{background:linear-gradient(135deg,var(--accent),#7b5cf0);filter:brightness(1.08);box-shadow:0 8px 22px rgba(66,133,244,.45)}
+/* 工具列按鍵 UI 強化（v1.2.7）：圖示鍵 hover 淡染主題色＋圖示變色、按壓回饋；分類頁籤過場更滑順 */
+#tbPanel .ibtn:hover{background:var(--accent-soft);border-color:transparent;box-shadow:0 4px 12px var(--accent-ring)}
+#tbPanel .ibtn:hover .ic{color:var(--accent)}
+#tbPanel .ibtn:active{transform:scale(.9)}
+button.tcat{transition:background .16s ease,color .16s ease,transform .16s cubic-bezier(.2,.8,.3,1.2),box-shadow .2s ease}
+button.tcat:active{transform:scale(.96)}
 /* ================= 主頁 Home ================= */
 #home{position:fixed;inset:0;z-index:200;display:none;flex-direction:column;background:
  radial-gradient(1100px 560px at 12% -12%,rgba(66,133,244,.16),transparent 62%),
@@ -221,6 +227,9 @@ html[data-theme=dark] body:not(.view-home) .starfield{display:block}
 .starfield .star:nth-child(18){left:48%;top:7%;--sz:22px;animation-duration:9.3s;animation-delay:-3.8s}
 .starfield .star:nth-child(19){left:74%;top:4%;--sz:16px;animation-duration:11.4s;animation-delay:-2.5s}
 .starfield .star:nth-child(20){left:35%;top:95%;--sz:24px;animation-duration:8.9s;animation-delay:-5.7s}
+/* 繁星全螢幕（v1.2.7）：topbar/tbPanel/sidebar/panel 各一層背景星，位於按鍵之後、不遮擋互動 */
+#topbar>.starfield,#tbPanel>.starfield,#sidebar>.starfield,#panel>.starfield{z-index:0}
+#topbar>*:not(.starfield),#tbPanel>*:not(.starfield),#sidebar>*:not(.starfield),#panel>*:not(.starfield){position:relative;z-index:1}
 
 /* ===== 主頁流星 =====
    6 顆。關鍵修正：所有流星用「同一條位移向量」，路徑彼此平行、不再收斂到左緣
@@ -342,6 +351,20 @@ html[data-theme=dark] .ncard .acts button{background:rgba(32,33,36,.82);color:#e
 .ncard.new .plus .ic{width:22px;height:22px}
 .ncard.new .nm{color:var(--text);text-shadow:none;font-size:15px}
 .ncard.new .m2{color:var(--text-3);text-shadow:none;opacity:1;justify-content:center}
+/* 主頁批量管理（v1.2.7） */
+body.homeSel .ncard .acts{display:none}
+.ncard .pick{position:absolute;top:12px;left:14px;width:26px;height:26px;border-radius:999px;border:2px solid rgba(255,255,255,.9);background:rgba(0,0,0,.2);box-shadow:0 2px 8px rgba(0,0,0,.28);z-index:3;display:flex;align-items:center;justify-content:center}
+.ncard .pick::after{content:"";width:12px;height:7px;border-left:2.5px solid #fff;border-bottom:2.5px solid #fff;transform:rotate(-45deg) translate(1px,-1px);opacity:0;transition:opacity .12s ease}
+.ncard.picked .pick{background:var(--accent);border-color:#fff}
+.ncard.picked .pick::after{opacity:1}
+.ncard.picked{outline:3px solid var(--accent);outline-offset:-3px}
+#homeSelBar{position:fixed;left:50%;bottom:calc(18px + var(--safe-bottom));transform:translate(-50%,160%);z-index:260;display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-lg);transition:transform .22s cubic-bezier(.2,.8,.3,1.2);max-width:calc(100vw - 20px)}
+#homeSelBar.show{transform:translate(-50%,0)}
+#homeSelCount{font-size:13px;font-weight:700;color:var(--text-2);white-space:nowrap;padding:0 4px}
+#homeSelBar button{height:32px;padding:0 13px;font-size:12.5px;font-weight:700;border-radius:999px;flex:none}
+#homeSelBar #homeSelDel{background:var(--danger);border-color:var(--danger);color:#fff}
+#homeSelBar #homeSelDel:disabled{opacity:.45;cursor:not-allowed}
+#homeSelBar #homeSelDel:not(:disabled):hover{filter:brightness(1.08)}
 .homeEmpty{grid-column:1/-1;text-align:center;color:var(--text-2);font-size:14px;padding:44px 0}
 @media (hover:hover){
  .ncard:hover{transform:translateY(-5px) scale(1.02);filter:brightness(1.05)}
@@ -447,6 +470,9 @@ body.sideCollapsed #sideToggle{display:flex}
 .page .bg img{width:100%;height:100%;object-fit:contain;display:block}
 .page .draw{position:absolute;left:0;top:0}
 .page .els{position:absolute;inset:0;overflow:hidden}
+.page .textLayer{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:3;color:transparent;line-height:1}
+.page .textLayer span{position:absolute;transform-origin:0 0;pointer-events:auto;cursor:text;user-select:text;-webkit-user-select:text;white-space:pre}
+body.tool-pen .textLayer span,body.tool-eraser .textLayer span,body.tool-text .textLayer span{user-select:none;-webkit-user-select:none;cursor:crosshair}
 body.tool-pen .page{cursor:crosshair}
 body.tool-eraser .page{cursor:cell}
 body.tool-text .page{cursor:text}
@@ -517,7 +543,7 @@ body.tool-pen .flow,body.tool-eraser .flow,body.tool-text .flow{pointer-events:n
 #elbarHost .elbar::-webkit-scrollbar{display:none}
 #elbarHost .elgrip{display:none}
 /* ================= 屬性面板 ================= */
-#panel{width:254px;background:var(--surface);border-left:1px solid var(--border);overflow:auto;padding:16px 14px 28px;flex:none;font-size:12.5px;display:flex;flex-direction:column}
+#panel{position:relative;width:254px;background:var(--surface);border-left:1px solid var(--border);overflow:auto;padding:16px 14px 28px;flex:none;font-size:12.5px;display:flex;flex-direction:column}
 #panel h4,#propEmpty,#propBox{flex:none}
 #panel h4{margin:0 0 14px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);font-weight:700}
 #panel .row{display:flex;gap:8px;margin-bottom:9px;align-items:center}
@@ -640,7 +666,7 @@ body.dragging #dropHint{display:flex}
 /* ================= 側欄收合鈕 ================= */
 #sideToggle .lbl{font-size:12px}
 /* ================= Responsive ================= */
-@media (max-width:1240px){#panel{display:none}}
+@media (max-width:1040px){#panel{display:none}}
 /* ===== 手機版：編輯頁隱藏左右欄；分類列 + 工具面板單行捲動 ===== */
 @media (max-width:768px){
  #sidebar,#sideToggle{display:none!important}
@@ -753,6 +779,7 @@ body.dragging #dropHint{display:flex}
     <option value="en">English</option>
    </select>
    <button class="ibtn" id="btnHomeTheme" data-tip="切換深色模式" aria-label="切換深色模式"><svg class="ic"><use href="#i-moon"></use></svg></button>
+    <button class="gbtn" id="btnHomeSelect" data-tip="批量管理：多選後一次刪除" aria-label="批量管理">管理</button>
    <button class="gbtn" id="btnHomeUpload"><svg class="ic"><use href="#i-upload"></use></svg>上載檔案</button>
   </div>
  </div>
@@ -761,10 +788,23 @@ body.dragging #dropHint{display:flex}
   <p id="homeSub">點擊板塊開始編輯</p>
  </div>
  <div id="homeGrid"></div>
+  <div id="homeSelBar" role="toolbar" aria-label="批量管理">
+   <span id="homeSelCount">點擊筆記進行多選</span>
+   <button id="homeSelAll">全選</button>
+   <button id="homeSelNone">全不選</button>
+   <button id="homeSelDel" class="danger" disabled>刪除選取</button>
+   <button id="homeSelDone" class="primary">完成</button>
+  </div>
 </div>
 
 <div id="app">
    <header id="topbar">
+    <div class="starfield" aria-hidden="true">
+     <i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i>
+     <i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i>
+     <i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i>
+     <i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i>
+    </div>
     <div class="brand" id="brandHome" data-tip="回到主頁" role="button" tabindex="0"><svg class="ic nx"><use href="#i-nexus"></use></svg><span>NEXUS</span><button class="expChip" id="btnExport" data-tip="匯出：JSON / HTML / TXT / PNG / 列印" aria-label="匯出"><svg class="ic"><use href="#i-download"></use></svg><span class="expTx">匯出</span></button></div>
     <nav id="tbCats" role="tablist" aria-label="工具類別">
      <button class="tcat" data-cat="file" role="tab" aria-selected="false">文件</button>
@@ -774,6 +814,12 @@ body.dragging #dropHint{display:flex}
     </nav>
    </header>
    <section id="tbPanel">
+    <div class="starfield" aria-hidden="true">
+     <i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i>
+     <i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i>
+     <i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i>
+     <i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i>
+    </div>
     <div class="tbPane" data-cat="file">
      <button id="btnNewDoc" class="ibtn" data-tip="新增筆記" aria-label="新增筆記"><svg class="ic"><use href="#i-note-plus"></use></svg></button>
      <input id="docName" spellcheck="false" aria-label="筆記名稱" data-tip="筆記名稱（雙擊左側卡片可重新命名）">
@@ -843,6 +889,12 @@ body.dragging #dropHint{display:flex}
 
  <div id="main">
      <aside id="sidebar">
+    <div class="starfield" aria-hidden="true">
+     <i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i>
+     <i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i>
+     <i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i>
+     <i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i>
+    </div>
     <div id="sideHead"><span class="shTitle">我的筆記 <span id="docCount">0</span></span><button id="btnSideCollapse" title="收起側欄">«</button></div>
     <div id="docList"></div>
     <div class="sideCap">上載的檔案</div>
@@ -861,6 +913,12 @@ body.dragging #dropHint{display:flex}
    <div id="dropHint">📥 放開以匯入檔案（PDF / TXT / JPG / PNG）</div>
   </div>
      <aside id="panel">
+    <div class="starfield" aria-hidden="true">
+     <i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i>
+     <i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i>
+     <i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i>
+     <i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i>
+    </div>
     <h4>屬性 Properties</h4>
     <div id="propEmpty" class="hint">
      <div class="es">
@@ -1032,7 +1090,7 @@ function closeModal(id){$('#'+id).classList.remove('open');}
 /* ===== 檢查更新（GitHub Releases） =====
    APP_VERSION 為目前版本；檢查時向 GitHub Releases API 取最新版並比對。
    發佈仓库：cghk-cn/nexus-notes。 */
-const APP_VERSION='1.2.6';
+const APP_VERSION='1.2.7';
 const UPD=(function(){
  const OWNER='cghk-cn', REPO='nexus-notes';
  const API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/latest';
@@ -1177,7 +1235,7 @@ Object.assign(I18N['zh-Hans'],{
 '無法載入 pdf.js（首次使用需網路）':'无法加载 pdf.js（首次使用需网络）','無法載入 html2canvas（首次需網路）':'无法加载 html2canvas（首次需网络）',
 '已匯出 JSON（可再匯入）':'已导出 JSON（可再导入）','已匯出純文字':'已导出纯文本','已匯出獨立 HTML 檔':'已导出独立 HTML 文件',
 '「{f}」位於第 {n} 頁':'「{f}」位于第 {n} 页','不支援的格式：{f}':'不支持的格式：{f}','匯入失敗：{f}':'导入失败：{f}','已插入圖片 {f}（第 {n} 頁）':'已插入图片 {f}（第 {n} 页）',
-'刪除筆記「{n}」？此動作無法復原。':'删除笔记「{n}」？此操作无法恢复。','重新命名筆記：':'重命名笔记：','輸入交點標籤（留空＝自動顯示均衡點 E）：':'输入交点标签（留空＝自动显示均衡点 E）：',
+'刪除筆記「{n}」？此動作無法復原。':'删除笔记「{n}」？此操作无法恢复。','已選 {n} 份':'已选 {n} 份','點擊筆記進行多選':'点击笔记进行多选','刪除選取（{n}）':'删除选取（{n}）','刪除選取':'删除选取','刪除選取的 {n} 份筆記？此動作無法復原。':'删除选取的 {n} 份笔记？此操作无法恢复。','已刪除選取筆記':'已删除选取笔记','管理':'管理','完成':'完成','重新命名筆記：':'重命名笔记：','輸入交點標籤（留空＝自動顯示均衡點 E）：':'输入交点标签（留空＝自动显示均衡点 E）：',
 '拖到另一條線以建立箭頭':'拖到另一条线以建立箭头',
 '正在解析 PDF…':'正在解析 PDF…','正在輸出 PNG…':'正在输出 PNG…','已匯出 {n} 張 PNG':'已导出 {n} 张 PNG','PNG 匯出失敗':'PNG 导出失败',
 '已匯入文字檔 {f}（{n} 頁 → 第 {a}–{b} 頁）':'已导入文字档 {f}（{n} 页 → 第 {a}–{b} 页）',
@@ -1207,7 +1265,7 @@ Object.assign(I18N['en'],{
 '加一列(右方)':'Add column right','加一行(下方)':'Add row below',
 '圖表已更新':'Chart updated','圖表標題':'Chart title',
 '在選取線中點加入扭曲点':'Add warp point at selected line',
-'刪除筆記「{n}」？此動作無法復原。':'Delete note “{n}”? This action cannot be undone.',
+'刪除筆記「{n}」？此動作無法復原。':'Delete note “{n}”? This action cannot be undone.','已選 {n} 份':'{n} selected','點擊筆記進行多選':'Click notes to multi-select','刪除選取（{n}）':'Delete selected ({n})','刪除選取':'Delete selected','刪除選取的 {n} 份筆記？此動作無法復原。':'Delete {n} selected notes? This cannot be undone.','已刪除選取筆記':'Selected notes deleted','管理':'Manage','完成':'Done',
 '刪除選取頁（{n}）':'Delete selected pages ({n})',
 '已儲存到瀏覽器':'Saved to browser',
 '已匯入 PDF「{f}」共 {n} 頁 → 第 {a}–{b} 頁（左側「上載的檔案」可跳轉）':'Imported PDF “{f}” with {n} pages → pages {a}–{b} (jump via the left "Uploaded files" list)',
@@ -1657,7 +1715,12 @@ const DESK=(function(){
   const isPdf=/^pdf$/i.test(ext);
   if(isText&&dup){ openDoc(dup.id); toast(tN('已開啟「{n}」，儲存時將覆寫原檔',{n:dup.name})); persist(); return; }
   /* 重開同一個 PDF：底圖必須重畫（原檔已被寫入註記），否則看到的是舊快取。 */
-  if(isPdf&&dup){ await reimportPdfInto(dup,p,name); return; }
+  if(isPdf&&dup){
+/* v1.2.7 筆記（有 pdfBase）→ 直接還原：保留向量筆跡＋pristine 底圖，儲存後仍可擦。
+舊筆記（無 pdfBase）才重新匯入（順便記下 pdfBase）。 */
+if(dup.pdfBase){ openDoc(dup.id); toast(tN('已開啟「{n}」',{n:dup.srcName||name})); persist(); return; }
+await reimportPdfInto(dup,p,name); return;
+}
   /* 已存過 sidecar（上次畫過並按了儲存）→ 直接載入那份註記，筆跡才會留下來。
    1.2.5 舊版把 PDF 也存在 sidecar → 遷移：連結改回 PDF 本體，儲存改走寫回。 */
   if(dupSc){
@@ -1704,7 +1767,7 @@ const DESK=(function(){
    /* PDF 走「直接寫回原檔」→ 連結原檔本身；
       圖片（無法寫回二進位）仍用旁邊的 sidecar。 */
    d.srcPath=p; d.srcName=name;
-   if(/^pdf$/i.test(ext)){ d.filePath=p; d.fileName=name; }
+   if(/^pdf$/i.test(ext)){ d.filePath=p; d.fileName=name; d.pdfBase=r.base64; }
    else{ d.filePath=sc; d.fileName=base+'.noteapp.json'; }
   }
   uploadMode='doc'; /* 已在上面建好筆記，匯入目前這份即可 */
@@ -1729,21 +1792,14 @@ const DESK=(function(){
     if(d.srcPath&&/\.pdf$/i.test(d.srcPath)){
      const ok=await writeBackToPdf(d);
      if(ok){
-      /* 註記已燒進 PDF → 先用磁碟上（含註記的）PDF 重畫底圖，畫面立刻看到結果，
-         再清空筆跡（下次儲存才不會重複疊加）；1.2.5 舊 sidecar 檔一併刪除。
-         底圖刷新失敗 → 保留筆跡（寧可重複，也不要畫面上的註記憑空消失）。
-         20s 超時保險：刷新卡住就當失敗，儲存永遠不會吊死。 */
-      let refreshed=false;
-      try{ refreshed=await Promise.race([refreshPdfBgs(d),
-           new Promise(res=>setTimeout(()=>res(false),20000))]); }catch(e){ console.warn('refreshPdfBgs',e); }
-      const hasInkLeft=(d.pages||[]).some(pg=>(pg.strokes&&pg.strokes.length)||(pg.els&&pg.els.length)||pg.flow);
-      if(refreshed||!hasInkLeft){ d.pages.forEach(pg=>{ pg.strokes=[]; pg.els=[]; pg.flow=''; }); }
-      else toast(t('底圖刷新失敗：畫面筆跡保留，重新載入後可見燒入結果'));
-      d.filePath=d.srcPath; d.fileName=d.srcName||d.fileName;
-      d.updated=Date.now(); persist(); renderAll(true);
-      killSidecar(d.srcPath+'.noteapp.json');
-      return true;
-     }
+/* 註記已燒進 PDF（pristine 重建）→ 向量筆跡／元素「保留」不清空：
+儲存後仍可橡皮擦、繼續編輯；底圖是 pristine 點陣、向量疊在其上即所見，
+不刷新底圖（刷新會把註記烤進點陣 → 就再也擦不掉）。舊 sidecar 檔一併刪除。 */
+d.filePath=d.srcPath; d.fileName=d.srcName||d.fileName;
+d.updated=Date.now(); persist();
+killSidecar(d.srcPath+'.noteapp.json');
+return true;
+}
      /* 寫不進 PDF（被鎖住／pdf-lib 沒載入）→ 退回 sidecar，至少註記不丟。
         ⚠️ 連結必須先改到 <原檔>.noteapp.json —— 絕不能把 JSON 寫進 .pdf 本體！ */
      d.filePath=d.srcPath+'.noteapp.json';
@@ -1790,7 +1846,7 @@ async function reimportPdfInto(oldDoc,p,name){
   const file=new File([u8],name,{type:'application/pdf'});
   const keepName=oldDoc.name;
   const nd=newDoc(keepName||name.replace(/\.[^.]+$/,''));
-  nd.filePath=p;nd.fileName=name;nd.srcPath=p;nd.srcName=name;
+  nd.filePath=p;nd.fileName=name;nd.srcPath=p;nd.srcName=name;nd.pdfBase=rd.base64;
   S.docs.unshift(nd);openDoc(nd.id);
   uploadMode='doc';
   await importPDF(file,{name:name});
@@ -1810,13 +1866,19 @@ async function reimportPdfInto(oldDoc,p,name){
 async function writeBackToPdf(d){
  if(typeof PDFLib==='undefined'){ toast(t('無法載入 pdf-lib（首次使用需網路）')); return false; }
  if(!d.srcPath)return false;
- const rd=await window.nexus.readFile(d.srcPath);
- if(!rd||!rd.ok||rd.base64==null){ toast(t('寫入失敗：讀不到原 PDF')); return false; }
- toast(t('正在寫入 PDF…'));
- try{
-  const bin=atob(rd.base64);const u8=new Uint8Array(bin.length);
-  for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
-  const pdf=await PDFLib.PDFDocument.load(u8,{ignoreEncryption:true});
+toast(t('正在寫入 PDF…'));
+/* 從 pristine 原始 PDF 重建（匯入時存的 d.pdfBase）→ 每次都是「原稿＋現有全部註記」，
+不會累疊、被擦掉的筆跡下次儲存就真的消失。沒有 pdfBase 的舊筆記才退回讀磁碟。 */
+let srcB64=d.pdfBase;
+if(!srcB64){
+const rd=await window.nexus.readFile(d.srcPath);
+if(!rd||!rd.ok||rd.base64==null){ toast(t('寫入失敗：讀不到原 PDF')); return false; }
+srcB64=rd.base64;
+}
+try{
+const bin=atob(srcB64);const u8=new Uint8Array(bin.length);
+for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+const pdf=await PDFLib.PDFDocument.load(u8,{ignoreEncryption:true});
   const pages=pdf.getPages();
   const rgb=h=>{const m=/^#?([0-9a-f]{6})$/i.exec(h||'#000');if(!m)return[0,0,0];
    const n=parseInt(m[1],16);return[(n>>16&255)/255,(n>>8&255)/255,(n&255)/255];};
@@ -1878,12 +1940,9 @@ const page=pages[idx]; if(!page)continue;
   for(let i=0;i<out.length;i+=CH)b64+=String.fromCharCode.apply(null,out.subarray(i,i+CH));
   const wr=await window.nexus.writeBinary(d.srcPath,btoa(b64));
   if(!wr||!wr.ok){ toast(t('寫入檔案失敗')+(wr&&wr.error?('：'+wr.error):'')); return false; }
-  /* 附加頁現在有自己的 PDF 頁碼 → 補上 bg.page */
-  if(added.length){
-   const baseNum=pdf.getPageCount()-added.length;
-   added.forEach((pg,i)=>{ pg.bg=Object.assign({},pg.bg||{},{page:baseNum+i+1,name:d.srcName||d.fileName||''}); });
-  }
-  toast(tN('已把註記寫回「{n}」',{n:d.srcName||d.name}));
+  /* 附加頁不設 bg.page：下次儲存仍以 pristine 重建、依現有頁面狀態重新附加；
+設了反而會被誤判成「原 PDF 頁」而漏附加或重複。 */
+toast(tN('已把註記寫回「{n}」',{n:d.srcName||d.name}));
   return true;
  }catch(e){
   console.error('writeBackToPdf',e);
@@ -2035,6 +2094,26 @@ function renderAll(recenter){
  if(recenter||docChanged)centerPages();
  updateSelUI();
 }
+/* PDF 文字層：把 PDF 文字重疊成透明可選取 span（選取模式可拖動選字/複製） */
+function buildTextLayer(bg,d){
+ const layer=document.createElement('div');layer.className='textLayer';
+ const T=bg.text;
+ if(!T||!T.items||!T.items.length||!T.vpw)return layer;
+ const k=d.w/T.vpw;
+ const tr=(m1,m2)=>[m1[0]*m2[0]+m1[2]*m2[1],m1[1]*m2[0]+m1[3]*m2[1],m1[0]*m2[2]+m1[2]*m2[3],m1[1]*m2[2]+m1[3]*m2[3],m1[0]*m2[4]+m1[2]*m2[5]+m1[4],m1[1]*m2[4]+m1[3]*m2[5]+m1[5]];
+ for(const it of T.items){
+  if(!it.s)continue;
+  const tx=tr(T.vpt,it.t);
+  const fontH=Math.hypot(tx[2],tx[3])||it.h||10;
+  const sp=document.createElement('span');
+  sp.textContent=it.s;
+  sp.style.left=(tx[4]*k)+'px';
+  sp.style.top=((tx[5]-fontH)*k)+'px';
+  sp.style.fontSize=(fontH*k)+'px';
+  layer.appendChild(sp);
+ }
+ return layer;
+}
 function renderPage(p,i,d){
  ensurePage(p);
  const el=document.createElement('div');
@@ -2061,6 +2140,7 @@ function renderPage(p,i,d){
  flow.addEventListener('blur',()=>{p.flow=flow.innerHTML;commit();},{once:false});
  elsLayer.appendChild(flow);
  p.els.forEach(e=>elsLayer.appendChild(renderEl(e)));
+ if(p.bg&&p.bg.text)el.appendChild(buildTextLayer(p.bg,d));
  /* 選取框 + 工具列放到該頁（僅第一頁掛共用節點） */
  if(i===0){
   const sb=document.createElement('div');sb.id='selbox';
@@ -2741,6 +2821,8 @@ $('#pages').addEventListener('pointerdown',ev=>{
   return;
  }
  /* --- 選取工具 --- */
+ /* 在 PDF 文字層上 → 交給瀏覽器原生文字選取（像 Mac 預覽程式），不攔截 */
+ if(ev.target.closest&&ev.target.closest('.textLayer')){ return; }
  /* 表格格線拖曳（Excel 風格：調整欄寬 / 列高） */
  const th=ev.target.closest('.tcolh,.trowh');
  if(th&&S.sel){
@@ -4017,7 +4099,16 @@ async function importPDF(file,t){
   /* 優先 WebP（同畫質檔案更小），不支援時退回高品質 JPEG */
   let src=cv.toDataURL('image/webp',0.92);
   if(src.indexOf('data:image/webp')!==0)src=cv.toDataURL('image/jpeg',0.96);
-  d.pages.push({id:uid(),bg:{src,name:file.name,page:i},strokes:[],els:[],flow:''});
+  /* 文字層：保留 PDF 文字（供「選取」模式拖動選字／複製，像 Mac 預覽） */
+  let tl=null;
+  try{
+   const tc=await page.getTextContent();
+   if(tc&&tc.items&&tc.items.length){
+    tl={vpt:vp.transform,vpw:vp.width,vph:vp.height,
+        items:tc.items.map(it=>({t:it.transform,s:it.str||'',w:it.width||0,h:it.height||0}))};
+   }
+  }catch(e){}
+  d.pages.push({id:uid(),bg:{src,name:file.name,page:i,text:tl},strokes:[],els:[],flow:''});
   added++;
  }
  if(S.sel)S.sel=null;
@@ -4203,6 +4294,21 @@ const HOME_TINTS=[
  ['rgba(18,181,229,.9)','rgba(66,133,244,.8)','rgba(18,181,229,.55)']
 ];
 function tintOf(id){let h=0;const s=String(id||'');for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return HOME_TINTS[h%HOME_TINTS.length];}
+let homeSel={on:false,ids:[]};
+function homeSelToggle(){
+ homeSel.on=!homeSel.on;
+ if(!homeSel.on)homeSel.ids=[];
+ document.body.classList.toggle('homeSel',homeSel.on);
+ const b=$('#btnHomeSelect'); if(b)b.textContent=homeSel.on?t('完成'):t('管理');
+ renderHome();
+}
+function updateSelBar(){
+ const bar=$('#homeSelBar'); if(!bar)return;
+ bar.classList.toggle('show',homeSel.on);
+ const n=homeSel.ids.length;
+ const cnt=$('#homeSelCount'); if(cnt)cnt.textContent=n?tN('已選 {n} 份',{n:n}):t('點擊筆記進行多選');
+ const del=$('#homeSelDel'); if(del){del.disabled=!n;del.textContent=n?tN('刪除選取（{n}）',{n:n}):t('刪除選取');}
+}
 function renderHome(){
  const grid=$('#homeGrid');if(!grid)return;
  const q=($('#homeSearchIn').value||'').trim().toLowerCase();
@@ -4214,10 +4320,13 @@ function renderHome(){
   const dt=new Date(d.updated||Date.now());
   const ds=dt.toLocaleDateString('zh-TW')+' '+dt.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
   const t=tintOf(d.id);
-  h+='<div class="ncard" data-id="'+d.id+'" role="button" tabindex="0" style="--c1:'+t[0]+';--c2:'+t[1]+';--csh:'+t[2]+'">'+
-   '<span class="cic"><svg class="ic"><use href="#i-book"></use></svg></span>'+
-   '<span class="acts"><button data-a="dup" data-tip="複製筆記" aria-label="複製筆記"><svg class="ic"><use href="#i-copy"></use></svg></button>'+
-   '<button class="danger" data-a="del" data-tip="刪除筆記" aria-label="刪除筆記"><svg class="ic"><use href="#i-trash"></use></svg></button></span>'+
+  const picked=homeSel.on&&homeSel.ids.indexOf(d.id)>=0;
+  h+='<div class="ncard'+(picked?' picked':'')+'" data-id="'+d.id+'" role="button" tabindex="0" style="--c1:'+t[0]+';--c2:'+t[1]+';--csh:'+t[2]+'">'+
+   (homeSel.on
+    ? '<span class="pick" aria-hidden="true"></span>'
+    : '<span class="cic"><svg class="ic"><use href="#i-book"></use></svg></span>'+
+      '<span class="acts"><button data-a="dup" data-tip="複製筆記" aria-label="複製筆記"><svg class="ic"><use href="#i-copy"></use></svg></button>'+
+      '<button class="danger" data-a="del" data-tip="刪除筆記" aria-label="刪除筆記"><svg class="ic"><use href="#i-trash"></use></svg></button></span>')+
    '<span class="nm">'+esc(d.name)+'</span>'+
    '<span class="m2"><span>'+d.pages.length+' 頁</span><span class="sep">·</span><span>'+esc(relTime(d.updated)||ds)+'</span></span>'+
   '</div>';
@@ -4226,8 +4335,9 @@ function renderHome(){
  grid.innerHTML=h;
  const sub=$('#homeSub');
  if(sub)sub.textContent=S.docs.length?('共 '+S.docs.length+' 份筆記 · 點擊板塊開始編輯'):'還沒有筆記，點擊「新增筆記」開始';
+ updateSelBar();
 }
-function showHome(){S.sel=null;S.editing=null;document.body.classList.add('view-home');renderHome();}
+function showHome(){S.sel=null;S.editing=null;homeSel.on=false;homeSel.ids=[];document.body.classList.remove('homeSel');const b=$('#btnHomeSelect');if(b)b.textContent=t('管理');document.body.classList.add('view-home');renderHome();}
 function openDoc(id){
  if(!S.docs.some(d=>d.id===id))return;
  S.curId=id;S.sel=null;S.editing=null;
@@ -4263,6 +4373,11 @@ $('#homeGrid').addEventListener('click',ev=>{
   }
   return;
  }
+ if(homeSel.on){
+  const i=homeSel.ids.indexOf(id);
+  if(i<0)homeSel.ids.push(id); else homeSel.ids.splice(i,1);
+  renderHome(); return;
+ }
  openDoc(id);
 });
 $('#homeGrid').addEventListener('keydown',ev=>{
@@ -4273,6 +4388,19 @@ $('#homeGrid').addEventListener('keydown',ev=>{
  openDoc(card.dataset.id);
 });
 $('#homeSearchIn').addEventListener('input',renderHome);
+$('#btnHomeSelect').addEventListener('click',()=>homeSelToggle());
+$('#homeSelDone').addEventListener('click',()=>{if(homeSel.on)homeSelToggle();});
+$('#homeSelAll').addEventListener('click',()=>{homeSel.ids=S.docs.map(x=>x.id);renderHome();});
+$('#homeSelNone').addEventListener('click',()=>{homeSel.ids=[];renderHome();});
+$('#homeSelDel').addEventListener('click',()=>{
+ if(!homeSel.ids.length)return;
+ if(!confirm(tN('刪除選取的 {n} 份筆記？此動作無法復原。',{n:homeSel.ids.length})))return;
+ const kill=new Set(homeSel.ids);
+ S.docs=S.docs.filter(x=>!kill.has(x.id));
+ homeSel.ids.forEach(id=>{try{FSA.clear(id);}catch(e){}});
+ if(kill.has(S.curId)){if(S.docs.length)S.curId=S.docs[0].id;else newDoc('我的筆記');}
+ homeSel.ids=[]; persist(); renderHome(); toast(t('已刪除選取筆記'));
+});
 $('#langSel').addEventListener('change',e=>setLang(e.target.value));
 $('#langSelHome').addEventListener('change',e=>setLang(e.target.value));
 $('#btnHomeTheme').addEventListener('click',()=>applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark'));
