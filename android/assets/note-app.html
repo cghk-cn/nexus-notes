@@ -26,6 +26,18 @@
  --glass:rgba(255,255,255,.72);
  --chip:rgba(16,24,40,.045);
  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei","Helvetica Neue",Arial,sans-serif;
+ /* v2.0.0 A1 設計代幣：四套階梯（間距/圓角/陰影/動效） */
+ --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--sp-6:32px;--sp-7:48px;--sp-8:64px;
+ --r-xs:6px;--r-2xl:20px;--r-3xl:28px;
+ --e-1:0 1px 2px rgba(16,24,40,.05);
+ --e-2:0 2px 8px rgba(16,24,40,.06),0 1px 2px rgba(16,24,40,.04);
+ --e-3:0 12px 32px rgba(16,24,40,.14);
+ --e-4:0 24px 64px rgba(16,24,40,.22);
+ --t-fast:.14s;--t-base:.2s;--t-slow:.32s;
+ --ease-out:cubic-bezier(.2,.8,.3,1);--ease-spring:cubic-bezier(.2,.8,.3,1.2);--ease-emph:cubic-bezier(.2,.7,.3,1);
+ /* v2.0.0 A5 三級字階＋行高（對比達 AA） */
+ --fs-xs:11.5px;--fs-sm:12.5px;--fs-base:14px;--fs-md:15.5px;--fs-lg:17.5px;--fs-xl:22px;--fs-2xl:clamp(24px,4vw,32px);
+ --lh-tight:1.25;--lh-base:1.65;--lh-loose:1.85;
 }
 html[data-theme=dark]{
  --bg:#0f1115;--surface:#171a21;--surface-2:#1e222b;--surface-3:#262b36;
@@ -745,7 +757,73 @@ body.dragging #dropHint{display:flex}
  body.tool-pen .page,body.tool-eraser .page,body.tool-text .page{touch-action:none}
 }
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-/* ================= Print ================= */
+/* ================= v2.0.0 優化（A3/A4/B2/E2） ================= */
+/* A4 動效過場：卡片 stagger 進場 / modal blur 彈入 / 頁面 crossfade（reduce-motion 已全域壓制） */
+@keyframes nxCardIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes nxPageIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.ncard{animation:nxCardIn var(--t-slow) var(--ease-out) both}
+.ncard:nth-child(1){animation-delay:0ms}.ncard:nth-child(2){animation-delay:35ms}
+.ncard:nth-child(3){animation-delay:70ms}.ncard:nth-child(4){animation-delay:105ms}
+.ncard:nth-child(5){animation-delay:140ms}.ncard:nth-child(6){animation-delay:175ms}
+.ncard:nth-child(7){animation-delay:210ms}.ncard:nth-child(8){animation-delay:245ms}
+.ncard:nth-child(n+9){animation-delay:280ms}
+.modal.open{backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.page{animation:nxPageIn var(--t-base) var(--ease-out) both}
+/* A3 空狀態：SVG 插畫＋CTA */
+.nxEmpty{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+ grid-column:1/-1;padding:var(--sp-7) var(--sp-5);color:var(--text-2);gap:var(--sp-4)}
+.nxEmpty svg{width:132px;height:100px;opacity:.9}
+.nxEmpty .neTitle{font-size:var(--fs-lg);font-weight:700;color:var(--text)}
+.nxEmpty .neSub{font-size:var(--fs-base);color:var(--text-3);max-width:340px;line-height:var(--lh-base)}
+.nxEmpty .neCta{margin-top:var(--sp-2);padding:9px 18px;border-radius:999px;border:none;
+ background:linear-gradient(135deg,var(--accent),#7b5cf0);color:#fff;font-weight:700;font-size:var(--fs-base);
+ cursor:pointer;box-shadow:0 8px 20px rgba(47,111,237,.34);transition:transform var(--t-fast) var(--ease-spring)}
+.nxEmpty .neCta:hover{transform:translateY(-2px) scale(1.04)}
+.nxEmpty .neCta:active{transform:scale(.96)}
+/* A3 側欄空態（緊湊版） */
+.nxEmpty.compact{padding:var(--sp-5) var(--sp-2);gap:var(--sp-2)}
+.nxEmpty.compact svg{width:56px;height:70px}
+.nxEmpty.compact .neTitle{font-size:var(--fs-base)}
+.nxEmpty.compact .neSub{font-size:var(--fs-sm);max-width:180px}
+.nxEmpty.compact .neCta{padding:7px 14px;font-size:var(--fs-sm)}
+/* B2 釘選卡片：置頂高亮 */
+.ncard.pinned{box-shadow:0 0 0 2px rgba(47,111,237,.5),0 12px 26px -12px var(--csh,rgba(16,24,40,.5)),inset 0 1px 0 rgba(255,255,255,.5)}
+.ncard .pinFlag{position:absolute;top:12px;right:14px;z-index:4;font-size:12px;color:#fff;
+ filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));line-height:1}
+.ncard .cic.pinnedIc{}
+/* B2 排序選擇器 */
+#homeSort{height:30px;padding:0 var(--sp-2);border-radius:9px;border:1px solid var(--border);
+ background:var(--surface);color:var(--text);font-size:var(--fs-sm);font-weight:600;cursor:pointer}
+/* E2 手機閱讀優先：右下浮動「畫筆」FAB（進編輯） */
+#readFab{display:none;position:fixed;right:16px;bottom:calc(20px + var(--safe-bottom));z-index:320;
+ width:56px;height:56px;border-radius:999px;border:none;align-items:center;justify-content:center;
+ background:linear-gradient(135deg,var(--accent),#7b5cf0);color:#fff;box-shadow:0 12px 28px rgba(47,111,237,.46);
+ cursor:pointer;transition:transform var(--t-fast) var(--ease-spring)}
+#readFab .ic{width:24px;height:24px}
+#readFab:active{transform:scale(.9)}
+body.readMode #readFab{display:flex}
+/* E2 閱讀模式：隱藏頂部工具列/分類列/編輯列，只留文件 */
+body.readMode #topbar,body.readMode #tbPanel,body.readMode #elbarHost{display:none!important}
+/* C4 側欄頁面縮圖 */
+.sidePgs{display:flex;flex-direction:column;gap:8px;padding:4px 2px 2px}
+.sidePg{display:flex;gap:9px;align-items:center;padding:6px;border:1px solid var(--border);border-radius:12px;
+ cursor:pointer;background:var(--surface);transition:transform var(--t-fast) var(--ease-out),border-color var(--t-fast),box-shadow var(--t-fast)}
+.sidePg:hover{border-color:var(--accent);transform:translateX(3px);box-shadow:var(--e-2)}
+.sidePg.active{border-color:var(--accent);background:var(--accent-soft)}
+.sidePg.dragOver{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-ring)}
+.sidePg .spThumb{flex:none;width:44px;height:58px;border-radius:6px;overflow:hidden;background:var(--paper);
+ border:1px solid var(--border);box-shadow:var(--e-1)}
+.sidePg .spThumb img{width:100%;height:100%;object-fit:cover;display:block}
+.sidePg .spMeta{min-width:0;display:flex;flex-direction:column;gap:2px}
+.sidePg .spN{font-size:var(--fs-sm);font-weight:700;color:var(--text)}
+.sidePg .spS{font-size:var(--fs-xs);color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidePg .spGrip{margin-left:auto;color:var(--text-3);cursor:grab;font-size:13px;flex:none}
+/* E1 拇指區：手機版工具面板貼近底部（單行橫向捲動），方便單手操作 */
+@media (max-width:768px){
+ #tbPanel{position:sticky;bottom:0;z-index:59;box-shadow:0 -6px 20px rgba(16,24,40,.10)}
+ body.readMode #tbPanel{display:none!important}
+}
+/* Print ================= */
 @media print{
  #topbar,#tbPanel,#elbarHost,#sidebar,#panel,#home,.elbar,#selbox,#toast,#sideHead,#sideFoot,#sideToggle,.sprite,#dropHint,.printbar{display:none!important}
  body,#app,#main,#workspace{background:#fff;height:auto;overflow:visible;display:block}
@@ -805,6 +883,7 @@ body.dragging #dropHint{display:flex}
 <symbol id="i-view-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="2"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="2"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="2"/><rect x="13" y="13" width="7.5" height="7.5" rx="2"/></symbol>
 <symbol id="i-view-list" viewBox="0 0 24 24"><rect x="3.2" y="4.4" width="17.6" height="5.6" rx="2.2"/><rect x="3.2" y="14" width="17.6" height="5.6" rx="2.2"/><path d="M6.4 7.2h.01M6.4 16.8h.01"/></symbol>
 <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M9 4h6l-1 6 3.5 3.5H6.5L10 10 9 4z"/><path d="M12 13.5V21"/></symbol>
 <symbol id="i-doc-json" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M10 12l-1.5 1.5L10 15M14 12l1.5 1.5L14 15"/></symbol>
 <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></symbol>
 <symbol id="i-txt" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M8.5 13h7M8.5 16.5h5"/></symbol>
@@ -836,6 +915,11 @@ body.dragging #dropHint{display:flex}
     <button id="btnHomeGrid" class="sg on" data-tip="網格檢視" aria-label="網格檢視" aria-pressed="true"><svg class="ic"><use href="#i-view-grid"></use></svg></button>
     <button id="btnHomeList" class="sg" data-tip="列表檢視" aria-label="列表檢視" aria-pressed="false"><svg class="ic"><use href="#i-view-list"></use></svg></button>
    </span>
+   <select id="homeSort" data-nolang aria-label="排序方式" data-tip="排序（釘選一律置頂）">
+    <option value="updated">最近</option>
+    <option value="name">名稱</option>
+    <option value="pages">頁數</option>
+   </select>
    <select id="langSelHome" class="langSel" data-nolang aria-label="語言 / Language">
     <option value="zh-TW">繁體中文</option>
     <option value="zh-Hans">简体中文</option>
@@ -949,7 +1033,6 @@ body.dragging #dropHint{display:flex}
     <button data-x="png"><svg class="ic"><use href="#i-image"></use></svg>每頁 PNG 圖片</button>
     <button data-x="print"><svg class="ic"><use href="#i-print"></use></svg>列印 / 存成 PDF</button>
    </div>
-
  <div id="main">
      <aside id="sidebar">
     <div class="starfield" aria-hidden="true">
@@ -960,6 +1043,8 @@ body.dragging #dropHint{display:flex}
     </div>
     <div id="sideHead"><span class="shTitle">我的筆記 <span id="docCount">0</span></span><button id="btnSideCollapse" title="收起側欄">«</button></div>
     <div id="docList"></div>
+    <div class="sideCap" id="sidePgsCap" style="display:none">頁面縮圖</div>
+    <div id="sidePgs" class="sidePgs" style="display:none"></div>
     <div class="sideCap">上載的檔案</div>
     <div id="fileList"><div class="fiEmpty">尚無上載檔案</div></div>
     <div id="sideFoot">自動儲存於瀏覽器本機<br>支援 PDF / TXT / JPG / PNG · 畫筆 · 文字 · 表格 · 經濟圖表</div>
@@ -1126,6 +1211,14 @@ body.dragging #dropHint{display:flex}
  </div>
  <div class="btns"><button onclick="closeModal('mPages')">取消</button><button class="primary" id="pgOk">刪除選取頁</button></div>
 </div></div>
+<div class="modal" id="mPng"><div class="card">
+ <h3>🖼 匯出 PNG</h3>
+ <div class="row"><label>頁面範圍</label>
+  <select id="pngRange"><option value="all">全部頁面</option><option value="cur">目前頁</option></select></div>
+ <div class="row"><label>PNG 解析度</label>
+  <select id="pngScale"><option value="1">1x（標準）</option><option value="2" selected>2x（高）</option><option value="3">3x（列印）</option></select></div>
+ <div class="btns"><button onclick="closeModal('mPng')">取消</button><button class="primary" id="pngOk">匯出 PNG</button></div>
+</div></div>
 <div id="colorPop" role="dialog" aria-label="調色盤">
  <div class="cpSV" id="cpSV"><i class="cpKnob" id="cpKnob"></i></div>
  <input type="range" class="cpHue" id="cpHue" min="0" max="360" step="1" value="0" aria-label="色相">
@@ -1144,6 +1237,7 @@ body.dragging #dropHint{display:flex}
 </div>
 
 <div id="toast"></div>
+<button id="readFab" aria-label="開始編輯" data-tip="進入編輯模式"><svg class="ic"><use href="#i-pen"></use></svg></button>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
@@ -1161,7 +1255,7 @@ function closeModal(id){$('#'+id).classList.remove('open');}
 /* ===== 檢查更新（GitHub Releases） =====
    APP_VERSION 為目前版本；檢查時向 GitHub Releases API 取最新版並比對。
    發佈仓库：cghk-cn/nexus-notes。 */
-const APP_VERSION='1.4.0';
+const APP_VERSION='2.0.0';
 const UPD=(function(){
  const OWNER='cghk-cn', REPO='nexus-notes';
  const API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/latest';
@@ -1403,6 +1497,21 @@ Object.assign(I18N['en'],{
 '表格 {a}×{b}':'Table {a}×{b}','圖表 · {t}':'Chart · {t}','供給需求':'Supply–Demand','自訂雙線':'Custom lines','自繪圖表':'Drawn','圖片元素':'Image','手繪筆跡':'Drawing','表格':'Table',
 '系統預設':'System default','黑體（蘋果）':'Heiti (Apple)','宋體':'Songti','楷體':'Kaiti','微軟正黑體':'Microsoft JhengHei','筆記應用 NoteApp':'NoteApp','已切換界面語言':'UI language switched'
 });
+/* ===== v2.0.0 新增字串（A3 空態 / B2 釘選 / E2 閱讀優先 / F2 匯出） ===== */
+Object.assign(I18N['zh-Hans'],{
+'還沒有任何筆記':'还没有任何笔记','點一下下方按鈕，開始記錄你的第一頁。':'点击下方按钮，开始记录你的第一页。',
+'試試其他關鍵字，或建立一張新的筆記。':'试试其他关键字，或建立一张新的笔记。',
+'新增筆記':'新增笔记','已釘選到頂端':'已钉选到顶部','已取消釘選':'已取消钉选',
+'已進入編輯模式':'已进入编辑模式','頁面縮圖':'页面缩图','已移動到第 {n} 頁':'已移动到第 {n} 頁',
+'頁面範圍':'页面范围','全部頁面':'全部页面','目前頁':'目前页','PNG 解析度':'PNG 分辨率','匯出 PNG':'导出 PNG'
+});
+Object.assign(I18N['en'],{
+'還沒有任何筆記':'No notes yet','點一下下方按鈕，開始記錄你的第一頁。':'Tap the button below to start your first page.',
+'試試其他關鍵字，或建立一張新的筆記。':'Try another keyword, or create a new note.',
+'新增筆記':'New note','已釘選到頂端':'Pinned to top','已取消釘選':'Unpinned',
+'已進入編輯模式':'Edit mode on','頁面縮圖':'Page thumbnails','已移動到第 {n} 頁':'Moved to page {n}',
+'頁面範圍':'Page range','全部頁面':'All pages','目前頁':'Current page','PNG 解析度':'PNG resolution','匯出 PNG':'Export PNG'
+});
 
 Object.assign(I18N['en'],{
 '縮小':'Zoom out','放大':'Zoom in',
@@ -1626,12 +1735,84 @@ function newDoc(name){
  const d={id:uid(),name:name||('筆記 '+(S.docs.length+1)),w:PW,h:PH,updated:Date.now(),pages:[blankPage()]};
  S.docs.unshift(d);S.curId=d.id;S.sel=null;S.editing=null;initHist();renderAll();persist();return d;
 }
-function persist(){try{localStorage.setItem('noteapp.v1',JSON.stringify({docs:S.docs,curId:S.curId}));}catch(e){console.warn('儲存失敗',e);}}
-function loadPersisted(){
- try{const r=JSON.parse(localStorage.getItem('noteapp.v1'));
-  if(r&&Array.isArray(r.docs)&&r.docs.length){S.docs=r.docs;S.curId=(r.curId&&r.docs.some(d=>d.id===r.curId))?r.curId:S.docs[0].id;return true;}
+/* ===== v2.0.0 D2 儲存層（IndexedDB 主 + localStorage 雙寫回退）=====
+   原則：① 每次 persist 同時寫 localStorage（回退）與 IDB（容量天花板解除）；
+   ② 載入時 IDB 優先，失敗/為空自動退回 localStorage —— 舊筆記零損失；
+   ③ 動工前先對 localStorage 舊檔做一次性自動備份（noteapp.v1.bak）。 */
+const NXStore=(function(){
+ const DB='nexus-store',VER=1,S_DOCS='docs',S_META='meta';
+ let dbp=null,ready=false;
+ function open(){
+  if(dbp)return dbp;
+  dbp=new Promise((res,rej)=>{
+   let rq;try{rq=indexedDB.open(DB,VER);}catch(e){return rej(e);}
+   rq.onupgradeneeded=()=>{const db=rq.result;
+    if(!db.objectStoreNames.contains(S_DOCS))db.createObjectStore(S_DOCS);
+    if(!db.objectStoreNames.contains(S_META))db.createObjectStore(S_META);};
+   rq.onsuccess=()=>{ready=true;res(rq.result);};
+   rq.onerror=()=>rej(rq.error);
+  });
+  return dbp;
+ }
+ async function put(store,key,val){
+  const db=await open();return await new Promise((res,rej)=>{
+   const tx=db.transaction(store,'readwrite');tx.objectStore(store).put(val,key);
+   tx.oncomplete=()=>res(true);tx.onerror=()=>rej(tx.error);});
+ }
+ async function get(store,key){
+  try{const db=await open();return await new Promise((res,rej)=>{
+   const r=db.transaction(store,'readonly').objectStore(store).get(key);
+   r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+  catch(e){return undefined;}
+ }
+ async function del(store,key){
+  try{const db=await open();return await new Promise((res)=>{
+   const tx=db.transaction(store,'readwrite');tx.objectStore(store).delete(key);
+   tx.oncomplete=()=>res(true);tx.onerror=()=>res(false);});}catch(e){return false;}
+ }
+ return {open,put,get,del,hasIDB:()=>typeof indexedDB!=='undefined',S_DOCS,S_META};
+})();
+const S_DOCS=NXStore.S_DOCS;
+/* 自動備份：第一次以 v2.0.0 啟動時，把 localStorage 舊檔複製一份，供極端情況回復 */
+(function ensureBackup(){
+ try{
+  const raw=localStorage.getItem('noteapp.v1');
+  if(raw&&!localStorage.getItem('noteapp.v1.bak')){
+   localStorage.setItem('noteapp.v1.bak',raw);
+   localStorage.setItem('noteapp.v1.bakAt',Date.now());
+  }
  }catch(e){}
- return false;
+})();
+let _pendT=null;
+function persist(flush){
+ const payload={docs:S.docs,curId:S.curId,savedAt:Date.now()};
+ let json=null;
+ try{json=JSON.stringify(payload);}catch(e){console.warn('序列化失敗',e);return;}
+ try{localStorage.setItem('noteapp.v1',json);}
+ catch(e){console.warn('localStorage 寫入失敗（改由 IndexedDB 保存）',e);}   /* 超量時仍要寫 IDB */
+ if(NXStore.hasIDB()){
+  clearTimeout(_pendT);
+  const go=()=>{NXStore.put(S_DOCS,'main',payload).catch(e=>console.warn('IDB 寫入失敗',e));};
+  if(flush)go(); else _pendT=setTimeout(go,250);
+ }
+}
+function loadPersisted(){
+ return (async()=>{
+  const readLS=k=>{try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}};
+  const valid=r=>!!(r&&Array.isArray(r.docs)&&r.docs.length);
+  let ls=readLS('noteapp.v1');
+  if(!valid(ls))ls=readLS('noteapp.v1.bak');        /* 主檔損毀時退回備份 */
+  let idb=null;
+  if(NXStore.hasIDB()){try{idb=(await NXStore.get(S_DOCS,'main'))||null;}catch(e){idb=null;}}
+  let pick=null;
+  if(valid(idb)&&valid(ls))pick=((idb.savedAt||0)>=(ls.savedAt||0))?idb:ls;   /* 取較新者 */
+  else pick=valid(idb)?idb:(valid(ls)?ls:null);
+  if(!pick)return false;
+  S.docs=pick.docs;
+  S.curId=(pick.curId&&S.docs.some(d=>d.id===pick.curId))?pick.curId:S.docs[0].id;
+  persist(true);   /* 舊資料種入 IDB（遷移）；之後以 IDB 為主 */
+  return true;
+ })();
 }
 /* ===== 本機檔案連結（File System Access API）=====
    支援的瀏覽器（Mac 版 Chrome / Edge）可直接「開啟」本機 .json / .noteapp 檔，
@@ -2190,12 +2371,41 @@ function findEl(id){
 }
 function pageIndexOfEl(id){const r=findEl(id);return r?r.pi:-1;}
 /* ===== 渲染 ===== */
+/* ===== v2.0.0 D1 增量渲染 =====
+   每頁以內容指紋（頁面 JSON＋頁數＋邊距＋文件字級/字體＋文件 id）判斷是否變動；
+   指紋未變的頁面保留原 DOM（不重建、不重繪筆跡），只重建有變的頁。
+   結構性變化（換筆記、增刪頁、重排）一律全量重建，確保正確性。 */
+const _pageFp=new Map();   /* key: docId:pageId → fingerprint */
+function pageFingerprint(p,i,d){
+ return d.id+'|'+(d.pages.length)+'|'+docMargin(d)+'|'+(d.ffs||16)+'|'+(d.ffont||'')+'|'+i+'|'+JSON.stringify(p);
+}
+let _lastFullDocId=null;
 function renderAll(recenter){
- const d=curDoc();const wrap=$('#pages');wrap.innerHTML='';
- if(!d)return;
- d.pages.forEach((p,i)=>wrap.appendChild(renderPage(p,i,d)));
+ const d=curDoc();const wrap=$('#pages');
+ if(!d){wrap.innerHTML='';return;}
+ const fullNeeded=(_lastFullDocId!==d.id)||(wrap.children.length!==d.pages.length)||!!S._forceFull;
+ S._forceFull=false;
+ if(fullNeeded){
+  wrap.innerHTML='';
+  d.pages.forEach((p,i)=>{const pe=renderPage(p,i,d);wrap.appendChild(pe);_pageFp.set(d.id+'|'+p.id,pageFingerprint(p,i,d));});
+  _lastFullDocId=d.id;
+  S._dirtyStat={full:true,rebuilt:d.pages.length,kept:0};
+ }else{
+  let rebuilt=0,kept=0;
+  d.pages.forEach((p,i)=>{
+   const key=d.id+'|'+p.id;const fp=pageFingerprint(p,i,d);
+   const cur=wrap.children[i];
+   if(_pageFp.get(key)===fp&&cur&&cur.dataset.pi==i){kept++;return;}
+   /* 只重建內容變動的頁；selbox 為共用 UI 節點，被重建連帶移除時由 updateSelUI 統一重建 */
+   const pe=renderPage(p,i,d);
+   if(cur)wrap.replaceChild(pe,cur);else wrap.appendChild(pe);
+   _pageFp.set(key,fp);rebuilt++;
+  });
+  S._dirtyStat={full:false,rebuilt,kept};
+ }
  renderDocList();
  renderFileList();
+ renderSidePgs();   /* C4：側欄頁面縮圖 */
  $('#docName').value=d.name;
  $('#pageMargin').value=docMargin(d);
  $('#pageMarginV').textContent=docMargin(d);
@@ -2204,6 +2414,72 @@ function renderAll(recenter){
  S._docId=d.id;
  if(recenter||docChanged)centerPages();
  updateSelUI();
+}
+/* ===== v2.0.0 C4 側欄頁面縮圖：點擊跳頁 + pointer 拖曳排序 ===== */
+function renderSidePgs(){
+ const host=$('#sidePgs'),cap=$('#sidePgsCap');if(!host)return;
+ const d=curDoc();
+ if(!d||d.pages.length<2){host.style.display='none';if(cap)cap.style.display='none';host.innerHTML='';return;}
+ host.style.display='flex';if(cap)cap.style.display='';
+ host.innerHTML='';
+ d.pages.forEach((p,i)=>{
+  const it=document.createElement('div');
+  it.className='sidePg';it.dataset.pi=i;
+  const bits=[];
+  if(p.bg&&p.bg.src)bits.push('底圖');
+  if(p.strokes&&p.strokes.length)bits.push(p.strokes.length+'筆');
+  if(p.els&&p.els.length)bits.push(p.els.length+'物');
+  if(p.flow&&p.flow.trim())bits.push('文字');
+  it.innerHTML='<div class="spThumb"><img alt=""></div>'+
+   '<div class="spMeta"><span class="spN">第 '+(i+1)+' 頁</span><span class="spS">'+(bits.length?bits.join(' · '):'空白')+'</span></div>'+
+   '<span class="spGrip" title="拖曳排序">⠿</span>';
+  /* 點擊跳頁 */
+  it.addEventListener('click',()=>gotoPage(i));
+  /* pointer 拖曳排序 */
+  it.addEventListener('pointerdown',ev=>{ if(ev.target.closest('.spGrip'))startSideDrag(ev,i); });
+  host.appendChild(it);
+  /* 縮圖（非同步填充） */
+  NXThumb.renderThumb(d,i).then(url=>{const im=it.querySelector('img');if(im&&url)im.src=url;}).catch(()=>{});
+ });
+}
+function gotoPage(i){
+ const ws=$('#workspace');const pg=document.querySelector('.page[data-pi="'+i+'"]');
+ if(!ws||!pg)return;
+ const pr=pg.getBoundingClientRect(),wr=ws.getBoundingClientRect();
+ const targetY=S.panY+(pr.top-wr.top)-(ws.clientHeight-pr.height)/2;
+ S.panY=targetY;clampPan();applyPagesTransform();
+}
+/* C4：拖曳排序（拖到另一頁上方→互換順序） */
+let sideDrag=null;
+function startSideDrag(ev,i){
+ ev.preventDefault();
+ sideDrag={from:i};
+ const items=[...document.querySelectorAll('.sidePg')];
+ const move=e=>{
+  const el=document.elementFromPoint(e.clientX,e.clientY);
+  const over=el&&el.closest?el.closest('.sidePg'):null;
+  items.forEach(x=>x.classList.remove('dragOver'));
+  if(over&&+over.dataset.pi!==sideDrag.from)over.classList.add('dragOver');
+ };
+ const up=e=>{
+  document.removeEventListener('pointermove',move);
+  document.removeEventListener('pointerup',up);
+  items.forEach(x=>x.classList.remove('dragOver'));
+  const el=document.elementFromPoint(e.clientX,e.clientY);
+  const over=el&&el.closest?el.closest('.sidePg'):null;
+  if(over){
+   const to=+over.dataset.pi;
+   if(to!==sideDrag.from){
+    const d=curDoc();const mv=d.pages.splice(sideDrag.from,1)[0];
+    d.pages.splice(to,0,mv);
+    S.sel=null;S.editing=null;commit();renderAll();
+    toast(tN('已移動到第 {n} 頁',{n:to+1}));
+   }
+  }
+  sideDrag=null;
+ };
+ document.addEventListener('pointermove',move);
+ document.addEventListener('pointerup',up);
 }
 /* PDF 文字層：把 PDF 文字重疊成透明可選取 span（選取模式可拖動選字/複製） */
 function buildTextLayer(bg,d){
@@ -2407,6 +2683,10 @@ function docPreview(d){
 function renderDocList(){
  const list=$('#docList');list.innerHTML='';
  const dc=$('#docCount');if(dc)dc.textContent=S.docs.length;
+ if(!S.docs.length){   /* A3：側欄空態（無筆記時） */
+  list.innerHTML=emptyState('side','還沒有任何筆記','點一下下方按鈕，開始記錄你的第一頁。','新增筆記','newFromEmpty');
+  return;
+ }
  S.docs.forEach(d=>{
   const it=document.createElement('div');
   it.className='docItem'+(d.id===S.curId?' active':'');
@@ -2489,11 +2769,17 @@ function syncSelClasses(){
  });
 }
 function updateSelUI(){
- const sb=$('#selbox');if(!sb)return;
  const old=$('#elbar');if(old)old.remove();
  const d=curDoc();
  syncSelClasses();
- if(!S.sel||!d){sb.style.display='none';renderPanel();return;}
+ let sb=$('#selbox');
+ if(!sb&&d){   /* v2.0.0 D1：頁面增量重建可能移除共用 selbox → 缺失時重建並掛回第 1 頁 */
+  sb=document.createElement('div');sb.id='selbox';
+  sb.innerHTML='<i class="nw"></i><i class="ne"></i><i class="sw"></i><i class="se"></i>';
+  const host=document.querySelector('.page[data-pi="0"] .els')||$('#pages');
+  if(host)host.appendChild(sb);else sb=null;
+ }
+ if(!sb||!S.sel||!d){if(sb)sb.style.display='none';renderPanel();return;}
  const f=findEl(S.sel.id);
  if(!f){S.sel=null;sb.style.display='none';renderPanel();return;}
  const {el:e,pi}=f;
@@ -2919,6 +3205,11 @@ function onSelectDeselect(){S.sel=null;S.dselLine=null;S.dselArrow=null;updateSe
 
 $('#pages').addEventListener('pointerdown',ev=>{
  if(ev.button!==0)return;
+ /* v2.0.0 E1 防掌觸：畫筆／橡皮擦運作中，忽略手掌等大面積觸控（touch 來源），
+    只保留手寫筆／滑鼠（pointerType pen/mouse），避免手掌握到畫布留下誤觸筆跡。 */
+ if((S.tool==='pen'||S.tool==='eraser')&&ev.pointerType==='touch'){
+  if(ev.width&&ev.width>28)return;   /* 掌觸通常接觸面積大 */
+ }
  const pageEl=ev.target.closest('.page');if(!pageEl)return;
  const pi=+pageEl.dataset.pi;
  const d=curDoc();if(!d)return;
@@ -5030,8 +5321,22 @@ function exportHTML(){
  dl(safeName()+'.html',html,'text/html;charset=utf-8');
  toast('已匯出獨立 HTML 檔');
 }
-async function exportPNG(){
+/* ===== v2.0.0 F2 匯出強化：頁面範圍（全部/目前）＋ PNG 解析度（1x/2x/3x） ===== */
+let _pngCurPage=0;
+function _curVisiblePage(){
+ /* 目前頁 = 垂直捲動位置最接近工作區頂端的那一頁 */
+ const ws=$('#workspace');if(!ws)return 0;
+ const wr=ws.getBoundingClientRect();let best=0,bd=1e9;
+ $$('.page').forEach(pg=>{const r=pg.getBoundingClientRect();const dd=Math.abs(r.top-wr.top-8);if(dd<bd){bd=dd;best=+pg.dataset.pi||0;}});
+ return best;
+}
+function openPngDlg(){ _pngCurPage=_curVisiblePage(); const d=curDoc(); const r=$('#pngRange'); if(r)r.options[0].textContent=t('全部頁面')+'（'+(d?d.pages.length:0)+'）'; $('#mPng').classList.add('open'); }
+async function exportPNG(range,scale){
  if(typeof html2canvas==='undefined'){toast('無法載入 html2canvas（首次需網路）');return;}
+ range=range||'all';scale=scale||2;
+ const d=curDoc();if(!d)return;
+ /* 依範圍挑出要匯出的頁索引 */
+ let idxs=[]; if(range==='cur')idxs=[_pngCurPage]; else idxs=d.pages.map((_,i)=>i);
  const box=buildStatic();
  const holder=document.createElement('div');
  holder.style.cssText='position:fixed;left:-100000px;top:0;background:#fff;z-index:-1;';
@@ -5039,16 +5344,17 @@ async function exportPNG(){
  document.body.appendChild(holder);
  toast('正在輸出 PNG…');
  try{
-  const kids=[...box.children];
-  for(let i=0;i<kids.length;i++){
-   const cv=await html2canvas(kids[i],{scale:2,backgroundColor:'#fff',logging:false});
+  const kids=[...box.children];let n=0;
+  for(const pi of idxs){
+   const node=kids[pi];if(!node)continue;
+   const cv=await html2canvas(node,{scale:scale,backgroundColor:'#fff',logging:false});
    const a=document.createElement('a');
    a.href=cv.toDataURL('image/png');
-   a.download=safeName()+'_第'+(i+1)+'頁.png';
-   document.body.appendChild(a);a.click();a.remove();
+   a.download=safeName()+'_第'+(pi+1)+'頁.png';
+   document.body.appendChild(a);a.click();a.remove();n++;
    await new Promise(r=>setTimeout(r,350));
   }
-  toast(tN('已匯出 {n} 張 PNG',{n:kids.length}));
+  toast(tN('已匯出 {n} 張 PNG',{n:n}));
  }catch(err){console.error(err);toast('PNG 匯出失敗');}
  holder.remove();
 }
@@ -5085,8 +5391,15 @@ $('#exportMenu').addEventListener('click',ev=>{
  if(k==='saveas')saveAsLocal();
  if(k==='html')exportHTML();
  if(k==='txt')exportTXT();
- if(k==='png')exportPNG();
+ if(k==='png')openPngDlg();
  if(k==='print')setTimeout(()=>window.print(),120);
+});
+/* F2：PNG 匯出選項確認 */
+if($('#pngOk'))$('#pngOk').addEventListener('click',()=>{
+ const rg=$('#pngRange')?$('#pngRange').value:'all';
+ const sc=+($('#pngScale')?$('#pngScale').value:2);
+ closeModal('mPng');
+ exportPNG(rg,sc);
 });
 /* ===== 深色模式 ===== */
 function applyTheme(t){
@@ -5149,10 +5462,68 @@ function setHomeLayout(m){
  try{localStorage.setItem('noteapp.homeLayout',m);}catch(e){}
  applyHomeLayout();
 }
+/* ===== v2.0.0 A2/C4 共用縮圖引擎 =====
+   renderThumb(d,pi) 回傳 dataURL：
+   ① 有 bg.src（PDF/圖片/pptx 底圖）→ 直接以該圖當縮圖；
+   ② 無底圖 → 用 html2canvas 把頁 DOM（含文字流/元素/筆跡）截成小圖；
+   ③ 截圖失敗或無內容 → 回傳 null（呼叫端用漸層 fallback）。
+   快取：記憶體 Map + IndexedDB（key=docId:updated，doc 一改就換圖）。 */
+const NXThumb=(function(){
+ const mem=new Map();
+ const key=(d,pi)=>d.id+':'+(d.updated||0)+':'+pi;
+ function pageHasContent(p){
+  return !!((p.bg&&p.bg.src)||(p.els&&p.els.length)||(p.strokes&&p.strokes.length)||(p.flow&&p.flow.trim()));
+ }
+ async function idbGet(k){try{return await NXStore.get('meta','thumb:'+k);}catch(e){return undefined;}}
+ async function idbSet(k,v){try{await NXStore.put('meta','thumb:'+k,v);}catch(e){}}
+ async function renderThumb(d,pi){
+  const p=(d.pages||[])[pi];if(!p)return null;
+  const k=key(d,pi);
+  if(mem.has(k))return mem.get(k);
+  const cached=await idbGet(k);
+  if(cached){mem.set(k,cached);return cached;}
+  if(!pageHasContent(p)){mem.set(k,null);return null;}
+  /* ① 底圖直接用 */
+  if(p.bg&&p.bg.src){
+   mem.set(k,p.bg.src);idbSet(k,p.bg.src);return p.bg.src;
+  }
+  /* ② html2canvas 截頁 DOM */
+  if(typeof html2canvas==='undefined')return null;
+  try{
+   const pe=renderPage(p,pi,d);
+   pe.querySelectorAll('.thlayer,.chandle,.nhandle,.ciDot,#selbox,.elbar').forEach(x=>x.remove());
+   pe.querySelectorAll('.el').forEach(x=>x.classList.remove('sel','cediting'));
+   pe.querySelectorAll('[contenteditable]').forEach(x=>x.removeAttribute('contenteditable'));
+   pe.style.position='fixed';pe.style.left='-100000px';pe.style.top='0';pe.style.animation='none';
+   document.body.appendChild(pe);
+   try{
+    const cv=await html2canvas(pe,{scale:0.18,backgroundColor:'#ffffff',logging:false});
+    const url=cv.toDataURL('image/jpeg',0.6);
+    mem.set(k,url);idbSet(k,url);
+    return url;
+   }finally{pe.remove();}
+  }catch(e){console.warn('縮圖失敗',e);return null;}
+ }
+ function clear(){mem.clear();}
+ return {renderThumb,pageHasContent,clear};
+})();
+/* ===== v2.0.0 B2 排序（釘選一律置頂） ===== */
+let homeSort='updated';
+try{const sv=localStorage.getItem('noteapp.homeSort');if(['updated','name','pages'].includes(sv))homeSort=sv;}catch(e){}
+function sortDocs(list){
+ const pin=d=>d.pin?0:1;
+ const cmp={
+  updated:(a,b)=>(b.updated||0)-(a.updated||0),
+  name:(a,b)=>String(a.name||'').localeCompare(String(b.name||''),'zh-Hant'),
+  pages:(a,b)=>((b.pages||[]).length)-((a.pages||[]).length)
+ }[homeSort]||((a,b)=>(b.updated||0)-(a.updated||0));
+ return list.slice().sort((a,b)=>pin(a)-pin(b)||cmp(a,b));
+}
 function renderHome(){
  const grid=$('#homeGrid');if(!grid)return;
  const q=($('#homeSearchIn').value||'').trim().toLowerCase();
- const docs=S.docs.filter(d=>!q||d.name.toLowerCase().includes(q)||docPreview(d).toLowerCase().includes(q));
+ let docs=S.docs.filter(d=>!q||d.name.toLowerCase().includes(q)||docPreview(d).toLowerCase().includes(q));
+ docs=sortDocs(docs);   /* B2：釘選置頂 + 依目前排序 */
  let h='<div class="ncard new" id="ncardNew" role="button" tabindex="0">'+
   '<div class="plus"><svg class="ic"><use href="#i-plus"></use></svg></div>'+
   '<div class="tx"><div class="nm">新增筆記</div><div class="m2">建立一張新的空白頁面</div></div></div>';
@@ -5161,26 +5532,79 @@ function renderHome(){
   const ds=dt.toLocaleDateString('zh-TW')+' '+dt.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
   const t=tintOf(d.id);
   const picked=homeSel.on&&homeSel.ids.indexOf(d.id)>=0;
-  h+='<div class="ncard'+(picked?' picked':'')+'" data-id="'+d.id+'" role="button" tabindex="0" style="--c1:'+t[0]+';--c2:'+t[1]+';--csh:'+t[2]+'">'+
+  h+='<div class="ncard'+(picked?' picked':'')+(d.pin?' pinned':'')+'" data-id="'+d.id+'" role="button" tabindex="0" style="--c1:'+t[0]+';--c2:'+t[1]+';--csh:'+t[2]+'">'+
    (homeSel.on
     ? '<span class="pick" aria-hidden="true"></span>'
-    : '<span class="cic"><svg class="ic"><use href="#i-book"></use></svg></span>')+
+    : '<span class="cic" data-thumb="0"><svg class="ic"><use href="#i-book"></use></svg></span>')+
+   (d.pin&&!homeSel.on?'<span class="pinFlag" title="已釘選">📌</span>':'')+
    '<span class="tx">'+
     '<span class="nm">'+esc(d.name)+'</span>'+
     '<span class="m2"><span>'+d.pages.length+' 頁</span><span class="sep">·</span><span>'+esc(relTime(d.updated)||ds)+'</span></span>'+
-    '<span class="pv">'+esc(docPreview(d))+'</span>'+ /* list 模式預覽列（v1.4.0；grid 隱藏） */
+    '<span class="pv">'+esc(docPreview(d))+'</span>'+
    '</span>'+
-   (homeSel.on?'':'<span class="acts"><button data-a="dup" data-tip="複製筆記" aria-label="複製筆記"><svg class="ic"><use href="#i-copy"></use></svg></button>'+
+   (homeSel.on?'':'<span class="acts">'+
+    '<button data-a="pin" data-tip="'+(d.pin?'取消釘選':'釘選到頂端')+'" aria-label="釘選"><svg class="ic"><use href="#i-pin"></use></svg></button>'+
+    '<button data-a="dup" data-tip="複製筆記" aria-label="複製筆記"><svg class="ic"><use href="#i-copy"></use></svg></button>'+
     '<button class="danger" data-a="del" data-tip="刪除筆記" aria-label="刪除筆記"><svg class="ic"><use href="#i-trash"></use></svg></button></span>')+
   '</div>';
  });
- if(!docs.length&&S.docs.length)h+='<div class="homeEmpty">找不到符合「'+esc(q)+'」的筆記</div>';
+ /* A3 空狀態 */
+ if(!docs.length){
+  if(q)h+=emptyState('search','找不到符合「'+esc(q)+'」的筆記','試試其他關鍵字，或建立一張新的筆記。','新增筆記','newFromEmpty');
+  else  h+=emptyState('home','還沒有任何筆記','點一下下方按鈕，開始記錄你的第一頁。','新增筆記','newFromEmpty');
+ }
  grid.innerHTML=h;
+ /* A2：為有內容的筆記卡片換上真實縮圖 */
+ docs.forEach(d=>{ hydrateThumb(d); });
  const sub=$('#homeSub');
  if(sub)sub.textContent=S.docs.length?('共 '+S.docs.length+' 份筆記 · 點擊板塊開始編輯'):'還沒有筆記，點擊「新增筆記」開始';
  updateSelBar();
 }
+/* A3 空狀態 SVG 插畫＋CTA */
+function emptyState(kind,title,sub,ctaLabel,ctaAction){
+ const art={
+  home:'<svg viewBox="0 0 132 100" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="26" y="16" width="80" height="68" rx="8" opacity=".45"/><path d="M40 34h40M40 46h52M40 58h34" opacity=".7"/><circle cx="98" cy="74" r="16" fill="var(--accent-soft)" stroke="var(--accent)"/><path d="M98 68v12M92 74h12" stroke="var(--accent)"/></svg>',
+  search:'<svg viewBox="0 0 132 100" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="60" cy="46" r="26" opacity=".6"/><path d="M80 66l18 18" opacity=".8"/><path d="M50 46h20M60 36v20" opacity=".5"/></svg>',
+  side:'<svg viewBox="0 0 60 76" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="10" y="8" width="40" height="60" rx="6" opacity=".5"/><path d="M20 24h20M20 36h20M20 48h12" opacity=".6"/></svg>'
+ }[kind]||'';
+ const compact=(kind==='side')?' compact':'';
+ return '<div class="nxEmpty'+compact+'">'+art+
+  '<div class="neTitle">'+title+'</div>'+
+  '<div class="neSub">'+sub+'</div>'+
+  (ctaLabel?'<button class="neCta" data-empty-cta="'+ctaAction+'">'+ctaLabel+'</button>':'')+
+  '</div>';
+}
+/* A2：依 doc 內容把 .cic 換成縮圖背景圖 */
+function hydrateThumb(d){
+ const card=document.querySelector('.ncard[data-id="'+d.id+'"]');
+ if(!card)return;
+ const cic=card.querySelector('.cic');if(!cic)return;
+ NXThumb.renderThumb(d,0).then(url=>{
+  if(!url)return;
+  const c2=card.querySelector('.cic[data-thumb]');if(!c2)return;
+  c2.style.backgroundImage='url('+url+')';
+  c2.style.backgroundSize='cover';c2.style.backgroundPosition='center';
+  const ic=c2.querySelector('.ic');if(ic)ic.style.display='none';
+  c2.removeAttribute('data-thumb');
+ }).catch(()=>{});
+}
 function showHome(){S.sel=null;S.editing=null;homeSel.on=false;homeSel.ids=[];document.body.classList.remove('homeSel');const b=$('#btnHomeSelect');if(b)b.textContent=t('管理');document.body.classList.add('view-home');renderHome();}
+/* ===== v2.0.0 E2 手機閱讀優先 =====
+   ≤768px 開啟筆記預設進入「閱讀模式」（隱藏頂部工具列/分類列，只留文件），
+   右下浮動「畫筆」FAB 點一下才進編輯模式。桌機 (>768px) 不受影响。 */
+function isNarrow(){return window.matchMedia&&window.matchMedia('(max-width:768px)').matches;}
+function setReadMode(on){
+ document.body.classList.toggle('readMode',!!on);
+ const fab=$('#readFab');if(fab)fab.setAttribute('aria-hidden',on?'false':'true');
+}
+function enterEditMode(){
+ setReadMode(false);
+ setTool('pen');setCat('tools');
+ toast(t('已進入編輯模式'));
+}
+if($('#readFab'))$('#readFab').addEventListener('click',enterEditMode);
+/* 離開閱讀模式後，若使用者在桌機視窗，不強制 readMode */
+window.addEventListener('resize',()=>{ if(!isNarrow())setReadMode(false); });
 function openDoc(id){
  if(!S.docs.some(d=>d.id===id))return;
  S.curId=id;S.sel=null;S.editing=null;
@@ -5192,9 +5616,11 @@ function openDoc(id){
  renderAll();
  restoreView(id);
  persist();
+ /* E2：手機寬度預設閱讀模式 */
+ setReadMode(isNarrow());
 }
 /* 離開／切換分頁時把目前檢視位置存起來 */
-window.addEventListener('pagehide',persist);
+window.addEventListener('pagehide',()=>persist(true));
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persist();});
 $('#homeGrid').addEventListener('click',ev=>{
  const nb=ev.target.closest('#ncardNew');
@@ -5205,6 +5631,9 @@ $('#homeGrid').addEventListener('click',ev=>{
  const a=ev.target.closest('button[data-a]');
  if(a){
   ev.stopPropagation();
+  if(a.dataset.a==='pin'){
+   d.pin=!d.pin;persist();renderHome();toast(d.pin?'已釘選到頂端':'已取消釘選');return;
+  }
   if(a.dataset.a==='dup'){
    const c=JSON.parse(JSON.stringify(d));c.id=uid();c.name=d.name+' (副本)';c.updated=Date.now();delete c.fileName;delete c.filePath;delete c.textSrc;delete c.srcPath;delete c.srcName;
    S.docs.unshift(c);persist();renderHome();toast('已複製筆記');
@@ -5231,6 +5660,20 @@ $('#homeGrid').addEventListener('keydown',ev=>{
  openDoc(card.dataset.id);
 });
 $('#homeSearchIn').addEventListener('input',renderHome);
+/* A3 空狀態 CTA：新增筆記 */
+$('#homeGrid').addEventListener('click',ev=>{
+ const cta=ev.target.closest('.neCta');if(!cta)return;
+ const nd=newDoc('筆記 '+(S.docs.length+1));openDoc(nd.id);toast('已建立新筆記');
+});
+/* A3 側欄空態 CTA：新增筆記 */
+if($('#docList'))$('#docList').addEventListener('click',ev=>{
+ const cta=ev.target.closest('.neCta');if(!cta)return;
+ newDoc('筆記 '+(S.docs.length+1));toast('已建立新筆記');
+});
+/* B2 排序選擇器 */
+(function(){const hs=$('#homeSort');if(!hs)return;hs.value=homeSort;
+ hs.addEventListener('change',e=>{homeSort=e.target.value;try{localStorage.setItem('noteapp.homeSort',homeSort);}catch(err){}renderHome();});
+})();
 $('#btnHomeSelect').addEventListener('click',()=>homeSelToggle());
 $('#homeSelDone').addEventListener('click',()=>{if(homeSel.on)homeSelToggle();});
 $('#homeSelAll').addEventListener('click',()=>{homeSel.ids=S.docs.map(x=>x.id);renderHome();});
@@ -5577,18 +6020,25 @@ window.addEventListener('keydown',ev=>{
 });
 /* ===== 啟動（先進入主頁） ===== */
 (function init(){
- if(!loadPersisted())newDoc('我的筆記');
- else{initHist();renderAll(true);}
- setTool('text');   /* 進入編輯頁預設「文字工具」 */
- setCat('tools');
- renderHome();
- applyHomeLayout();
- applyLang();
- document.body.classList.add('view-home');
-  /* 桌面版：訂閱「以此打開」事件，並告知主進緒渲染已就緒（送出待處理的開啟檔案） */
+ /* v2.0.0：loadPersisted 改為 async（IDB 優先、localStorage 回退）→ 以 Promise 流程啟動 */
+ loadPersisted().then(ok=>{
+  if(!ok)newDoc('我的筆記');
+  else{initHist();renderAll(true);}
+  setTool('text');   /* 進入編輯頁預設「文字工具」 */
+  setCat('tools');
+  renderHome();
+  applyHomeLayout();
+  applyLang();
+  document.body.classList.add('view-home');
+   /* 桌面版：訂閱「以此打開」事件，並告知主進緒渲染已就緒（送出待處理的開啟檔案） */
+   if(DESK.supported){ DESK.listen(); DESK.ready(); }
+  console.log('NoteApp ready —',S.docs.length,'doc(s) · home view · lang=',LANG);
+ }).catch(e=>{
+  console.warn('啟動載入失敗，改以空白筆記啟動',e);
+  newDoc('我的筆記');setTool('text');setCat('tools');renderHome();applyHomeLayout();applyLang();
+  document.body.classList.add('view-home');
   if(DESK.supported){ DESK.listen(); DESK.ready(); }
-
- console.log('NoteApp ready —',S.docs.length,'doc(s) · home view · lang=',LANG);
+ });
 })();
 </script>
 
