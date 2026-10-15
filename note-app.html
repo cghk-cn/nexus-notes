@@ -1117,7 +1117,7 @@ function closeModal(id){$('#'+id).classList.remove('open');}
 /* ===== 檢查更新（GitHub Releases） =====
    APP_VERSION 為目前版本；檢查時向 GitHub Releases API 取最新版並比對。
    發佈仓库：cghk-cn/nexus-notes。 */
-const APP_VERSION='1.2.9';
+const APP_VERSION='1.3.0';
 const UPD=(function(){
  const OWNER='cghk-cn', REPO='nexus-notes';
  const API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/latest';
@@ -2152,8 +2152,26 @@ function renderAll(recenter){
 function buildTextLayer(bg,d){
  const layer=document.createElement('div');layer.className='textLayer';
  const T=bg.text;
- if(!T||!T.items||!T.items.length||!T.vpw)return layer;
- const k=d.w/T.vpw;
+ if(!T||!T.items||!T.items.length)return layer;
+ /* direct 模式（pptx 渲染器 v1.3.0）：item 是 EMU 頁面座標 {x,y,fs,s}，
+    底圖 .bg img 走 object-fit:contain（置中留邊）→ 先算顯示框再換算才對得準 */
+ if(T.direct){
+  const vw=T.vpw||d.w,vh=T.vph||T.vpw||d.h;
+  let dw=d.w,dh=d.h,ox=0,oy=0;
+  if(vw>0&&vh>0){const ar=vw/vh;dw=Math.min(d.w,d.h*ar);dh=dw/ar;ox=(d.w-dw)/2;oy=(d.h-dh)/2;}
+  const kx=dw/vw,ky=dh/vh;
+  for(const it of T.items){
+   if(!it.s)continue;
+   const sp=document.createElement('span');sp.textContent=it.s;
+   sp.style.left=(ox+it.x*kx)+'px';
+   sp.style.top=(oy+it.y*ky)+'px';
+   sp.style.fontSize=(it.fs*kx)+'px';
+   layer.appendChild(sp);
+  }
+  return layer;
+ }
+ const k=d.w/(T.vpw||d.w);
+ if(!T.vpw)return layer;
  const tr=(m1,m2)=>[m1[0]*m2[0]+m1[2]*m2[1],m1[1]*m2[0]+m1[3]*m2[1],m1[0]*m2[2]+m1[2]*m2[3],m1[1]*m2[2]+m1[3]*m2[3],m1[0]*m2[4]+m1[2]*m2[5]+m1[4],m1[1]*m2[4]+m1[3]*m2[5]+m1[5]];
  for(const it of T.items){
   if(!it.s)continue;
@@ -4158,30 +4176,632 @@ async function importDOCX(file,t){
  finishTrack(t,pages.length,fromPage,'docx');
  toast(tN('已匯入 Word 檔 {f}（{n} 頁 → 第 {a}–{b} 頁）',{f:file.name,n:pages.length,a:fromPage+1,b:fromPage+pages.length}));
 }
-/* 簡報 .pptx（OOXML zip）→ JSZip 逐頁擷取 <a:t> 文字 → 每頁一則（v1.2.9，內容為文字） */
+/* ===== 簡報 .pptx 渲染器（v1.3.0）====================================
+   解析 OOXML → 把每張投影片繪製成 canvas 底圖（版面原樣：文字框/圖片/表格/
+   形狀/項目符號/主題色/母版樣式/群組），同時收集每個文字行的「頁面座標」→
+   bg.text={direct:true,vpw,vph,items}，由 buildTextLayer 的 direct 模式
+   疊透明可選取 span（像 PDF 文字層）。座標一律 EMU（1pt=12700、914400=1in）；
+   畫布先 scale(s) 再以 EMU 繪製；矩陣 M 處理群組平移+縮放；
+   LibreOffice 未安裝 → 純用戶端渲染；圖表/SmartArt 以淺灰佔位（已知限制）。 */
+const PPTX_DEF={ /* 母版缺資料時的後備樣式（sz 單位 = EMU：pt×12700） */
+ title:{sz:558800,algn:'l',buNone:true,lnSpc:{pct:0.9},color:'#111111',fam:''},
+ body:{sz:355600,algn:'l',marL:228600,indent:-228600,buChar:'\u2022',lnSpc:{pct:0.9},color:'#111111',fam:''},
+ other:{sz:228600,algn:'l',buNone:true,color:'#111111',fam:''}};
+const PPTX_MI={a:1,b:0,c:0,d:1,e:0,f:0};
+function pxCh(el,n){if(!el)return null;for(const c of el.children)if(c.localName===n)return c;return null;}
+function pxA(el,n){const r=[];if(el)for(const c of el.children)if(c.localName===n)r.push(c);return r;}
+function pxDeep(el,n){if(!el)return null;const q=[...el.children];while(q.length){const c=q.shift();if(c.localName===n)return c;q.push(...c.children);}return null;}
+function pxAll(el,n,out){out=out||[];if(!el)return out;for(const c of el.children){if(c.localName===n)out.push(c);pxAll(c,n,out);}return out;}
+function pxParse(xml){const doc=new DOMParser().parseFromString(xml,'application/xml');return (!doc.documentElement||doc.documentElement.localName==='parsererror')?null:doc;}
+function pxMul(m,n){return{a:m.a*n.a+m.c*n.b,b:m.b*n.a+m.d*n.b,c:m.a*n.c+m.c*n.d,d:m.b*n.c+m.d*n.d,e:m.a*n.e+m.c*n.f+m.e,f:m.b*n.e+m.d*n.f+m.f};}
+function pxPt(m,x,y){return[m.a*x+m.c*y+m.e,m.b*x+m.d*y+m.f];}
+function pxHexRgb(h){h=String(h||'000').replace('#','');if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];return[parseInt(h.slice(0,2),16)||0,parseInt(h.slice(2,4),16)||0,parseInt(h.slice(4,6),16)||0];}
+function pxRgbHex(r){return '#'+r.map(v=>Math.max(0,Math.min(255,Math.round(v)))).map(v=>(v<16?'0':'')+v.toString(16)).join('');}
+function pxClr(el,theme){ /* a:srgbClr/a:sysClr/a:schemeClr → #rrggbb（含 lumMod/lumOff/tint/shade） */
+ if(!el)return null;
+ const n=el.localName;
+ if(n==='srgbClr')return '#'+(el.getAttribute('val')||'000000');
+ if(n==='sysClr')return '#'+(el.getAttribute('lastClr')||({window:'ffffff',windowText:'000000'}[el.getAttribute('val')])||'000000');
+ if(n==='schemeClr'){
+  const v=el.getAttribute('val')||'';
+  const map={tx1:'dk1',bg1:'lt1',tx2:'dk2',bg2:'lt2',phClr:'accent1'};
+  let hex=(theme&&theme.clr&&theme.clr[map[v]||v])||(theme&&theme.clr&&theme.clr.accent1)||'#5b9bd5';
+  let rgb=pxHexRgb(hex);
+  for(const m of el.children){
+   const a=(+m.getAttribute('val')||0)/100000;
+   if(m.localName==='lumMod')rgb=rgb.map(x=>x*a);
+   else if(m.localName==='lumOff')rgb=rgb.map(x=>x+255*(1-a));
+   else if(m.localName==='tint')rgb=rgb.map(x=>x+(255-x)*a);
+   else if(m.localName==='shade')rgb=rgb.map(x=>x*a);
+  }
+  return pxRgbHex(rgb);
+ }
+ return null;
+}
+function pxSolid(el,theme){const sf=pxCh(el,'solidFill');if(!sf||!sf.children.length)return null;return pxClr(sf.children[0],theme);}
+function pxFill(spPr,styleEl,theme){ /* 形狀填色；缺省時用 p:style fillRef（主題色） */
+ if(pxCh(spPr,'noFill'))return null;
+ const sf=pxCh(spPr,'solidFill');if(sf&&sf.children.length)return pxClr(sf.children[0],theme);
+ const gf=pxCh(spPr,'gradFill');if(gf){const gs=pxA(gf,'gs');if(gs.length&&gs[0].children.length)return pxClr(gs[0].children[0],theme);}
+ if(pxCh(spPr,'blipFill')||pxCh(spPr,'pattFill'))return null;
+ if(styleEl){const fr=pxDeep(styleEl,'fillRef');
+  if(fr&&(+fr.getAttribute('idx')>0)){const s=pxCh(fr,'solidFill');
+   return ((s&&s.children.length)?pxClr(s.children[0],theme):null)||(theme&&theme.clr&&theme.clr.accent1)||'#5b9bd5';}}
+ return null;
+}
+function pxLn(spPr,styleEl,theme){ /* 描邊（w=EMU、prstDash 虛線） */
+ const ln=pxCh(spPr,'ln');
+ if(ln){
+  if(pxCh(ln,'noFill'))return null;
+  const w=+(ln.getAttribute('w')||0)||9525;
+  const d=pxCh(ln,'prstDash');
+  return {w:w,c:pxSolid(ln,theme)||'#000000',dash:!!(d&&/dash/.test(d.getAttribute('val')||''))};
+ }
+ if(styleEl){const lr=pxDeep(styleEl,'lnRef');
+  if(lr&&(+lr.getAttribute('idx')>0))return {w:9525,c:(theme&&theme.clr&&theme.clr.dk2)||'#44546a',dash:false};}
+ return null;
+}
+function pxFont(tf,theme){ /* +mj-lt/+mn-lt 主題字型 → 實際字型名（空 → 系統預設） */
+ if(!tf)return '';
+ if(tf.indexOf('+mj')===0)return (theme&&theme.major)||'';
+ if(tf.indexOf('+mn')===0)return (theme&&theme.minor)||'';
+ if(tf[0]==='+')return '';
+ return tf;
+}
+function pxParseTheme(xml){
+ const out={clr:{},major:'',minor:''};
+ if(!xml)return out;
+ const doc=pxParse(xml);if(!doc)return out;
+ const cs=pxDeep(doc.documentElement,'clrScheme');
+ if(cs)for(const c of cs.children){const col=c.children[0];if(col)out.clr[c.localName]=pxClr(col,null);}
+ const fs=pxDeep(doc.documentElement,'fontScheme');
+ if(fs){
+  const g=n=>{if(!n)return '';const l=pxCh(n,'latin');const tf=l?l.getAttribute('typeface'):'';return (!tf||tf[0]==='+')?'':tf;};
+  out.major=g(pxCh(fs,'majorFont'));out.minor=g(pxCh(fs,'minorFont'));
+ }
+ return out;
+}
+function pxSpc(el){ /* lnSpc/spcBef/spcAft → {pct}(1=100%) 或 {pts}(點)。val="0" 是合法值不可當缺省 */
+ if(!el)return null;
+ const p=pxCh(el,'spcPct');
+ if(p){const v=p.getAttribute('val');return {pct:(v==null?100000:+v)/100000};}
+ const q=pxCh(el,'spcPts');
+ if(q){const v=q.getAttribute('val');return {pts:(v==null?0:+v)/100};}
+ return null;
+}
+function pxParseStyles(masterXml,theme){ /* slideMaster txStyles → title/body/other 逐級預設 */
+ const out={title:null,body:null,other:null};
+ if(!masterXml)return out;
+ const doc=pxParse(masterXml);if(!doc)return out;
+ const tx=pxDeep(doc.documentElement,'txStyles');if(!tx)return out;
+ for(const pr of [['titleStyle','title'],['bodyStyle','body'],['otherStyle','other']]){
+  const st=pxCh(tx,pr[0]);if(!st)continue;
+  const lvls=[];
+  for(const c of st.children){
+   const m=/^lvl(\d+)pPr$/.exec(c.localName||'');if(!m)continue;
+   const def=pxCh(c,'defRPr')||pxCh(c,'endParaRPr');
+   const buC=pxCh(c,'buChar'),buA=pxCh(c,'buAutoNum');
+   const la=def?pxCh(def,'latin'):null;
+   lvls[+m[1]-1]={
+    sz:(def&&def.getAttribute('sz'))?((+def.getAttribute('sz'))*127):0, /* 百分之一點 → EMU(×127) */
+    color:def?pxSolid(def,theme):null,
+    fam:la?(la.getAttribute('typeface')||''):null,
+    algn:c.getAttribute('algn')||null,
+    marL:(c.getAttribute('marL')!=null)?(+c.getAttribute('marL')):null,
+    indent:(c.getAttribute('indent')!=null)?(+c.getAttribute('indent')):null,
+    lnSpc:pxSpc(pxCh(c,'lnSpc')),spcBef:pxSpc(pxCh(c,'spcBef')),spcAft:pxSpc(pxCh(c,'spcAft')),
+    buChar:buC?(buC.getAttribute('char')||'\u2022'):null,
+    buAutoNum:!!buA,buNone:!!pxCh(c,'buNone')};
+  }
+  out[pr[1]]=lvls;
+ }
+ return out;
+}
+/* ---- pptx 準備：投影片清單、投影片尺寸、主題、母版樣式、rels/版型快取 ---- */
+async function pptxPrepare(zip){
+ const slides=Object.keys(zip.files).filter(p=>/^ppt\/slides\/slide\d+\.xml$/.test(p))
+  .sort((a,b)=>(+a.match(/slide(\d+)\.xml$/)[1])-(+b.match(/slide(\d+)\.xml$/)[1]));
+ if(!slides.length)return null;
+ const g={zip:zip,slides:slides,SW:12192000,SH:6858000,imgCache:{},relCache:{},layCache:{}};
+ const rd=async p=>{const f=zip.file(p);return f?await f.async('string'):null;};
+ const pres=await rd('ppt/presentation.xml');
+ if(pres){const m=pres.match(/<p:sldSz[^>]*cx="(\d+)"[^>]*cy="(\d+)"/);
+  if(m){g.SW=(+m[1])||g.SW;g.SH=(+m[2])||g.SH;}}
+ const tk=Object.keys(zip.files).find(p=>/^ppt\/theme\/theme\d+\.xml$/.test(p));
+ g.theme=tk?pxParseTheme(await rd(tk)):{clr:{},major:'',minor:''};
+ const mk=Object.keys(zip.files).find(p=>/^ppt\/slideMasters\/slideMaster\d+\.xml$/.test(p));
+ g.styles=pxParseStyles(mk?await rd(mk):null,g.theme);
+ g.resolve=(base,target)=>{ /* 相對路徑解析（../media/x.png） */
+  if(!target)return '';
+  if(target[0]==='/')return target.slice(1);
+  const segs=base.split('/');segs.pop();
+  for(const s of target.split('/')){if(s===''||s==='.')continue;if(s==='..')segs.pop();else segs.push(s);}
+  return segs.join('/');
+ };
+ g.rels=async base=>{ /* _rels/*.rels → {Id:{t,tr}} */
+  const rp=base.replace(/([^\/]+)$/,'_rels/$1.rels');
+  if(g.relCache[rp])return g.relCache[rp];
+  const map={};const x=await rd(rp);
+  if(x){const doc=pxParse(x);
+   if(doc)for(const r of doc.documentElement.children){
+    if(r.localName!=='Relationship')continue;
+    map[r.getAttribute('Id')]={t:r.getAttribute('Type')||'',tr:r.getAttribute('Target')||''};}}
+  g.relCache[rp]=map;return map;
+ };
+ return g;
+}
+/* ---- slideLayout fallback：placeholder 在投影片上沒 xfrm 時從版型補位置 ---- */
+async function pptxLoadLayout(g,slidePath,rels){
+ const ent=Object.keys(rels).map(k=>rels[k]).find(r=>/\/slideLayout$/.test(r.t));
+ if(!ent)return null;
+ const path=g.resolve(slidePath,ent.tr);
+ if(g.layCache[path]===undefined)g.layCache[path]=(async()=>{
+  const f=g.zip.file(path);if(!f)return null;
+  const doc=pxParse(await f.async('string'));if(!doc)return null;
+  const ph={};let bgc=null;
+  for(const sp of pxAll(doc.documentElement,'sp')){
+   const nv=pxCh(sp,'nvSpPr'),nvp=nv?pxCh(nv,'nvPr'):null,phe=nvp?pxCh(nvp,'ph'):null;
+   if(!phe)continue;
+   const xf=pxDeep(pxCh(sp,'spPr'),'xfrm');
+   if(xf)ph[(phe.getAttribute('type')||'body')+'#'+(phe.getAttribute('idx')||'0')]=xf;
+  }
+  const cs=pxCh(doc.documentElement,'cSld'),bg=cs?pxCh(cs,'bg'):null;
+  if(bg){const bp=pxCh(bg,'bgPr');
+   if(bp)bgc=pxSolid(bp,g.theme);
+   else if(pxCh(bg,'bgRef'))bgc=((+(pxCh(bg,'bgRef').getAttribute('idx')||1))<=1)?'#ffffff':null;}
+  return {ph:ph,bg:bgc};
+ })();
+ return g.layCache[path];
+}
+/* ---- 單頁渲染：回傳 {canvas, items(頁面座標文字行)} ---- */
+async function pptxRenderSlide(g,slidePath){
+ const f=g.zip.file(slidePath);if(!f)return null;
+ const doc=pxParse(await f.async('string'));if(!doc)return null;
+ const rels=await g.rels(slidePath);
+ const layout=await pptxLoadLayout(g,slidePath,rels);
+ const W=1600,s=W/g.SW,H=Math.max(1,Math.round(g.SH*s));
+ const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+ const ctx=cv.getContext('2d');
+ ctx.fillStyle=(layout&&layout.bg)||'#ffffff';ctx.fillRect(0,0,W,H);
+ /* 關鍵：之後所有繪製都用 EMU 座標 → 必須先把座標系縮放到畫布像素 */
+ ctx.setTransform(s,0,0,s,0,0);
+ ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+ ctx.textBaseline='top';
+ const tree=pxDeep(doc.documentElement,'spTree');if(!tree)return null;
+ const st={g:g,ctx:ctx,rels:rels,layout:layout,slidePath:slidePath,M:PPTX_MI,s:s,items:[]};
+ await pptxWalk(tree,st);
+ return {cv:cv,items:st.items};
+}
+async function pptxWalk(el,st){
+ for(const c of el.children){
+  const n=c.localName;
+  try{
+   if(n==='sp'||n==='cxnSp')await pptxSp(c,st); /* 連接線也走形狀路徑（prstGeom=line） */
+   else if(n==='pic')await pptxPic(c,st);
+   else if(n==='grpSp')await pptxGrp(c,st);
+   else if(n==='graphicFrame')await pptxGf(c,st);
+  }catch(e){console.error('pptx node',n,e);}
+ }
+}
+function pptxMime(p){
+ const m=/\.([a-z0-9]+)$/i.exec(p||'');const e=m?m[1].toLowerCase():'';
+ if(e==='png')return 'image/png';
+ if(e==='jpg'||e==='jpeg')return 'image/jpeg';
+ if(e==='gif')return 'image/gif';
+ if(e==='bmp')return 'image/bmp';
+ if(e==='webp')return 'image/webp';
+ if(e==='svg')return 'image/svg+xml';
+ return null; /* emf/wmf/tiff 瀏覽器不能畫 → 佔位 */
+}
+function pptxImage(g,path,mime){ /* 讀 zip 內圖檔 → Image（Promise 快取） */
+ if(g.imgCache[path]!==undefined)return g.imgCache[path];
+ g.imgCache[path]=(async()=>{
+  const f=g.zip.file(path);if(!f)return null;
+  const url='data:'+mime+';base64,'+(await f.async('base64'));
+  return new Promise(res=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>res(null);i.src=url;});
+ })();
+ return g.imgCache[path];
+}
+function pptxPlaceholder(st,x,y,w,h,label){ /* 圖表/SmartArt/不支援圖檔 → 淺灰佔位（改用裝置像素畫） */
+ const ctx=st.ctx;
+ const s=(typeof ctx.getTransform==='function')?ctx.getTransform().a:(st.s||1);
+ ctx.save();
+ ctx.setTransform(1,0,0,1,0,0);
+ const px=x*s,py=y*s,pw=w*s,ph2=h*s;
+ ctx.fillStyle='#e9ecef';ctx.fillRect(px,py,pw,ph2);
+ ctx.strokeStyle='#ced4da';ctx.lineWidth=Math.max(1,9525*s);ctx.strokeRect(px,py,pw,ph2);
+ const fs=Math.max(12,Math.min(Math.abs(pw),Math.abs(ph2))*0.16);
+ ctx.fillStyle='#868e96';ctx.font=fs+'px sans-serif';
+ ctx.textAlign='center';ctx.textBaseline='top';
+ ctx.fillText(label,px+pw/2,py+Math.max(0,(ph2-fs)/2));
+ ctx.textAlign='left';ctx.restore();
+}
+async function pptxSp(el,st){ /* p:sp / p:cxnSp：形狀＋文字（placeholder 無 xfrm 從版型補） */
+ const spPr=pxCh(el,'spPr');if(!spPr)return;
+ const nv=pxCh(el,'nvSpPr')||pxCh(el,'nvCxnSpPr');
+ const nvPr=nv?pxCh(nv,'nvPr'):null;
+ const ph=nvPr?pxCh(nvPr,'ph'):null;
+ let phType=null;
+ if(ph){
+  phType=ph.getAttribute('type')||'body';
+  if(!pxCh(spPr,'xfrm')&&st.layout&&st.layout.ph){
+   const k=phType+'#'+(ph.getAttribute('idx')||'0');
+   const lxf=st.layout.ph[k]||st.layout.ph['body#'+(ph.getAttribute('idx')||'0')];
+   if(lxf)spPr.insertBefore(lxf.cloneNode(true),spPr.firstChild); /* 本輪補位置（不寫回 XML） */
+  }
+ }
+ const xf=pxCh(spPr,'xfrm');
+ if(!xf)return;
+ const off=pxCh(xf,'off'),ext=pxCh(xf,'ext');
+ if(!off||!ext)return;
+ const cx=+ext.getAttribute('cx')||0,cy=+ext.getAttribute('cy')||0;
+ if(cx<=0&&cy<=0)return;
+ const p0=pxPt(st.M,+off.getAttribute('x')||0,+off.getAttribute('y')||0);
+ const bx=p0[0],by=p0[1],bw=cx*st.M.a,bh=cy*st.M.d;
+ const rot=(+(xf.getAttribute('rot')||0))/60000*Math.PI/180;
+ const fh=xf.getAttribute('flipH')==='1',fv=xf.getAttribute('flipV')==='1';
+ const ctx=st.ctx;
+ const fill=pxFill(spPr,pxCh(el,'style'),st.g.theme);
+ const ln=pxLn(spPr,pxCh(el,'style'),st.g.theme);
+ const geom=pxCh(spPr,'prstGeom');
+ const prst=geom?geom.getAttribute('prst'):null;
+ ctx.save();
+ if(rot){const a=bx+bw/2,b=by+bh/2;ctx.translate(a,b);ctx.rotate(rot);ctx.translate(-a,-b);}
+ if(fh||fv){const a=bx+bw/2,b=by+bh/2;ctx.translate(a,b);ctx.scale(fh?-1:1,fv?-1:1);ctx.translate(-a,-b);}
+ if(prst!=='custGeom'&&(fill||ln)){
+  pptxPath(ctx,prst,bx,by,bw,bh);
+  if(fill){ctx.fillStyle=fill;ctx.fill();}
+  if(ln){ctx.strokeStyle=ln.c;ctx.lineWidth=Math.max(1,ln.w*st.M.a);
+   if(ln.dash)ctx.setLineDash([ln.w*4,ln.w*4]);
+   ctx.stroke();ctx.setLineDash([]);}
+ }
+ const tb=pxCh(el,'txBody');
+ if(tb)await pptxText(tb,{x:bx,y:by,w:bw,h:bh},st,phType,!(rot||fh||fv));
+ ctx.restore();
+}
+async function pptxGrp(el,st){ /* p:grpSp：off/ext/chOff/chExt → 縮放平移矩陣後遞迴 */
+ const gp=pxCh(el,'grpSpPr');const xf=gp?pxCh(gp,'xfrm'):null;
+ if(!xf)return;
+ const off=pxCh(xf,'off'),ext=pxCh(xf,'ext'),co=pxCh(xf,'chOff'),ce=pxCh(xf,'chExt');
+ if(!off||!ext||!co||!ce)return;
+ const ecx=+ce.getAttribute('cx')||0,ecy=+ce.getAttribute('cy')||0;
+ const sx=ecx?((+ext.getAttribute('cx')||0)/ecx):1;
+ const sy=ecy?((+ext.getAttribute('cy')||0)/ecy):1;
+ const m={a:sx,b:0,c:0,d:sy,
+  e:(+off.getAttribute('x')||0)-sx*(+co.getAttribute('x')||0),
+  f:(+off.getAttribute('y')||0)-sy*(+co.getAttribute('y')||0)};
+ const prev=st.M;st.M=pxMul(prev,m);
+ await pptxWalk(el,st);
+ st.M=prev;
+}
+async function pptxPic(el,st){ /* p:pic：blip rId → rels → media（srcRect 裁切） */
+ const bf=pxCh(el,'blipFill');const blip=bf?pxCh(bf,'blip'):null;
+ const spPr=pxCh(el,'spPr');const xf=spPr?pxCh(spPr,'xfrm'):null;
+ if(!xf)return;
+ const off=pxCh(xf,'off'),ext=pxCh(xf,'ext');if(!off||!ext)return;
+ const p0=pxPt(st.M,+off.getAttribute('x')||0,+off.getAttribute('y')||0);
+ const bx=p0[0],by=p0[1],bw=(+ext.getAttribute('cx')||0)*st.M.a,bh=(+ext.getAttribute('cy')||0)*st.M.d;
+ if(bw<=0||bh<=0)return;
+ const ctx=st.ctx;
+ const rot=(+(xf.getAttribute('rot')||0))/60000*Math.PI/180;
+ let ok=false;
+ if(blip){
+  const RNS='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const rid=blip.getAttribute('r:embed')||blip.getAttributeNS(RNS,'embed');
+  const rel=rid?st.rels[rid]:null;
+  if(rel&&rel.tr){
+   const path=st.g.resolve(st.slidePath,rel.tr);
+   const mime=pptxMime(path);
+   if(mime){
+    try{
+     const img=await pptxImage(st.g,path,mime);
+     if(img){
+      let sx=0,sy=0,sw=img.naturalWidth,sh=img.naturalHeight;
+      const sr=pxCh(bf,'srcRect');
+      if(sr){const pc=n=>{const v=sr.getAttribute(n);return v?(+v)/100000:0;};
+       const l=pc('l'),t=pc('t'),rr=pc('r'),b=pc('b');
+       sx=sw*l;sy=sh*t;sw=sw*(1-l-rr);sh=sh*(1-t-b);}
+      if(sw>0&&sh>0){
+       ctx.save();
+       if(rot){const a=bx+bw/2,b=by+bh/2;ctx.translate(a,b);ctx.rotate(rot);ctx.translate(-a,-b);}
+       ctx.drawImage(img,sx,sy,sw,sh,bx,by,bw,bh);
+       ctx.restore();ok=true;
+      }
+     }
+    }catch(e){console.error('pptx img',e);}
+   }
+  }
+ }
+ if(!ok)pptxPlaceholder(st,bx,by,bw,bh,'\u5716\u7247');
+}
+async function pptxGf(el,st){ /* p:graphicFrame：表格 → 畫格線文字；圖表/SmartArt → 淺灰佔位 */
+ const xf=pxCh(el,'xfrm');if(!xf)return;
+ const off=pxCh(xf,'off'),ext=pxCh(xf,'ext');if(!off||!ext)return;
+ const p0=pxPt(st.M,+off.getAttribute('x')||0,+off.getAttribute('y')||0);
+ const bx=p0[0],by=p0[1],bw=(+ext.getAttribute('cx')||0)*st.M.a,bh=(+ext.getAttribute('cy')||0)*st.M.d;
+ if(bw<=0||bh<=0)return;
+ const gd=pxDeep(el,'graphicData');
+ const tbl=gd?pxCh(gd,'tbl'):null;
+ if(tbl)await pptxTable(tbl,bx,by,bw,bh,st);
+ else pptxPlaceholder(st,bx,by,bw,bh,'\u5716\u8868'); /* 圖表/SmartArt/OLE */
+}
+async function pptxTable(tbl,bx,by,bw,bh,st){ /* a:tbl → 逐格填色+格線+文字（gridSpan/rowSpan/vMerge） */
+ const ctx=st.ctx,theme=st.g.theme;
+ const cols=pxA(pxCh(tbl,'tblGrid'),'gridCol').map(c=>(+c.getAttribute('w')||0)*st.M.a);
+ const rows=pxA(tbl,'tr');
+ if(!cols.length||!rows.length)return;
+ const xs=[bx];cols.forEach(w=>xs.push(xs[xs.length-1]+w));
+ const ys=[by];rows.forEach(r=>ys.push(ys[ys.length-1]+(+r.getAttribute('h')||0)*st.M.d));
+ const occ={};
+ for(let r=0;r<rows.length;r++){
+  const tcs=pxA(rows[r],'tc');let ci=0;
+  for(let c=0;c<cols.length;){
+   if(occ[r+':'+c]){c++;continue;}
+   const cell=tcs[ci++];if(!cell){c++;continue;}
+   const tcPr=pxCh(cell,'tcPr');
+   const gs=(tcPr&&tcPr.getAttribute('gridSpan'))?(+tcPr.getAttribute('gridSpan')):1;
+   const rs=(tcPr&&tcPr.getAttribute('rowSpan'))?(+tcPr.getAttribute('rowSpan')):1;
+   const vm=tcPr?tcPr.getAttribute('vMerge'):null;
+   for(let rr=r;rr<Math.min(r+rs,rows.length);rr++)
+    for(let cc=c;cc<Math.min(c+gs,cols.length);cc++)occ[rr+':'+cc]=1;
+   const x0=xs[c],x1=xs[Math.min(c+gs,cols.length)],y0=ys[r],y1=ys[Math.min(r+rs,rows.length)];
+   const w=x1-x0,h=y1-y0;
+   const fill=(tcPr&&pxSolid(tcPr,theme))||'#ffffff';
+   ctx.fillStyle=fill;ctx.fillRect(x0,y0,w,h);
+   ctx.strokeStyle='#adb5bd';ctx.lineWidth=Math.max(1,9525*st.M.a);ctx.strokeRect(x0,y0,w,h);
+   if(vm!=='continue'){ /* 合併續格不重畫文字 */
+    const tb=pxCh(cell,'txBody');
+    if(tb)await pptxText(tb,{x:x0,y:y0,w:w,h:h},st,null,true,{l:64000,r:64000,t:28000,b:28000});
+   }
+   c+=gs;
+  }
+ }
+}
+function pptxPath(ctx,prst,x,y,w,h){ /* prstGeom → canvas 路徑（罕見形狀退回矩形） */
+ const P=pts=>{ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);
+  for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i][0],pts[i][1]);ctx.closePath();};
+ const mn=Math.min(Math.abs(w),Math.abs(h));
+ switch(prst){
+ case 'roundRect':{const r=mn*0.16667;ctx.beginPath();
+  if(ctx.roundRect)ctx.roundRect(x,y,w,h,r);else ctx.rect(x,y,w,h);break;}
+ case 'ellipse':case 'pie':case 'chord':case 'arc':case 'blockArc':
+  ctx.beginPath();ctx.ellipse(x+w/2,y+h/2,Math.abs(w/2),Math.abs(h/2),0,0,Math.PI*2);break;
+ case 'triangle':P([[x,y+h],[x+w,y+h],[x+w/2,y]]);break;
+ case 'rtTriangle':P([[x,y],[x,y+h],[x+w,y+h]]);break;
+ case 'diamond':P([[x+w/2,y],[x+w,y+h/2],[x+w/2,y+h],[x,y+h/2]]);break;
+ case 'parallelogram':{const s=w*0.25;P([[x+s,y],[x+w,y],[x+w-s,y+h],[x,y+h]]);break;}
+ case 'trapezoid':{const s=w*0.25;P([[x+s,y],[x+w-s,y],[x+w,y+h],[x,y+h]]);break;}
+ case 'pentagon':{const s=Math.min(w*0.25,mn*0.5);P([[x,y],[x+w-s,y],[x+w,y+h/2],[x+w-s,y+h],[x,y+h]]);break;}
+ case 'hexagon':{const s=Math.min(w*0.25,mn*0.5);
+  P([[x+s,y],[x+w-s,y],[x+w,y+h/2],[x+w-s,y+h],[x+s,y+h],[x,y+h/2]]);break;}
+ case 'heptagon':case 'octagon':{const s=mn*0.3;
+  P([[x+s,y],[x+w-s,y],[x+w,y+s],[x+w,y+h-s],[x+w-s,y+h],[x+s,y+h],[x,y+h-s],[x,y+s]]);break;}
+ case 'chevron':{const s=Math.min(w*0.25,mn*0.5);
+  P([[x,y],[x+w-s,y],[x+w,y+h/2],[x+w-s,y+h],[x,y+h],[x+s,y+h/2]]);break;}
+ case 'star4':case 'star5':case 'star6':{const n=(prst==='star4')?4:((prst==='star5')?5:6);
+  const cx0=x+w/2,cy0=y+h/2,ro=mn/2,ri=ro*0.4,pts=[];
+  for(let i=0;i<n*2;i++){const a=-Math.PI/2+i*Math.PI/n,rr=(i%2)?ri:ro;
+   pts.push([cx0+rr*Math.cos(a),cy0+rr*Math.sin(a)]);}
+  P(pts);break;}
+ case 'rightArrow':{const hl=Math.min(w*0.5,mn*0.5),ht=h*0.25;
+  P([[x,y+h/2-ht],[x+w-hl,y+h/2-ht],[x+w-hl,y],[x+w,y+h/2],[x+w-hl,y+h],[x+w-hl,y+h/2+ht],[x,y+h/2+ht]]);break;}
+ case 'leftArrow':{const hl=Math.min(w*0.5,mn*0.5),ht=h*0.25;
+  P([[x+w,y+h/2-ht],[x+hl,y+h/2-ht],[x+hl,y],[x,y+h/2],[x+hl,y+h],[x+hl,y+h/2+ht],[x+w,y+h/2+ht]]);break;}
+ case 'upArrow':case 'downArrow':{const up=(prst==='upArrow'),hl=Math.min(h*0.5,mn*0.5),ht=w*0.25;
+  P(up?[[x+w/2-ht,y+h],[x+w/2-ht,y+hl],[x,y+hl],[x+w/2,y],[x+w,y+hl],[x+w/2-ht,y+hl],[x+w/2-ht,y+h]]
+      :[[x+w/2-ht,y],[x+w/2-ht,y+h-hl],[x,y+h-hl],[x+w/2,y+h],[x+w,y+h-hl],[x+w/2-ht,y+h-hl],[x+w/2-ht,y]]);break;}
+ case 'line':case 'straightConnector1':case 'elbowConnector1':case 'bentConnector1':
+  ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+w,y+h);break;
+ default:ctx.beginPath();ctx.rect(x,y,w,h);break;
+ }
+}
+/* ---- txBody → 排版繪製（對齊/字級/粗斜體/顏色/項目符號/自動編號/自動換行）
+       collect=true 時把每行 {x,y,fs,s}（EMU 頁面座標）收進 st.items 供文字層選取 ---- */
+async function pptxText(tb,box,st,phType,collect,ins0){
+ const g=st.g,ctx=st.ctx,theme=g.theme,styles=g.styles;
+ const kind=phType?((phType==='title'||phType==='ctrTitle')?'title':'body'):'other';
+ const F=PPTX_DEF[kind];
+ const clean=o=>{const r={};if(o)for(const k in o)if(o[k])r[k]=o[k];return r;};
+ const S0=clean(styles[kind]&&styles[kind][0]);
+ const lvDef=lv=>Object.assign({},F,S0,clean((styles[kind]&&styles[kind][lv])||{}));
+ const ins=Object.assign({l:91440,r:91440,t:45720,b:45720},ins0||{});
+ let anchor='t';
+ const bp=pxCh(tb,'bodyPr');
+ if(bp){
+  for(const kk of ['l','r','t','b']){const a=bp.getAttribute(kk+'Ins');if(a!=null)ins[kk]=(+a)||0;}
+  if(bp.getAttribute('anchor'))anchor=bp.getAttribute('anchor');
+ }
+ /* Chrome canvas font-size 上限 10000px → 文字座標改用 kunit=EMU/1000：
+    transform 放大 Q 倍、座標與字級除以 Q（平移 e,f 不縮放）。最後 ctx.restore() 還原 */
+ const Q=1000;
+ const T0=(typeof ctx.getTransform==='function')?ctx.getTransform():{a:1,b:0,c:0,d:1,e:0,f:0};
+ ctx.save();
+ ctx.setTransform(T0.a*Q,T0.b*Q,T0.c*Q,T0.d*Q,T0.e,T0.f);
+ box={x:box.x/Q,y:box.y/Q,w:box.w/Q,h:box.h/Q};
+ for(const kk of ['l','r','t','b'])ins[kk]=ins[kk]/Q;
+ /* 逐段落解析 */
+ const paras=[];
+ const nums={};
+ for(const p of pxA(tb,'p')){
+  const pPr=pxCh(p,'pPr');
+  const lv=(pPr&&pPr.getAttribute('lvl'))?(+pPr.getAttribute('lvl')):0;
+  const D=lvDef(lv);
+  const algn=(pPr&&pPr.getAttribute('algn'))||D.algn||'l';
+  let marL=(pPr&&pPr.getAttribute('marL')!=null)?(+pPr.getAttribute('marL')):((D.marL)||0);
+  let indent=(pPr&&pPr.getAttribute('indent')!=null)?(+pPr.getAttribute('indent')):((D.indent)||0);
+  marL/=Q;indent/=Q; /* → kunit */
+  let bullet=null;
+  if(pPr&&pxCh(pPr,'buChar'))bullet={c:pxCh(pPr,'buChar').getAttribute('char')||'\u2022'};
+  else if(pPr&&pxCh(pPr,'buAutoNum'))bullet={auto:pxCh(pPr,'buAutoNum').getAttribute('type')||'arabicPeriod'};
+  else if(pPr&&pxCh(pPr,'buNone'))bullet=null;
+  else if(D.buChar)bullet={c:D.buChar};
+  else if(D.buAutoNum)bullet={auto:'arabicPeriod'};
+  if(bullet&&marL===0&&indent===0){marL=342.9;indent=-342.9;} /* 自動懸掛縮排（kunit） */
+  const runs=[];
+  for(const c of p.children){
+   const n=c.localName;
+   if(n==='r'||n==='fld'){
+    const rPr=pxCh(c,'rPr');
+    const te=pxCh(c,'t');
+    const txt=te?te.textContent:'';
+    if(!txt)continue;
+    const la=rPr?pxCh(rPr,'latin'):null;
+    runs.push({txt:txt,
+     sz:(rPr&&rPr.getAttribute('sz'))?((+rPr.getAttribute('sz'))*127):(D.sz||F.sz), /* 百分之一點 → EMU */
+     b:!!(rPr&&rPr.getAttribute('b')==='1'),
+     i:!!(rPr&&rPr.getAttribute('i')==='1'),
+     color:(rPr?pxSolid(rPr,theme):null)||D.color||F.color||'#111111',
+     fam:pxFont(la?la.getAttribute('typeface'):null,theme)||D.fam||F.fam||''});
+   }else if(n==='br'){runs.push({br:true});}
+  }
+  paras.push({lv:lv,D:D,algn:algn,marL:marL,indent:indent,bullet:bullet,runs:runs,
+   lnSpc:(pPr?pxSpc(pxCh(pPr,'lnSpc')):null)||D.lnSpc||F.lnSpc||null,
+   spcBef:(pPr?pxSpc(pxCh(pPr,'spcBef')):null)||D.spcBef||null,
+   spcAft:(pPr?pxSpc(pxCh(pPr,'spcAft')):null)||D.spcAft||null});
+ }
+ /* 斷行（word wrap；超長單字逐字切；CJK 無空格也能斷）＋行高 → 可重跑的 layout() */
+ const avail=Math.max(20,box.w-ins.l-ins.r);
+ const setF=r=>{ctx.font=(r.i?'italic ':'')+(r.b?'bold ':'')+(r.sz/Q)+'px '+(r.fam?'"'+r.fam+'"':'sans-serif');};
+ const lhOf=(pa,l)=>{
+  const sz=(l.segs.length?Math.max.apply(null,l.segs.map(s=>s.seg.sz)):(pa.D.sz||F.sz))/Q;
+  const ls=pa.lnSpc;
+  const h=(ls&&ls.pts!=null)?((ls.pts*12700)/Q):((ls&&ls.pct!=null)?(sz*ls.pct*1.2):(sz*1.2));
+  return {h:Math.max(h,sz*0.8),sz:sz};
+ };
+ const spcOf=(v,sz)=>!v?0:((v.pts!=null)?((v.pts*12700)/Q):((v.pct||0)*sz*1.2));
+ let total=0;
+ const layout=()=>{
+  total=0;
+  for(const pa of paras){
+   const wrapped=[];
+   let cur=[],curW=0;
+   const pushLine=()=>{wrapped.push({segs:cur.slice(),w:curW});cur=[];curW=0;};
+   for(const r of pa.runs){
+    if(r.br){pushLine();continue;}
+    setF(r);
+    const parts=r.txt.split(/(\s+)/);
+    for(const part of parts){
+     if(!part)continue;
+     setF(r);
+     const w=ctx.measureText(part).width;
+     if(/^\s+$/.test(part)){
+      if(!cur.length)continue;
+      if(curW+w>avail){pushLine();continue;}
+      cur.push({seg:r,txt:part,w:w});curW+=w;continue;
+     }
+     if(curW+w>avail&&cur.length)pushLine();
+     if(w>avail){ /* 單一超長 token → 逐字 */
+      for(const chx of part){
+       setF(r);const wc=ctx.measureText(chx).width;
+       if(curW+wc>avail&&cur.length)pushLine();
+       cur.push({seg:r,txt:chx,w:wc});curW+=wc;
+      }
+     }else{cur.push({seg:r,txt:part,w:w});curW+=w;}
+    }
+   }
+   pushLine(); /* 含空段落 → 一行 */
+   pa._lines=wrapped;
+   pa._lh=wrapped.map(l=>lhOf(pa,l));
+   const f0=pa._lh.length?pa._lh[0].sz:(pa.D.sz||F.sz)/Q;
+   const f1=pa._lh.length?pa._lh[pa._lh.length-1].sz:f0;
+   pa._sb=spcOf(pa.spcBef,f0);pa._sa=spcOf(pa.spcAft,f1);
+   pa._h=pa._lh.reduce((a,x)=>a+x.h,0);
+   total+=pa._sb+pa._h+pa._sa;
+  }
+ };
+ layout();
+ /* autofit（同 PowerPoint normAutofit）：文字總高超出框高（如標題字級大於小框/假換行）
+    → 迭代縮放字級重排：先縮到放得下（下限 0.3），再逐步放回剛好可行的最大字級，
+    兼顧「不與其他形狀重疊」＋「字級盡量接近原稿」 */
+ const availH=Math.max(20,box.h-ins.t-ins.b);
+ const applyScale=k=>{for(const pa of paras)for(const r of pa.runs)r.sz*=k;};
+ let scale=1;
+ for(let round=0;round<2;round++){
+  for(let i=0;i<8&&total>availH;i++){
+   const step=Math.max(availH/total,0.3/scale);
+   if(step>=1)break;
+   applyScale(step);scale*=step;layout();
+  }
+  if(scale>=1)break; /* 原本就放得下的不放大 */
+  for(let i=0;i<8;i++){
+   const step=availH/total;
+   if(step<1.03)break;
+   const ns=Math.min(scale*step,scale*1.06);
+   applyScale(ns/scale);scale=ns;layout();
+  }
+ }
+ let y=(anchor==='ctr')?(box.y+(box.h-total)/2):((anchor==='b')?(box.y+box.h-ins.b-total):(box.y+ins.t));
+ /* 繪製 */
+ for(const pa of paras){
+  y+=pa._sb;
+  for(let li=0;li<pa._lines.length;li++){
+   const l=pa._lines[li],L=pa._lh[li],lsz=L.sz;
+   let x;
+   if(pa.algn==='ctr')x=box.x+ins.l+Math.max(0,(avail-l.w)/2);
+   else if(pa.algn==='r')x=box.x+ins.l+Math.max(0,avail-l.w);
+   else x=box.x+ins.l+pa.marL;
+   if(li===0&&pa.bullet){
+    const bxx=box.x+ins.l+pa.marL+pa.indent;
+    const s0=l.segs[0];
+    if(s0){setF(s0.seg);ctx.fillStyle=s0.seg.color;}
+    else{ctx.font=lsz+'px sans-serif';ctx.fillStyle=pa.D.color||F.color||'#111111';}
+    let bs='';
+    if(pa.bullet.c)bs=pa.bullet.c;
+    else{const key='l'+pa.lv;nums[key]=(nums[key]||0)+1;bs=nums[key]+'.';}
+    ctx.fillText(bs,bxx,y);
+   }
+   let cx0=x;
+   for(const sg of l.segs){
+    setF(sg.seg);
+    ctx.fillStyle=sg.seg.color;
+    ctx.fillText(sg.txt,cx0,y);
+    cx0+=sg.w;
+   }
+   if(collect&&l.segs.length){
+    const s=l.segs.map(sg=>sg.txt).join('').replace(/\s+$/,'');
+    /* kunit → 回填 EMU（文字層以 vpw/vph=EMU 換算） */
+    if(s)st.items.push({x:Math.round(x*Q),y:Math.round(y*Q),fs:Math.round(lsz*Q),s:s});
+   }
+   y+=L.h;
+  }
+  y+=pa._sa;
+ }
+ ctx.restore();
+}
+/* 簡報 .pptx → JSZip 解 OOXML → 逐頁渲染成 canvas 底圖＋可選取文字層（v1.3.0）
+   舊版 .ppt（二進位）不走這裡（handleFiles 已給轉檔提示） */
 async function importPPTX(file,t){
  if(typeof JSZip==='undefined'){finishTrack(t,0,null,'');toast('無法載入簡報解析器（首次使用需網路）');return;}
  const d=curDoc();if(!d)return;
  toast('正在解析簡報…');
  let zip;
  try{zip=await JSZip.loadAsync(file);}catch(e){console.error(e);finishTrack(t,0,null,'');toast(tN('匯入失敗：{f}',{f:file.name}));return;}
+ let g=null;
+ try{g=await pptxPrepare(zip);}catch(e){console.error(e);}
+ if(!g||!g.slides.length){finishTrack(t,0,null,'');toast(tN('無法讀取簡報內容：{f}',{f:file.name}));return;}
+ /* 自適應頁面尺寸：讀 <p:sldSz cx cy>（EMU）→ 頁面同比例。
+    必須在 clearEmptyPages 之前呼叫（applyAdaptiveSize 只對單一空白頁生效，同 importPDF）。 */
+ if(S.adapt&&g.SW&&g.SH)applyAdaptiveSize(g.SW/g.SH);
  clearEmptyPages(d);
  const fromPage=d.pages.length;
- const dec=s=>s.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&amp;/g,'&');
- const slideFiles=Object.keys(zip.files).filter(p=>/^ppt\/slides\/slide\d+\.xml$/.test(p))
-  .sort((a,b)=>(+a.match(/\d+/)[0])-(+b.match(/\d+/)[0]));
  let added=0;
- for(const sp of slideFiles){
-  let xml='';try{xml=await zip.files[sp].async('string');}catch(e){continue;}
-  const texts=[...xml.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map(m=>dec(m[1])).filter(s=>s.trim());
-  const pi=d.pages.length;d.pages.push(blankPage());
-  const content=texts.join('\n')||tN('（第 {n} 頁無文字）',{n:added+1});
-  const h=clamp(textLinesNeeded(content,d.w-80,15)*15*1.5+14,40,d.h-40);
-  d.pages[pi].els.push(makeText(40,40,esc(content).replace(/\n/g,'<br>'),d.w-80,h,15));
-  added++;
+ for(const sp of g.slides){
+  try{
+   const r=await pptxRenderSlide(g,sp);
+   if(!r)continue;
+   /* 優先 WebP（同畫質更小），不支援退回 JPEG — 同 importPDF */
+   let src=r.cv.toDataURL('image/webp',0.92);
+   if(src.indexOf('data:image/webp')!==0)src=r.cv.toDataURL('image/jpeg',0.96);
+   d.pages.push({id:uid(),
+    bg:{src:src,name:file.name,page:added+1,
+        text:r.items.length?{direct:true,vpw:g.SW,vph:g.SH,items:r.items}:null},
+    strokes:[],els:[],flow:''});
+   added++;
+  }catch(e){console.error('pptx slide',sp,e);}
  }
  if(!added){finishTrack(t,0,null,'');toast(tN('無法讀取簡報內容：{f}',{f:file.name}));return;}
- S.sel=null;commit();renderAll();
+ if(S.sel)S.sel=null;
+ commit();renderAll();
  revealPage(fromPage);
  finishTrack(t,added,fromPage,'pptx');
  toast(tN('已匯入簡報 {f}（{n} 頁 → 第 {a}–{b} 頁）',{f:file.name,n:added,a:fromPage+1,b:fromPage+added}));
