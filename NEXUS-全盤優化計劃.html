@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NEXUS 全盤優化計劃（v2 提案）</title>
+<script>try{var t=localStorage.getItem('plan.theme');if(t)document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark');}catch(e){}</script>
+<style>
+*{box-sizing:border-box}
+:root{--bg:#f4f5fa;--card:#fff;--ink:#111319;--ink2:#4d5468;--mut:#878ea3;--line:#e4e7f0;--chip:#eef0f7;--a1:#4f6bf6;--a2:#9b5cf6;--a3:#e13aa6;--r:16px;--sh:0 12px 34px rgba(17,19,25,.09)}
+html[data-theme=dark]{--bg:#0e1015;--card:#161923;--ink:#eceff7;--ink2:#a9b1c6;--mut:#767e93;--line:#262b38;--chip:#1e222d;--sh:0 12px 34px rgba(0,0,0,.5)}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei",system-ui,sans-serif;line-height:1.65;-webkit-font-smoothing:antialiased;padding-bottom:92px;transition:background .25s,color .25s}
+.themeBtn{position:absolute;top:18px;right:20px;z-index:3;width:40px;height:40px;border-radius:13px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font-size:17px;cursor:pointer;backdrop-filter:blur(6px);transition:transform .15s}
+.themeBtn:hover{transform:scale(1.08)}
+.hero{position:relative;padding:58px 24px 46px;color:#fff;background:linear-gradient(118deg,#3346d8 0%,#7a3cf0 46%,#e13aa6 100%);overflow:hidden}
+.hero:after{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.055) 1px,transparent 1px);background-size:38px 38px;-webkit-mask-image:radial-gradient(75% 90% at 50% 0,#000 20%,transparent);mask-image:radial-gradient(75% 90% at 50% 0,#000 20%,transparent)}
+.hero .in{max-width:1080px;margin:0 auto;position:relative;z-index:1}
+.kicker{display:inline-flex;gap-8px;align-items:center;gap:8px;font-size:12.5px;letter-spacing:.16em;font-weight:800;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);padding:6px 15px;border-radius:99px;backdrop-filter:blur(6px)}
+h1{margin:18px 0 12px;font-size:clamp(30px,5vw,47px);line-height:1.16;letter-spacing:-.01em}
+.hero .sub{margin:0;font-size:16.5px;color:rgba(255,255,255,.9);max-width:790px}
+.hero .sub b{background:rgba(255,255,255,.22);padding:1px 7px;border-radius:6px}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.pill{font-size:12.5px;font-weight:800;padding:5px 13px;border-radius:99px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.24)}
+.stats{max-width:1080px;margin:-28px auto 0;padding:0 24px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;position:relative;z-index:2}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:14px 16px;box-shadow:var(--sh)}
+.stat b{display:block;font-size:25px;letter-spacing:-.02em}
+.stat span{font-size:12.5px;color:var(--mut);font-weight:600}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+.sect{margin:44px 0 14px;display:flex;gap:13px;align-items:flex-start}
+.sect .letter{flex:none;width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:16px;box-shadow:0 6px 16px rgba(17,19,25,.18)}
+.l-a{background:linear-gradient(135deg,#4f6bf6,#6a5cf6)}.l-b{background:linear-gradient(135deg,#e13aa6,#f6793c)}.l-c{background:linear-gradient(135deg,#9b5cf6,#4f6bf6)}.l-d{background:linear-gradient(135deg,#0ca678,#0f9bce)}.l-e{background:linear-gradient(135deg,#f59e0b,#e13aa6)}.l-f{background:linear-gradient(135deg,#22b8cf,#4f6bf6)}
+.sect h2{margin:0;font-size:22px;letter-spacing:-.01em}
+.sect .tag{display:block;font-size:13.5px;color:var(--ink2);font-weight:500;margin-top:2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(325px,1fr));gap:14px}
+.item{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 16px 13px;cursor:pointer;user-select:none;transition:transform .16s cubic-bezier(.2,.8,.3,1.2),box-shadow .18s,border-color .18s}
+.item:hover{transform:translateY(-3px);box-shadow:var(--sh)}
+.item.sel{border-color:transparent;box-shadow:0 0 0 2.5px var(--a1),var(--sh)}
+.item .top{display:flex;gap:10px;align-items:flex-start}
+.item .id{flex:none;font:800 12px/1 ui-monospace,Menlo,monospace;color:#fff;background:var(--ink);opacity:.72;padding:5px 7px;border-radius:7px;letter-spacing:.03em}
+.item h3{margin:1px 0 0;font-size:16.2px;flex:1;letter-spacing:-.01em}
+.item .mark{flex:none;width:23px;height:23px;border-radius:8px;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13.5px;color:transparent;transition:.15s;background:var(--card)}
+.item.sel .mark{background:var(--a1);border-color:var(--a1);color:#fff}
+.item .now{margin:9px 0 2px;font-size:13px;color:var(--mut)}
+.item .new{margin:0 0 11px;font-size:13.6px;color:var(--ink2)}
+.item .new b{color:var(--ink);font-weight:700}
+.b{display:inline-block;font-size:11px;font-weight:900;padding:3px 9px;border-radius:99px;margin:0 5px 4px 0;letter-spacing:.02em}
+.b.imp{background:var(--chip);color:var(--ink2)}
+.b.s{background:#e3f8ee;color:#0a8f63}.b.m{background:#fff2dd;color:#c06a05}.b.l{background:#ffe5ea;color:#d61f45}
+.b.sp{background:#ece9ff;color:#6244e8}
+html[data-theme=dark] .b.s{background:rgba(12,166,120,.16);color:#4ade9f}
+html[data-theme=dark] .b.m{background:rgba(245,158,11,.16);color:#fbbf4a}
+html[data-theme=dark] .b.l{background:rgba(244,63,94,.16);color:#ff8698}
+html[data-theme=dark] .b.sp{background:rgba(98,68,232,.2);color:#a895ff}
+.ba{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:10px 0 11px}
+.ba .col{border:1px dashed var(--mut);border-radius:12px;padding:8px 7px;text-align:center;font-size:11.5px;color:var(--mut);font-weight:700}
+.mini{height:70px;border-radius:9px;margin-bottom:6px;position:relative;overflow:hidden}
+.mini.old{background:linear-gradient(135deg,#f6a13c,#e13aa6)}
+.mini.new{background:var(--bg);border:1px solid var(--line);display:flex;gap:5px;padding:7px}
+.mini.new i{flex:1;background:#eef1f8;border-radius:4px;position:relative}
+html[data-theme=dark] .mini.new i{background:#1e222d}
+.mini.new i:before{content:"";position:absolute;left:14%;right:14%;top:16%;height:5px;background:#c9d2ea;border-radius:2px;box-shadow:0 10px 0 #d6ddef,0 20px 0 #d6ddef}
+.mini.new i:nth-child(2):before{background:#f0b9c8;box-shadow:0 10px 0 #d6ddef,0 20px 0 #d6ddef}
+html[data-theme=dark] .mini.new i:before{background:#3a4152;box-shadow:0 10px 0 #2a303c,0 20px 0 #2a303c}
+</style>
+<style>
+.lead{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;margin-top:26px;font-size:14.6px;color:var(--ink2)}
+.lead b{color:var(--ink)}
+.diag{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:12px;margin-top:14px}
+.diag .d{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px 16px;position:relative;overflow:hidden}
+.diag .d:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--a1),var(--a3))}
+.diag .d b{display:block;font-size:15px;margin-bottom:5px}
+.diag .d span{font-size:13.2px;color:var(--ink2)}
+.prin{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:12px;margin-top:14px}
+.prin .p{background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:15px 16px}
+.prin .p b{display:block;font-size:14.5px;margin-bottom:4px;color:var(--ink)}
+.prin .p span{font-size:13.2px;color:var(--ink2)}
+/* 路線圖 */
+.tl{position:relative;padding-left:30px;margin-top:16px}
+.tl:before{content:"";position:absolute;left:9px;top:8px;bottom:8px;width:3px;border-radius:2px;background:linear-gradient(180deg,var(--a1),var(--a3))}
+.ph{position:relative;background:var(--card);border:1px solid var(--line);border-radius:15px;padding:16px 18px;margin-bottom:13px;box-shadow:var(--sh)}
+.ph:before{content:"";position:absolute;left:-27px;top:22px;width:13px;height:13px;border-radius:50%;background:var(--a1);box-shadow:0 0 0 4px var(--bg);border:2px solid var(--card)}
+.ph:nth-child(4):before{background:var(--a3)}
+.ph .v{font:900 12px ui-monospace,Menlo;color:#fff;background:linear-gradient(135deg,var(--a1),var(--a2));padding:3px 11px;border-radius:99px;display:inline-block;letter-spacing:.04em}
+.ph.opt .v{background:linear-gradient(135deg,#22b8cf,#4f6bf6)}
+.ph h3{margin:9px 0 5px;font-size:17.5px;letter-spacing:-.01em}
+.ph p{margin:0;font-size:13.8px;color:var(--ink2)}
+.ph .ids{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+.ph .ids span{font:800 11.5px ui-monospace,Menlo;background:var(--chip);border:1px solid var(--line);padding:3px 8px;border-radius:7px;color:var(--ink2)}
+/* 風險 */
+.risk{background:var(--card);border:1px solid var(--line);border-left:4px solid #f59e0b;border-radius:13px;padding:15px 18px;font-size:14px}
+.risk ul{margin:6px 0 0;padding-left:20px}
+.risk li{margin:7px 0;color:var(--ink2);font-size:13.8px}
+.risk b{color:var(--ink)}
+/* 決策 */
+.dec{background:linear-gradient(135deg,#151827,#232a4d 70%,#3a2350);border-radius:22px;padding:30px 28px 26px;margin-top:46px;color:#fff;position:relative;overflow:hidden}
+.dec:after{content:"";position:absolute;right:-70px;top:-70px;width:230px;height:230px;border-radius:50%;background:radial-gradient(circle,rgba(225,58,166,.4),transparent 65%)}
+.dec h2{margin:0 0 6px;font-size:26px;letter-spacing:-.01em}
+.dec .ds{margin:0 0 18px;font-size:14.5px;color:rgba(255,255,255,.75)}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:13px;position:relative;z-index:1}
+.opt{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:15px;padding:15px 16px;transition:.16s}
+.opt:hover{background:rgba(255,255,255,.12);transform:translateY(-3px)}
+.opt b{display:block;font-size:15.5px;margin-bottom:5px}
+.opt span{font-size:13.2px;color:rgba(255,255,255,.78)}
+.opt .n{display:inline-block;font:900 11.5px ui-monospace,Menlo;color:#151827;background:#7ef0c6;border-radius:7px;padding:2px 8px;margin-bottom:8px}
+/* 底部彙總列 */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;justify-content:center;align-items:center;gap:14px;flex-wrap:wrap;background:rgba(16,18,28,.94);backdrop-filter:blur(12px);border-top:1px solid rgba(255,255,255,.1);padding:13px 18px;color:#fff}
+.bar .sum{font-size:14.5px;font-weight:600}
+.bar .sum b{color:#7ef0c6;font-size:17px}
+.bar button{border:0;border-radius:11px;padding:9px 17px;font-weight:800;font-size:13.5px;cursor:pointer;background:rgba(255,255,255,.13);color:#fff;font-family:inherit;transition:.15s}
+.bar button:hover{background:rgba(255,255,255,.22)}
+.bar button.pri{background:linear-gradient(135deg,#4f6bf6,#9b5cf6);box-shadow:0 6px 18px rgba(79,107,246,.45)}
+.bar button.pri:hover{filter:brightness(1.12)}
+footer{text-align:center;color:var(--mut);font-size:12.8px;margin:40px 0 10px}
+@media (max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}.hero{padding-top:70px}.sect{flex-wrap:wrap}}
+@media print{.bar,.themeBtn{display:none!important}body{padding-bottom:0}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="hero">
+ <button class="themeBtn" id="themeBtn" title="切換深淺色">◐</button>
+ <div class="in">
+  <span class="kicker">NEXUS · 優化計劃書 v2</span>
+  <h1>全盤優化：讓每一屏<br>「一眼就不一樣」</h1>
+  <p class="sub">基於 <b>v1.4.0</b> 現況的 <b>24 項提案</b>，橫跨 6 大領域。入選標準只有一條：<b>用戶 3 秒內看得見、摸得著的改變</b>。先勾選、後動工 — 底部即時彙總規模，看完直接告訴我選項。</p>
+  <div class="pills"><span class="pill">24 項提案</span><span class="pill">6 大領域</span><span class="pill">4 衝刺＋亮點池</span><span class="pill">3 平台一源</span><span class="pill">v1.5 → v2.0 路線</span></div>
+ </div>
+</header>
+<div class="stats">
+ <div class="stat"><b>24</b><span>項可勾選提案</span></div>
+ <div class="stat"><b>45</b><span>規模點（全做滿）</span></div>
+ <div class="stat"><b>3</b><span>衝刺見效最快</span></div>
+ <div class="stat"><b>&lt;1s</b><span>啟動目標（D3）</span></div>
+</div>
+<div class="wrap">
+ <div class="lead"><b>為什麼要有這份計劃：</b>v1.2.x → v1.4.0 的迭代都是「單點回饋 → 修」，功能已經夠多，但整體體驗開始出現天花板 — 卡片資訊密度低、找東西靠翻、大筆記會卡、手機是縮小的桌面。這份計劃把痛點一次攤開，<b>每一項都標註「改後用戶看到什麼」</b>，由你勾選後分衝刺執行。</div>
+ <div class="sect"><div class="letter l-a">!</div><div><h2>現況四大痛點</h2><span class="tag">從工作日誌、回饋與實測歸納 — 也是本計劃的靶子</span></div></div>
+ <div class="diag">
+  <div class="d"><b>視覺資訊密度低</b><span>主頁卡片是漸變色塊，不點開不知道內容；空態一行灰字、動效零散，整體「工具感」有餘、「精緻感」不足。</span></div>
+  <div class="d"><b>找東西靠翻</b><span>沒有命令面板、沒有釘選排序、快捷鍵少且無處可查；筆記一多，效率直線下降。</span></div>
+  <div class="d"><b>大筆記會卡</b><span>任何變動 renderAll 全量重繪；localStorage ~5MB 天花板；pdf.js 等重庫拖慢首屏。</span></div>
+  <div class="d"><b>手機是縮小的桌面</b><span>工具列照搬、無雙指手勢、拇指夠不到主要操作；Android 只是「能跑」。</span></div>
+ </div>
+ <div class="sect"><div class="letter l-f">◎</div><div><h2>四條不變原則</h2><span class="tag">計劃可以大，底線不能破</span></div></div>
+ <div class="prin">
+  <div class="p"><b>① 看得見優先</b><span>第一衝刺全部是 3 秒內可感知的改變；純內部重構不佔衝刺名額。</span></div>
+  <div class="p"><b>② 資料向後相容</b><span>任何儲存結構變更（如 D2/B4）必須自動遷移＋雙讀回退，舊筆記零損失。</span></div>
+  <div class="p"><b>③ 單一源不變</b><span>仍以 note-app.html 為唯一程式碼來源，桌面/Android 照現行 build.js 同步；debug.keystore 不動。</span></div>
+  <div class="p"><b>④ 每衝刺照發佈流程</b><span>靜態回歸＋E2E＋截圖對比＋四處版本號＋dmg/apk/Release，與 v1.4.0 同規格。</span></div>
+ </div>
+
+ <div class="sect"><div class="letter l-a">A</div><div><h2>設計語言 ·「一眼不同」</h2><span class="tag">把整個 app 放進同一套節奏 — 視覺衝擊最大的一組</span></div></div>
+ <div class="grid">
+  <div class="item sel" data-id="A1" data-eff="M"><div class="top"><span class="id">A1</span><h3>設計代幣一次到位</h3><span class="mark">✓</span></div><p class="now">現況：间距/圓角/陰影/動效散落各處，面板質感不一。</p><p class="new">✅ 改後：<b>四套階梯（間距·圓角·陰影·動效）統一全局</b> — 所有畫面同時「對齊節奏」，一翻截圖就看出差別。</p><span class="b imp">影響 ★★★★★</span><span class="b m">工作量 M</span><span class="b sp">衝刺 1</span></div>
+  <div class="item sel" data-id="A2" data-eff="L"><div class="top"><span class="id">A2</span><h3>主頁卡片換真實縮圖 ⭐旗艦</h3><span class="mark">✓</span></div><p class="now">現況：漸變色塊卡片，要點開才知道是哪份筆記。</p><div class="ba"><div class="col"><div class="mini old"></div>改前：色塊</div><div class="col"><div class="mini new"><i></i><i></i><i></i></div>改後：內容縮圖</div></div><p class="new">✅ 改後：<b>每張卡顯示第 1 頁真實縮圖</b>（離屏渲染＋快取），主頁像相簿一目了然；色塊只留首次佔位。</p><span class="b imp">影響 ★★★★★</span><span class="b l">工作量 L</span><span class="b sp">衝刺 1</span></div>
+  <div class="item sel" data-id="A3" data-eff="S"><div class="top"><span class="id">A3</span><h3>空狀態不再空白</h3><span class="mark">✓</span></div><p class="now">現況：無筆記/搜尋無結果只有一行灰字。</p><p class="new">✅ 改後：<b>插畫＋情境 CTA</b>（「建立第一份筆記」「清除搜尋」），第一次用也知道往哪走。</p><span class="b imp">影響 ★★★★☆</span><span class="b s">工作量 S</span><span class="b sp">衝刺 1</span></div>
+  <div class="item sel" data-id="A4" data-eff="M"><div class="top"><span class="id">A4</span><h3>動效過場系統</h3><span class="mark">✓</span></div><p class="now">現況：切頁瞬移、modal 突現、卡片無進場。</p><p class="new">✅ 改後：<b>卡片 stagger 進場、頁面 crossfade＋微位移、modal blur 彈入</b> — 操作有「物理感」（遵循 reduce-motion）。</p><span class="b imp">影響 ★★★★☆</span><span class="b m">工作量 M</span><span class="b sp">衝刺 1</span></div>
+  <div class="item sel" data-id="A5" data-eff="S"><div class="top"><span class="id">A5</span><h3>字階與對比重整</h3><span class="mark">✓</span></div><p class="now">現況：字級/行高/對比零散，輔助文字偏灰看不清。</p><p class="new">✅ 改後：<b>三級字階＋統一行高＋對比達 WCAG AA</b>，閱讀疲勞明顯下降。</p><span class="b imp">影響 ★★★★☆</span><span class="b s">工作量 S</span><span class="b sp">衝刺 1</span></div>
+ </div>
+
+ <div class="sect"><div class="letter l-b">B</div><div><h2>主頁與導航 ·「找得快」</h2><span class="tag">筆記多了以後，效率差距全在這裡</span></div></div>
+ <div class="grid">
+  <div class="item" data-id="B1" data-eff="M"><div class="top"><span class="id">B1</span><h3>⌘K 命令面板</h3><span class="mark">✓</span></div><p class="now">現況：找筆記要回主頁搜尋，切設定要翻選單。</p><p class="new">✅ 改後：<b>任何頁面 ⌘K/Ctrl+K</b> — 搜筆記、執行指令（匯出／新增頁／切主題），模糊匹配＋全鍵盤操作。</p><span class="b imp">影響 ★★★★★</span><span class="b m">工作量 M</span><span class="b sp">衝刺 2</span></div>
+  <div class="item sel" data-id="B2" data-eff="S"><div class="top"><span class="id">B2</span><h3>釘選與排序</h3><span class="mark">✓</span></div><p class="now">現況：只能按時間序，重要資料被新筆記洗掉。</p><p class="new">✅ 改後：<b>釘選置頂＋依名稱/頁數/時間排序＋最近編輯分組</b>。</p><span class="b imp">影響 ★★★★☆</span><span class="b s">工作量 S</span><span class="b sp">衝刺 1</span></div>
+  <div class="item" data-id="B3" data-eff="M"><div class="top"><span class="id">B3</span><h3>範本庫</h3><span class="mark">✓</span></div><p class="now">現況：經濟圖表/投影片版型要自己從零擺。</p><p class="new">✅ 改後：<b>SD、IS-LM、AD-AS 空白圖、16:9 簡報版、康奈爾筆記</b>…一鍵開新筆記。</p><span class="b imp">影響 ★★★★★</span><span class="b m">工作量 M</span><span class="b sp">衝刺 2</span></div>
+  <div class="item" data-id="B4" data-eff="M"><div class="top"><span class="id">B4</span><h3>全文搜尋升級</h3><span class="mark">✓</span></div><p class="now">現況：搜尋只配對檔名與首頁摘要，命中處無高亮。</p><p class="new">✅ 改後：<b>內文全文匹配＋命中高亮＋最近搜尋記錄</b>，找句子一步到位。</p><span class="b imp">影響 ★★★★☆</span><span class="b m">工作量 M</span><span class="b sp">衝刺 2</span></div>
+ </div>
+ <div class="sect"><div class="letter l-c">C</div><div><h2>編輯器 ·「編得順」</h2><span class="tag">最高頻使用區 — 每次少點兩下，累積起來最划算</span></div></div>
+ <div class="grid">
+  <div class="item" data-id="C1" data-eff="M"><div class="top"><span class="id">C1</span><h3>浮動選取工具列</h3><span class="mark">✓</span></div><p class="now">現況：選中物件要跑頂部/側欄找操作。</p><p class="new">✅ 改後：<b>物件旁浮現快捷列</b>（複製·刪除·圖層·配色·鎖定），滑鼠不離工作區。</p><span class="b imp">影響 ★★★★★</span><span class="b m">工作量 M</span><span class="b sp">衝刺 2</span></div>
+  <div class="item" data-id="C2" data-eff="M"><div class="top"><span class="id">C2</span><h3>屬性面板重構</h3><span class="mark">✓</span></div><p class="now">現況：屬性欄項目平鋪、常用項埋得深（歷來回饋焦點）。</p><p class="new">✅ 改後：<b>分組摺疊（版式/外觀/進階）＋即時預覽＋常用上提</b>，改樣式少點三下。</p><span class="b imp">影響 ★★★★☆</span><span class="b m">工作量 M</span><span class="b sp">衝刺 2</span></div>
+  <div class="item" data-id="C3" data-eff="M"><div class="top"><span class="id">C3</span><h3>快捷鍵體系＋速查卡</h3><span class="mark">✓</span></div><p class="now">現況：快捷鍵少且無處可查。</p><p class="new">✅ 改後：<b>補齊常用快捷鍵＋「?」喚出鍵盤速查卡</b>，進階用戶速度翻倍。</p><span class="b imp">影響 ★★★★☆</span><span class="b m">工作量 M</span><span class="b sp">衝刺 2</span></div>
+  <div class="item" data-id="C4" data-eff="M"><div class="top"><span class="id">C4</span><h3>側欄頁面縮圖</h3><span class="mark">✓</span></div><p class="now">現況：側欄只有頁碼文字，多頁跳轉靠猜。</p><p class="new">✅ 改後：<b>真實頁縮圖＋拖曳排序＋點擊跳頁</b>，長文件導覽直覺化。</p><span class="b imp">影響 ★★★★☆</span><span class="b m">工作量 M</span><span class="b sp">衝刺 3</span></div>
+  <div class="item" data-id="C5" data-eff="M"><div class="top"><span class="id">C5</span><h3>選字浮動格式列</h3><span class="mark">✓</span></div><p class="now">現況：改字樣式要回工具列找文字分類。</p><p class="new">✅ 改後：<b>選取文字即在游標旁浮現 粗/斜/大小/顏色/對齊 列</b>，像文書軟體。</p><span class="b imp">影響 ★★★★☆</span><span class="b m">工作量 M</span><span class="b sp">衝刺 3</span></div>
+ </div>
+
+ <div class="sect"><div class="letter l-d">D</div><div><h2>效能底盤 ·「大檔不卡」</h2><span class="tag">用戶感知：從「等等等」到「跟手」；也解除資料量天花板</span></div></div>
+ <div class="grid">
+  <div class="item" data-id="D1" data-eff="M"><div class="top"><span class="id">D1</span><h3>增量渲染＋筆跡分層</h3><span class="mark">✓</span></div><p class="now">現況：任何變動 renderAll 全量重繪，多頁/多物件卡頓。</p><p class="new">✅ 改後：<b>只重繪變動頁；筆跡固定層與內容層分離</b> — 大筆記流暢如空白頁。</p><span class="b imp">影響 ★★★★☆</span><span class="b m">工作量 M</span><span class="b sp">衝刺 3</span></div>
+  <div class="item" data-id="D2" data-eff="L"><div class="top"><span class="id">D2</span><h3>儲存升級 IndexedDB ⚠最大風險項</h3><span class="mark">✓</span></div><p class="now">現況：localStorage ~5MB 天花板，貼圖多的筆記有存不下風險。</p><p class="new">✅ 改後：<b>IndexedDB 存大資產＋自動儲存節流合併</b>；舊資料自動遷移、雙讀回退、零損失。</p><span class="b imp">影響 ★★★★★</span><span class="b l">工作量 L</span><span class="b sp">衝刺 3</span></div>
+  <div class="item" data-id="D3" data-eff="M"><div class="top"><span class="id">D3</span><h3>首屏提速</h3><span class="mark">✓</span></div><p class="now">現況：一次性載入 pdf.js/mammoth/JSZip 等重庫。</p><p class="new">✅ 改後：<b>骨架屏即時出現＋重庫按需動態載入</b>，啟動目標 &lt;1 秒。</p><span class="b imp">影響 ★★★★☆</span><span class="b m">工作量 M</span><span class="b sp">衝刺 3</span></div>
+ </div>
+ <div class="sect"><div class="letter l-e">E</div><div><h2>行動端 ·「隨身好用」</h2><span class="tag">Android 從「能跑」變「好用」</span></div></div>
+ <div class="grid">
+  <div class="item" data-id="E1" data-eff="M"><div class="top"><span class="id">E1</span><h3>觸控手勢重做</h3><span class="mark">✓</span></div><p class="now">現況：手機沿用桌面操作，雙指/單手都彆扭。</p><p class="new">✅ 改後：<b>雙指平移縮放、工具列下移至拇指區、簡易防掌觸</b>。</p><span class="b imp">影響 ★★★★★</span><span class="b m">工作量 M</span><span class="b sp">衝刺 4</span></div>
+  <div class="item" data-id="E2" data-eff="S"><div class="top"><span class="id">E2</span><h3>手機閱讀優先</h3><span class="mark">✓</span></div><p class="now">現況：手機直接進編輯視圖，工具列擠滿一列。</p><p class="new">✅ 改後：<b>預設舒適閱讀＋浮動「畫筆」開關才進編輯</b>，閱讀/速記分流。</p><span class="b imp">影響 ★★★★☆</span><span class="b s">工作量 S</span><span class="b sp">衝刺 4</span></div>
+  <div class="item" data-id="E3" data-eff="S"><div class="top"><span class="id">E3</span><h3>無障礙與 reduce-motion 審查</h3><span class="mark">✓</span></div><p class="now">現況：部分對比不足、焦點環不一致。</p><p class="new">✅ 改後：<b>對比/焦點序/aria/減少動效全面過一遍</b> — 鍵盤與讀屏可完整操作。</p><span class="b imp">影響 ★★★☆☆</span><span class="b s">工作量 S</span><span class="b sp">衝刺 4</span></div>
+ </div>
+
+ <div class="sect"><div class="letter l-f">F</div><div><h2>亮點池 ·「可選加碼」</h2><span class="tag">不佔四個衝刺名額，勾了就排進去</span></div></div>
+ <div class="grid">
+  <div class="item" data-id="F1" data-eff="S"><div class="top"><span class="id">F1</span><h3>日落自動深色</h3><span class="mark">✓</span></div><p class="now">現況：深色要手動切。</p><p class="new">✅ 改後：<b>依當地日落時間自動切換深淺色</b>，可關。</p><span class="b imp">影響 ★★★☆☆</span><span class="b s">工作量 S</span><span class="b sp">亮點池</span></div>
+  <div class="item" data-id="F2" data-eff="M"><div class="top"><span class="id">F2</span><h3>匯出強化</h3><span class="mark">✓</span></div><p class="now">現況：匯出選項固定，多頁要一次次點。</p><p class="new">✅ 改後：<b>選頁數範圍/解析度、一次匯出全部頁 PDF/PNG</b>。</p><span class="b imp">影響 ★★★★☆</span><span class="b m">工作量 M</span><span class="b sp">亮點池</span></div>
+  <div class="item" data-id="F3" data-eff="M"><div class="top"><span class="id">F3</span><h3>本機版本快照</h3><span class="mark">✓</span></div><p class="now">現況：誤刪/改壞只能靠 JSON 手動備份。</p><p class="new">✅ 改後：<b>每次儲存自動留 N 份快照，一鍵回復</b>（本機儲存，占用可控）。</p><span class="b imp">影響 ★★★★☆</span><span class="b m">工作量 M</span><span class="b sp">亮點池</span></div>
+  <div class="item" data-id="F4" data-eff="L"><div class="top"><span class="id">F4</span><h3>標籤／資料夾 ⚠含資料遷移</h3><span class="mark">✓</span></div><p class="now">現況：筆記一多只能靠搜尋。</p><p class="new">✅ 改後：<b>標籤過濾＋資料夾分組</b>；資料結構變動，需遷移與回退方案。</p><span class="b imp">影響 ★★★☆☆</span><span class="b l">工作量 L</span><span class="b sp">亮點池</span></div>
+ </div>
+
+ <div class="sect"><div class="letter l-a">→</div><div><h2>衝刺路線圖</h2><span class="tag">預估以「完整 session 數」為單位；每衝刺結束都是可發佈的正式版</span></div></div>
+ <div class="tl">
+  <div class="ph"><span class="v">衝刺 1 · v1.5</span><h3>「一眼不同」— 最明顯的一刀</h3><p>全域設計代幣＋主頁縮圖卡片＋空態＋動效＋字階＋釘寫排序。完成後新舊截圖對比就有效果，適合做發表素材。</p><div class="ids"><span>A1</span><span>A2</span><span>A3</span><span>A4</span><span>A5</span><span>B2</span></div></div>
+  <div class="ph"><span class="v">衝刺 2 · v1.6</span><h3>「編得快」— 效率四件套</h3><p>⌘K 命令面板、浮動選取工具列、屬性面板重構、快捷鍵速查、範本庫、全文搜尋。重度用戶體感最強的一段。</p><div class="ids"><span>B1</span><span>B3</span><span>B4</span><span>C1</span><span>C2</span><span>C3</span></div></div>
+  <div class="ph"><span class="v">衝刺 3 · v1.7</span><h3>「大檔不卡」— 底盤升級</h3><p>增量渲染、IndexedDB 遷移（最大風險項，先備份＋雙讀回退）、首屏提速、側欄縮圖、選字格式列。有專屬回歸清單。</p><div class="ids"><span>C4</span><span>C5</span><span>D1</span><span>D2</span><span>D3</span></div></div>
+  <div class="ph"><span class="v">衝刺 4 · v1.8</span><h3>「隨身好用」— 行動端＋無障礙</h3><p>真機手勢測試（Android 實測）、拇指區工具列、閱讀優先模式、無障礙審查。</p><div class="ids"><span>E1</span><span>E2</span><span>E3</span></div></div>
+  <div class="ph opt"><span class="v">亮點池 · 隨插隨用</span><h3>勾了就排進對應衝刺尾段</h3><p>日落深色、匯出強化、版本快照、標籤/資料夾 — 視勾選結果併入最近的衝刺。</p><div class="ids"><span>F1</span><span>F2</span><span>F3</span><span>F4</span></div></div>
+ </div>
+ <div class="sect"><div class="letter l-f">⚠</div><div><h2>風險與底線</h2><span class="tag">計劃可以大，翻車面必須先想好</span></div></div>
+ <div class="risk"><b>三項高風險（執行前先做小規模 PoC）：</b><ul>
+  <li><b>D2 IndexedDB 遷移</b> — 最大風險項：動工前先做自動備份＋新舊雙讀回退；遷移失敗自動退回 localStorage，保證舊筆記零損失。</li>
+  <li><b>F4 標籤/資料夾</b> — 牽動 doc 資料結構：需要 schema 版號＋遷移腳本＋匯出/匯入相容測試。</li>
+  <li><b>C1 浮動工具列</b> — 與選取框/縮放手柄可能碰撞：先做 PoC 確認碰撞避讓再全量鋪開。</li>
+ </ul>四條底線：note-app.html 單一源不變・debug.keystore 不動・資料向後相容・每衝刺照發佈流程（回歸+E2E+截圖+四版本號+dmg/apk/Release）。</div>
+
+ <section class="dec">
+  <h2>看完後，這樣決定</h2>
+  <p class="ds">以下四種走法任選其一；也可以直接回我「勾選編號」（例如：A2 B1 C1 D2）。勾選狀態會存在本機瀏覽器，隨時回來改。</p>
+  <div class="opts">
+   <div class="opt"><span class="n">選項 ①</span><b>全部照衝刺跑</b><span>1→4 依序執行，亮點池後議。完整走完約 46 規模點，v1.5 到 v2.0 一路升級。</span></div>
+   <div class="opt"><span class="n">選項 ②</span><b>只做衝刺 1＋2</b><span>視覺＋效率最集中的 12 項 —「一眼不一樣」的最高 CP 值組合，先發 v1.5/v1.6 再說。</span></div>
+   <div class="opt"><span class="n">選項 ③</span><b>我勾選</b><span>用頁面上的卡片勾出你要的清單，按「複製選取」貼給我，按你的名單開工。</span></div>
+   <div class="opt"><span class="n">選項 ④</span><b>先做 A2 PoC</b><span>只先做「主頁真實縮圖卡片」看效果 — 它是視覺衝擊最大的單項，滿意再放大。</span></div>
+  </div>
+ </section>
+ <footer>NEXUS 全盤優化計劃書 v2 · 2026-10-15 · 基於 v1.4.0 現況 · 單檔源 note-app.html · 計劃先審、動工有據（日誌規則第 1 條）</footer>
+</div>
+<div class="bar">
+ <span class="sum">已勾選 <b id="selN">0</b> 項 · 規模 <b id="selP">0</b> 點</span>
+ <button id="btnAll">全選</button>
+ <button id="btnClr">清除</button>
+ <button id="btnS1">只選衝刺1</button>
+ <button class="pri" id="btnCopy">複製選取清單</button>
+</div>
+<script>
+(function(){
+ var W={S:1,M:2,L:3};
+ var items=[].slice.call(document.querySelectorAll('.item'));
+ var elN=document.getElementById('selN'),elP=document.getElementById('selP');
+ var S1=['A1','A2','A3','A4','A5','B2'];
+ function upd(){var n=0,p=0,ids=[];items.forEach(function(el){if(el.classList.contains('sel')){n++;p+=W[el.getAttribute('data-eff')]||1;ids.push(el.getAttribute('data-id'));}});elN.textContent=n;elP.textContent=p;window.__sel=ids;}
+ items.forEach(function(el){el.addEventListener('click',function(){el.classList.toggle('sel');upd();});});
+ document.getElementById('btnAll').onclick=function(){items.forEach(function(el){el.classList.add('sel');});upd();};
+ document.getElementById('btnClr').onclick=function(){items.forEach(function(el){el.classList.remove('sel');});upd();};
+ document.getElementById('btnS1').onclick=function(){items.forEach(function(el){el.classList.toggle('sel',S1.indexOf(el.getAttribute('data-id'))>=0);});upd();};
+ document.getElementById('btnCopy').onclick=function(){
+  var txt='NEXUS 優化選取：'+(window.__sel.length?window.__sel.join(' ')+'（'+window.__sel.length+' 項／規模 '+elP.textContent+' 點）':'（尚未勾選）');
+  var btn=this,old=btn.textContent;
+  var done=function(){btn.textContent='已複製 ✓';setTimeout(function(){btn.textContent=old;},1500);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){window.prompt('複製：',txt);});}else{window.prompt('複製：',txt);}
+ };
+ var tb=document.getElementById('themeBtn');
+ function setTheme(t){document.documentElement.setAttribute('data-theme',t);tb.textContent=t==='dark'?'☀':'◐';try{localStorage.setItem('plan.theme',t);}catch(e){}}
+ tb.onclick=function(){setTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');};
+ try{var sv=localStorage.getItem('plan.theme');if(sv)tb.textContent=sv==='dark'?'☀':'◐';}catch(e){}
+ upd();
+})();
+</script>
+</body>
+</html>
