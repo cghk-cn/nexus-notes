@@ -6,6 +6,7 @@
 const { app, BrowserWindow, Menu, shell, dialog, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
 
 /* 允許作為開啟方式的副檔名（與桌面版 app 支援的匯入類型一致） */
 const OPEN_EXT = /\.(json|noteapp|txt|md|markdown|pdf|png|jpe?g|webp)$/i;
@@ -162,6 +163,41 @@ ipcMain.handle('nexus:delete', async (_e, { path: p }) => {
   } catch (e) {
     return { ok: false, error: String((e && e.message) || e) };
   }
+});
+
+/* 下載檔案到「下載」資料夾（穩定檔名→重複更新即覆寫舊檔）。
+   GitHub 資產URL會 302 導向 objects.githubusercontent.com，這裡手動跟隨。 */
+ipcMain.handle('nexus:download', async (_e, { url, name }) => {
+  const dest = path.join(app.getPath('downloads'), path.basename(name || 'download.bin'));
+  const file = fs.createWriteStream(dest);
+  try {
+    await new Promise((resolve, reject) => {
+      const get = (u, redirects) => {
+        if (redirects > 6) return reject(new Error('too many redirects'));
+        https.get(u, res => {
+          if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+            res.resume();
+            return get(res.headers.location, redirects + 1);
+          }
+          if (res.statusCode !== 200) return reject(new Error('HTTP ' + res.statusCode));
+          res.on('error', reject);
+          res.pipe(file);
+          file.on('finish', () => file.close(() => resolve()));
+        }).on('error', err => { try { file.close(); } catch (_) {} reject(err); });
+      };
+      get(url, 0);
+    });
+    return { ok: true, path: dest, size: fs.statSync(dest).size };
+  } catch (e) {
+    try { file.close(); } catch (_) {}
+    return { ok: false, error: String((e && e.message) || e) };
+  }
+});
+
+/* 在檔案總管/Finder 顯示指定檔 */
+ipcMain.handle('nexus:reveal', async (_e, { path: p }) => {
+  try { shell.showItemInFolder(p); return { ok: true }; }
+  catch (e) { return { ok: false, error: String((e && e.message) || e) }; }
 });
 
 ipcMain.handle('nexus:pick-open', async () => {

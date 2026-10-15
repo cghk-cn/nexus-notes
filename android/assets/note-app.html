@@ -299,6 +299,20 @@ body.view-home #app{display:none}
 #mUpdate .uAsset .ic{width:17px;height:17px;color:var(--accent-text);flex:none}
 #mUpdate .uAsset .sz{margin-left:auto;font-size:11.5px;font-weight:500;color:var(--text-3)}
 #mUpdate .uSpin{display:inline-block;width:15px;height:15px;border:2px solid var(--border-strong);border-top-color:var(--accent);border-radius:50%;animation:chkSpin .7s linear infinite;vertical-align:-3px;margin-right:7px}
+/* 檢查更新 footer（v1.2.8）：左下 Release Page、右下 關閉/更新 */
+#mUpdate .uFoot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+#mUpdate .uRel{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--text-2);text-decoration:none;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);transition:color .15s ease,border-color .15s ease,background .15s ease,transform .12s}
+#mUpdate .uRel:hover{color:var(--accent-text);border-color:var(--accent);background:var(--accent-soft);transform:translateY(-1px)}
+#mUpdate .uRel .ic{width:14px;height:14px}
+#mUpdate .uFootBtns{display:flex;align-items:center;gap:8px}
+#mUpdate .uFootBtns button{min-width:76px}
+#mUpdate .uNew{color:var(--accent-text);font-weight:700}
+#mUpdate .uErr{color:var(--danger);font-weight:600}
+#mUpdate .uMeta{font-size:12px;color:var(--text-3);margin:-6px 0 10px}
+#mUpdate .uDlActions{margin-top:10px;display:flex;gap:8px}
+#mUpdate .uDlActions button{min-width:120px}
+#mUpdate .uVer{align-items:center}
+#mUpdate .uNotes{margin-top:2px}
 .homeSearch{flex:1;max-width:560px;display:flex;align-items:center;gap:10px;height:46px;padding:0 20px;border-radius:999px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-sm);transition:box-shadow .18s ease,border-color .18s ease,transform .18s cubic-bezier(.2,.8,.3,1.2)}
 .homeSearch:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-ring),var(--shadow-md);transform:scale(1.01)}
 .homeSearch input{flex:1;min-width:0;border:none;background:none;outline:none;font-size:14.5px;color:var(--text);font-family:inherit}
@@ -979,7 +993,13 @@ body.dragging #dropHint{display:flex}
  <div id="uBody">
   <div class="uStatus"><span class="uSpin"></span>正在檢查更新…</div>
  </div>
- <div class="btns"><button onclick="closeModal('mUpdate')">關閉</button><a class="primary" id="uDL" href="#" target="_blank" rel="noopener" style="display:none;text-decoration:none"><svg class="ic"><use href="#i-download"></use></svg>前往下載</a></div>
+ <div class="uFoot">
+  <a class="uRel" id="uRelPage" href="#" target="_blank" rel="noopener" style="display:none"><svg class="ic"><use href="#i-globe"></use></svg><span>Release Page</span></a>
+  <div class="uFootBtns">
+   <button onclick="closeModal('mUpdate')">關閉</button>
+   <button class="primary" id="uUpdate" style="display:none"><svg class="ic"><use href="#i-download"></use></svg><span>更新</span></button>
+  </div>
+ </div>
 </div></div>
 
 <div class="modal" id="mChart"><div class="card wide">
@@ -1090,7 +1110,7 @@ function closeModal(id){$('#'+id).classList.remove('open');}
 /* ===== 檢查更新（GitHub Releases） =====
    APP_VERSION 為目前版本；檢查時向 GitHub Releases API 取最新版並比對。
    發佈仓库：cghk-cn/nexus-notes。 */
-const APP_VERSION='1.2.7';
+const APP_VERSION='1.2.8';
 const UPD=(function(){
  const OWNER='cghk-cn', REPO='nexus-notes';
  const API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/latest';
@@ -1101,54 +1121,81 @@ const UPD=(function(){
  function fmtSize(n){if(n==null)return '';const u=['B','KB','MB','GB'];let i=0;n=+n;while(n>=1024&&i<u.length-1){n/=1024;i++;}return (n>=10||i===0?Math.round(n):n.toFixed(1))+' '+u[i];}
  function fmtDate(s){try{return new Date(s).toLocaleDateString(LANG==='en'?'en-US':'zh-TW');}catch(e){return s||'';}}
  function open(url){ try{window.open(url,'_blank','noopener');}catch(e){location.href=url;} }
+ function isDesk(){return typeof window.nexus!=='undefined'&&!!window.nexus.download;}
+ function isAndroid(){return /android/i.test(navigator.userAgent||'');}
+ function pickAsset(assets){
+  const want=isAndroid()?/\.apk$/i:/\.dmg$/i;
+  return assets.find(a=>want.test(a.name))||assets[0]||null;
+ }
  async function run(){
-  const btn=$('#btnCheckUpdate'), body=$('#uBody'), dl=$('#uDL');
+  const btn=$('#btnCheckUpdate'), body=$('#uBody'), upd=$('#uUpdate'), rel=$('#uRelPage');
   $('#mUpdate').classList.add('open');
   btn.classList.add('spinning'); btn.classList.remove('dot');
   body.innerHTML='<div class="uStatus"><span class="uSpin"></span>'+esc(t('正在檢查更新…'))+'</div>';
-  dl.style.display='none';
-  let rel;
+  upd.style.display='none'; rel.style.display='none';
+  let rel_;
   try{
    const r=await fetch(API,{headers:{'Accept':'application/vnd.github+json'}});
    if(r.status===404){ renderNone(); return; }
    if(!r.ok)throw new Error('HTTP '+r.status);
-   rel=await r.json();
+   rel_=await r.json();
   }catch(e){
-   body.innerHTML='<div class="uStatus">'+esc(t('檢查更新失敗：請檢查網路連線。'))+'</div>';
+   body.innerHTML='<div class="uStatus uErr">'+esc(t('檢查更新失敗：請檢查網路連線。'))+'</div>';
+   rel.href=PAGE; rel.style.display='';
    return;
   }finally{ btn.classList.remove('spinning'); }
-  const latest=(rel.tag_name||rel.name||'').trim();
+  const latest=(rel_.tag_name||rel_.name||'').trim();
   const newer=cmp(latest,APP_VERSION)>0;
-  const notes=(rel.body||'').trim();
+  const notes=(rel_.body||'').trim();
   let html='';
   html+='<div class="uVer"><div><span class="lab">'+esc(t('目前版本'))+'</span><span class="val">'+esc(APP_VERSION)+'</span></div>'+
         '<svg class="ic uArrow"><use href="#i-arrow-r"></use></svg>'+
-        '<div style="text-align:right"><span class="lab">'+esc(t('最新版本'))+'</span><span class="val'+(newer?' new':'')+'">'+esc(latest||t('未知'))+'</span></div></div>';
+        '<div style="text-align:right"><span class="lab">'+esc(t('最新版本'))+'</span><span class="val'+(newer?' new':'')+'\">'+esc(latest||t('未知'))+'</span></div></div>';
   if(newer){
-   html+='<div class="uStatus">🎉 '+esc(tN('有新版本 {v} 可供下載。',{v:latest}))+'</div>';
+   html+='<div class="uStatus uNew">🎉 '+esc(tN('有新版本 {v} 可供下載。',{v:latest}))+'</div>';
    btn.classList.add('dot');
   }else{
    html+='<div class="uStatus">✅ '+esc(t('你使用的已是最新版本。'))+'</div>';
   }
-  if(rel.published_at)html+='<div class="uStatus" style="margin-top:-6px">'+esc(t('發布日期'))+'：'+esc(fmtDate(rel.published_at))+'</div>';
+  if(rel_.published_at)html+='<div class="uMeta">'+esc(t('發布日期'))+'：'+esc(fmtDate(rel_.published_at))+'</div>';
   if(notes)html+='<div class="uNotes">'+esc(notes)+'</div>';
-  const assets=(rel.assets||[]).filter(a=>a.name);
-  if(assets.length){
-   html+='<div class="uAssets">';
-   for(const a of assets){
-    html+='<a class="uAsset" href="'+esc(a.browser_download_url)+'" target="_blank" rel="noopener">'+
-          '<svg class="ic"><use href="#i-download"></use></svg><span>'+esc(a.name)+'</span>'+
-          (a.size?'<span class="sz">'+esc(fmtSize(a.size))+'</span>':'')+'</a>';
-   }
-   html+='</div>';
-  }
   body.innerHTML=html;
-  dl.href=rel.html_url||PAGE; dl.style.display='';
+  rel.href=rel_.html_url||PAGE; rel.style.display='';
+  const assets=(rel_.assets||[]).filter(a=>a.name);
+  const asset=pickAsset(assets);
+  if(newer){
+   upd.style.display=''; upd.disabled=false;
+   const lbl=upd.querySelector('span'); if(lbl)lbl.textContent=t('更新');
+   upd.onclick=async ()=>{
+    upd.disabled=true;
+    if(lbl)lbl.textContent=t('正在下載…');
+    if(asset && isDesk()){
+     const nm=isAndroid()?'NEXUS-latest.apk':'NEXUS-latest-arm64.dmg';
+     const res=await window.nexus.download(asset.browser_download_url,nm);
+     if(res&&res.ok){
+      body.innerHTML='<div class="uStatus uNew">✅ '+esc(tN('已下載完成：{p}',{p:res.path}))+'</div>'+
+        (res.size?'<div class="uMeta">'+esc(fmtSize(res.size))+'</div>':'')+
+        '<div class="uDlActions"><button class="primary" id="uReveal">'+esc(t('開啟檔案位置'))+'</button></div>';
+      const rv=$('#uReveal'); if(rv)rv.onclick=()=>window.nexus.reveal(res.path);
+      upd.style.display='none';
+     }else{
+      body.innerHTML='<div class="uStatus uErr">'+esc(t('下載失敗'))+(res&&res.error?('：'+esc(res.error)):'')+'</div>';
+      upd.disabled=false; if(lbl)lbl.textContent=t('更新');
+     }
+    }else{
+     open(asset?asset.browser_download_url:(rel_.html_url||PAGE));
+     upd.disabled=false; if(lbl)lbl.textContent=t('更新');
+    }
+   };
+  }else{
+   upd.style.display='none';
+  }
  }
  function renderNone(){
   $('#btnCheckUpdate').classList.remove('spinning');
   $('#uBody').innerHTML='<div class="uStatus">'+esc(t('目前沒有任何已發布的版本。'))+'</div>';
-  $('#uDL').href=PAGE; $('#uDL').style.display='';
+  const rel=$('#uRelPage'); rel.href=PAGE; rel.style.display='';
+  $('#uUpdate').style.display='none';
  }
  return {run};
 })();
@@ -1415,7 +1462,7 @@ Object.assign(I18N['zh-Hans'],{
  '檢查更新失敗：請檢查網路連線。':'检查更新失败：请检查网络连接。',
  '目前沒有任何已發布的版本。':'目前没有任何已发布的版本。',
  '目前版本':'目前版本','最新版本':'最新版本','未知':'未知',
- '有新版本 {v} 可供下載。':'有新版本 {v} 可供下载。','你使用的已是最新版本。':'你使用的已是最新版本。',
+ '有新版本 {v} 可供下載。':'有新版本 {v} 可供下载。','你使用的已是最新版本。':'你使用的已是最新版本。','更新':'更新','正在下載…':'正在下载…','已下載完成：{p}':'已下载完成：{p}','開啟檔案位置':'打开文件位置','下載失敗':'下载失败',
  '發布日期':'发布日期'
 });
 Object.assign(I18N['en'],{
@@ -1442,7 +1489,7 @@ Object.assign(I18N['en'],{
  '檢查更新失敗：請檢查網路連線。':'Update check failed — please check your connection.',
  '目前沒有任何已發布的版本。':'No releases have been published yet.',
  '目前版本':'Current version','最新版本':'Latest version','未知':'Unknown',
- '有新版本 {v} 可供下載。':'A new version {v} is available to download.','你使用的已是最新版本。':'You are already on the latest version.',
+ '有新版本 {v} 可供下載。':'A new version {v} is available to download.','你使用的已是最新版本。':'You are already on the latest version.','更新':'Update','正在下載…':'Downloading…','已下載完成：{p}':'Download complete: {p}','開啟檔案位置':'Show in Folder','下載失敗':'Download failed',
  '發布日期':'Released'
 });
 /* ===== 翻譯 helpers ===== */

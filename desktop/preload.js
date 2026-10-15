@@ -32,6 +32,12 @@ contextBridge.exposeInMainWorld('nexus', {
   /* 刪除本機檔（清掉 1.2.5 遺留的 sidecar；不存在時回報 ok:false） */
   deleteFile(p) { return ipcRenderer.invoke('nexus:delete', { path: p }); },
 
+  /* 下載 URL 到「下載」資料夾（穩定檔名→重複更新覆寫舊檔） */
+  download(url, name) { return ipcRenderer.invoke('nexus:download', { url, name }); },
+
+  /* 在 Finder/檔案總管顯示指定檔 */
+  reveal(p) { return ipcRenderer.invoke('nexus:reveal', { path: p }); },
+
   /* 原生「開啟舊檔」對話框 → 回傳絕對路徑或 null */
   pickOpen() { return ipcRenderer.invoke('nexus:pick-open'); },
 
