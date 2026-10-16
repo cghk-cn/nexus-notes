@@ -203,6 +203,69 @@ ipcMain.handle('nexus:reveal', async (_e, { path: p }) => {
   catch (e) { return { ok: false, error: String((e && e.message) || e) }; }
 });
 
+/* 安裝更新：掛載 DMG → 備份當前 .app → 複製新版到原位置（任意路徑：/Applications、桌面…）→ 重新啟動
+   失敗自動回滾（備份移回），避免應用程式消失 */
+ipcMain.handle('nexus:install-update', async (_e, { dmgPath }) => {
+  const { execSync } = require('child_process');
+  const fs = require('fs');
+  if (process.platform !== 'darwin') return { ok: false, error: '自動安裝僅支援 macOS' };
+  let mountPoint = null;
+  try {
+    // 1. 掛載 DMG
+    const xml = execSync('hdiutil attach "' + dmgPath + '" -nobrowse -plist', { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 });
+    const m = xml.match(/<key>mount-point<\/key>\s*<string>([^<]+)<\/string>/);
+    if (!m) return { ok: false, error: '無法掛載 DMG' };
+    mountPoint = m[1];
+    // 2. 找 DMG 裡的 .app
+    const appEntry = fs.readdirSync(mountPoint).find(e => e.endsWith('.app'));
+    if (!appEntry) {
+      try { execSync('hdiutil detach "' + mountPoint + '"', { stdio: 'ignore' }); } catch (_) {}
+      return { ok: false, error: 'DMG 中未找到應用程式' };
+    }
+    const srcApp = path.join(mountPoint, appEntry);
+    // 3. 從 execPath 推導當前 .app bundle（<bundle>/Contents/MacOS/<exe> → <bundle>），支援任意安裝位置
+    let bundle = process.execPath;
+    while (bundle && !bundle.endsWith('.app')) {
+      const parent = path.dirname(bundle);
+      if (parent === bundle) break;
+      bundle = parent;
+    }
+    if (!bundle.endsWith('.app') || bundle.includes('node_modules')) {
+      try { execSync('hdiutil detach "' + mountPoint + '"', { stdio: 'ignore' }); } catch (_) {}
+      return { ok: false, error: bundle.includes('node_modules') ? '開發模式不支援自動安裝' : '找不到當前應用程式位置' };
+    }
+    // 4. 先把舊 bundle 改名備份（執行中的程序不受 rename 影響），再複製新版；失敗回滾
+    const backup = bundle + '.old';
+    try { if (fs.existsSync(backup)) fs.rmSync(backup, { recursive: true, force: true }); } catch (_) {}
+    fs.renameSync(bundle, backup);
+    try {
+      /* ditto 保留權限／符號連結／xattr；完成後清掉可能的 quarantine 標記 */
+      try { execSync('ditto "' + srcApp + '" "' + bundle + '"', { maxBuffer: 500 * 1024 * 1024 }); }
+      catch (_) { execSync('cp -R "' + srcApp + '" "' + bundle + '"', { maxBuffer: 500 * 1024 * 1024 }); }
+      try { execSync('xattr -cr "' + bundle + '"', { stdio: 'ignore' }); } catch (_) {}
+      if (!fs.existsSync(path.join(bundle, 'Contents'))) throw new Error('複製後缺少 Contents，安裝不完整');
+    } catch (e) {
+      try { fs.renameSync(backup, bundle); } catch (_) {}   /* 回滾：舊版移回原位 */
+      throw e;
+    }
+    try { fs.rmSync(backup, { recursive: true, force: true }); } catch (_) {}
+    // 5. 卸載 DMG → 回傳成功（renderer 顯示「安裝完成」）→ 舊程序退出後再啟動原路徑的新版。
+    //    直接 app.relaunch() 會與 requestSingleInstanceLock 競爭（新實例可能在舊實例尚未釋放
+    //    單實例鎖時啟動而自行退出），改用 detached shell 稍候 open，確保新版本從原位置被啟動。
+    execSync('hdiutil detach "' + mountPoint + '"', { stdio: 'ignore' });
+    mountPoint = null;
+    try {
+      const { spawn } = require('child_process');
+      spawn('sh', ['-c', 'sleep 1.5; open "$1"', 'sh', bundle], { detached: true, stdio: 'ignore' }).unref();
+    } catch (_) { try { app.relaunch(); } catch (_) {} }
+    setTimeout(() => { try { app.exit(); } catch (_) {} }, 700);
+    return { ok: true };
+  } catch (e) {
+    if (mountPoint) { try { execSync('hdiutil detach "' + mountPoint + '"', { stdio: 'ignore' }); } catch (_) {} }
+    return { ok: false, error: String((e && e.message) || e) };
+  }
+});
+
 ipcMain.handle('nexus:pick-open', async () => {
   const r = await dialog.showOpenDialog(mainWindow, {
     title: '選擇要開啟的檔案',
@@ -210,6 +273,7 @@ ipcMain.handle('nexus:pick-open', async () => {
     filters: [
       { name: 'NEXUS 筆記檔 (.json / .noteapp)', extensions: ['json', 'noteapp'] },
       { name: 'PDF / 文字 / 圖片', extensions: ['pdf', 'txt', 'md', 'markdown', 'png', 'jpg', 'jpeg', 'webp'] },
+      { name: 'Office 文件 (.docx / .pptx)', extensions: ['docx', 'pptx'] },
       { name: '所有檔案', extensions: ['*'] },
     ],
   });

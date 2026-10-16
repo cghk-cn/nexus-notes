@@ -44,5 +44,8 @@ contextBridge.exposeInMainWorld('nexus', {
   pickOpen() { return ipcRenderer.invoke('nexus:pick-open'); },
 
   /* 原生「儲存」對話框 → 回傳絕對路徑或 null */
+  /* 安裝更新：掛載 DMG，替換當前應用程序，然後重新啟動 */
+  installUpdate(dmgPath) { return ipcRenderer.invoke('nexus:install-update', { dmgPath }); },
+
   pickSave(defaultName) { return ipcRenderer.invoke('nexus:pick-save', defaultName); },
 });

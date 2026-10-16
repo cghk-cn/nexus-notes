@@ -963,6 +963,7 @@ html[data-theme=dark] .sidePg.dragging{box-shadow:0 16px 34px -10px rgba(0,0,0,.
    </select>
    <button class="ibtn" id="btnHomeTheme" data-tip="切換深色模式" aria-label="切換深色模式"><svg class="ic"><use href="#i-moon"></use></svg></button>
     <button class="gbtn" id="btnHomeSelect" data-tip="批量管理：多選後一次刪除" aria-label="批量管理"><svg class="ic mobOnly"><use href="#i-checks"></use></svg><span id="btnHomeSelectTx">管理</span></button>
+   <button class="gbtn" id="btnHomeNew"><svg class="ic"><use href="#i-plus"></use></svg>新增筆記</button>
    <button class="gbtn" id="btnHomeUpload"><svg class="ic"><use href="#i-folder"></use></svg>開啟本機檔案</button>
   </div>
  </div>
@@ -1306,6 +1307,7 @@ html[data-theme=dark] .sidePg.dragging{box-shadow:0 16px 34px -10px rgba(0,0,0,.
 
 <div id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
@@ -1323,7 +1325,7 @@ function closeModal(id){$('#'+id).classList.remove('open');if(id==='mPgThumbs'){
 /* ===== 檢查更新（GitHub Releases） =====
    APP_VERSION 為目前版本；檢查時向 GitHub Releases API 取最新版並比對。
    發佈仓库：cghk-cn/nexus-notes。 */
-const APP_VERSION='2.1.4';
+const APP_VERSION='2.1.5';
 const UPD=(function(){
  const OWNER='cghk-cn', REPO='nexus-notes';
  const API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/latest';
@@ -1385,11 +1387,23 @@ const UPD=(function(){
     if(asset && isDesk()){
      const nm=isAndroid()?'NEXUS-latest.apk':'NEXUS-latest-arm64.dmg';
      const res=await window.nexus.download(asset.browser_download_url,nm);
+     const canAuto=!isAndroid()&&window.nexus&&typeof window.nexus.installUpdate==='function';
      if(res&&res.ok){
-      body.innerHTML='<div class="uStatus uNew">✅ '+esc(tN('已下載完成：{p}',{p:res.path}))+'</div>'+
-        (res.size?'<div class="uMeta">'+esc(fmtSize(res.size))+'</div>':'')+
-        '<div class="uDlActions"><button class="primary" id="uReveal">'+esc(t('開啟檔案位置'))+'</button></div>';
+      const dlDone='<div class="uStatus uNew">✅ '+esc(tN('已下載完成：{p}',{p:res.path}))+'</div>'+
+        (res.size?'<div class="uMeta">'+esc(fmtSize(res.size))+'</div>':'');
+      let failed='';
+      if(canAuto){
+       /* 桌面版：不跳下載頁 — 下載完直接覆蓋安裝到目前安裝位置（/Applications、桌面…）→ 自動重新啟動 */
+       body.innerHTML=dlDone+'<div class="uStatus"><span class="uSpin"></span>'+esc(t('正在安裝到目前位置，完成後自動重新啟動…'))+'</div>';
+       let ir=null;
+       try{ ir=await window.nexus.installUpdate(res.path); }catch(e){ ir={ok:false,error:String((e&&e.message)||e)}; }
+       if(ir&&ir.ok){ body.innerHTML='<div class="uStatus uNew">'+esc(t('安裝完成，正在重新啟動…'))+'</div>'; return; }
+       failed='<div class="uStatus uErr">'+esc(t('自動安裝失敗'))+(ir&&ir.error?('：'+esc(ir.error)):'')+'</div>';
+      }
+      /* 兜底：非桌面平台／自動安裝失敗 → 顯示下載結果＋手動按鈕 */
+      body.innerHTML=failed+dlDone+'<div class="uDlActions"><button class="primary" id="uReveal">'+esc(t('開啟檔案位置'))+'</button>'+(canAuto?' <button class="primary" id="uInstall">'+esc(t('安裝並重新啟動'))+'</button>':'')+'</div>';
       const rv=$('#uReveal'); if(rv)rv.onclick=()=>window.nexus.reveal(res.path);
+      const iv=$('#uInstall'); if(iv)iv.onclick=()=>window.nexus.installUpdate(res.path);
       upd.style.display='none';
      }else{
       body.innerHTML='<div class="uStatus uErr">'+esc(t('下載失敗'))+(res&&res.error?('：'+esc(res.error)):'')+'</div>';
@@ -1697,7 +1711,8 @@ Object.assign(I18N['zh-Hans'],{
  '目前沒有任何已發布的版本。':'目前没有任何已发布的版本。',
  '目前版本':'目前版本','最新版本':'最新版本','未知':'未知',
  '有新版本 {v} 可供下載。':'有新版本 {v} 可供下载。','你使用的已是最新版本。':'你使用的已是最新版本。','更新':'更新','正在下載…':'正在下载…','已下載完成：{p}':'已下载完成：{p}','開啟檔案位置':'打开文件位置','下載失敗':'下载失败',
- '發布日期':'发布日期'
+ '發布日期':'发布日期',
+ '開啟本機檔案':'打开本地文件','安裝並重新啟動':'安装并重启','正在安裝到目前位置，完成後自動重新啟動…':'正在安装到当前位置，完成后自动重启…','安裝完成，正在重新啟動…':'安装完成，正在重启…','自動安裝失敗':'自动安装失败','所有支援的檔案':'所有支持的文件','PDF 文件 (.pdf)':'PDF 文件 (.pdf)','文字文件 (.txt / .md / .markdown)':'文字文件 (.txt / .md / .markdown)','圖片文件 (.png / .jpg / .jpeg / .webp)':'图片文件 (.png / .jpg / .jpeg / .webp)','文檔文件 (.docx / .pptx)':'文档文件 (.docx / .pptx)'
 });
 Object.assign(I18N['en'],{
  '開啟本地檔案：編輯後可直接覆蓋原檔':'Open local file: overwrite it directly after editing',
@@ -1724,7 +1739,8 @@ Object.assign(I18N['en'],{
  '目前沒有任何已發布的版本。':'No releases have been published yet.',
  '目前版本':'Current version','最新版本':'Latest version','未知':'Unknown',
  '有新版本 {v} 可供下載。':'A new version {v} is available to download.','你使用的已是最新版本。':'You are already on the latest version.','更新':'Update','正在下載…':'Downloading…','已下載完成：{p}':'Download complete: {p}','開啟檔案位置':'Show in Folder','下載失敗':'Download failed',
- '發布日期':'Released'
+ '發布日期':'Released',
+ '開啟本機檔案':'Open Local File','安裝並重新啟動':'Install & Relaunch','正在安裝到目前位置，完成後自動重新啟動…':'Installing to current location — will relaunch automatically…','安裝完成，正在重新啟動…':'Installed — relaunching…','自動安裝失敗':'Auto install failed','所有支援的檔案':'All supported files','PDF 文件 (.pdf)':'PDF document (.pdf)','文字文件 (.txt / .md / .markdown)':'Text file (.txt / .md / .markdown)','圖片文件 (.png / .jpg / .jpeg / .webp)':'Image (.png / .jpg / .jpeg / .webp)','文檔文件 (.docx / .pptx)':'Office document (.docx / .pptx)'
 });
 /* ===== v1.4.0 新增字串（排列切換＋自適應重算） ===== */
 Object.assign(I18N['zh-Hans'],{
@@ -1957,24 +1973,59 @@ const FSA=(function(){
    let handle;
    try{
     [handle]=await window.showOpenFilePicker({
-     types:[{description:t('NEXUS 筆記檔 (.json / .noteapp)'),accept:{'application/json':['.json','.noteapp.json','.noteapp']}}],
+     types:[
+   {description:t('所有支援的檔案'),accept:{'*/*':['.json','.noteapp.json','.noteapp','.pdf','.txt','.md','.markdown','.png','.jpg','.jpeg','.webp','.docx','.pptx']}},
+   {description:t('NEXUS 筆記檔 (.json / .noteapp)'),accept:{'application/json':['.json','.noteapp.json','.noteapp']}},
+   {description:t('PDF 文件 (.pdf)'),accept:{'application/pdf':['.pdf']}},
+   {description:t('文字文件 (.txt / .md / .markdown)'),accept:{'text/plain':['.txt','.md','.markdown']}},
+   {description:t('圖片文件 (.png / .jpg / .jpeg / .webp)'),accept:{'image/*':['.png','.jpg','.jpeg','.webp']}},
+   {description:t('文檔文件 (.docx / .pptx)'),accept:{'application/vnd.openxmlformats-officedocument.*':['.docx','.pptx']}}
+ ],
      multiple:false
     });
    }catch(e){ if(e&&e.name==='AbortError')return null; console.error(e); return false; }
    if(!handle)return null;
-   let text;
-   try{ text=await (await handle.getFile()).text(); }catch(e){console.error(e);return false;}
-   let doc;
+   const file=await handle.getFile();
+   const name=file.name||handle.name||t('檔案');
+   const ext=(name.split('.').pop()||'').toLowerCase();
+   /* 筆記 JSON 檔：直接還原（快捷方式流程，儲存覆蓋原檔） */
+   if(/^(json|noteapp)$/.test(ext)){
+    let text;
+    try{ text=await file.text(); }catch(e){console.error(e);return false;}
+    let doc;
+    try{
+     const o=JSON.parse(text); doc=(o&&o.doc)?o.doc:o;
+     if(!doc||!Array.isArray(doc.pages))throw new Error('格式不符');
+    }catch(e){ alert(t('開啟失敗：不是有效的筆記 JSON 檔')); return null; }
+    doc.id=uid(); doc.updated=Date.now();
+    if(!doc.name)doc.name=name.replace(/\.(noteapp\.)?json$/i,'');
+    S.docs.unshift(doc); S.curId=doc.id; S.sel=null; S.editing=null;
+    initHist(); renderAll(); persist();
+    await FSA.link(doc.id,handle);
+    toast(tN('已開啟「{n}」，儲存時將覆蓋原檔',{n:doc.name}));
+    return true;
+   }
+   /* 非 JSON（PDF/TXT/圖片/Office）：匯入成新筆記並連結本機檔（📎 快捷方式） */
+   if(!/^(pdf|txt|md|markdown|png|jpe?g|webp|docx|pptx)$/.test(ext)){
+    alert(tN('不支援的格式：{f}',{f:name})); return null;
+   }
+   const base=name.replace(/\.[^.]+$/,'')||name;
+   const d=newDoc(base);
+   openDoc(d.id);
+   const tr=trackFile(name,{size:file.size});
    try{
-    const o=JSON.parse(text); doc=(o&&o.doc)?o.doc:o;
-    if(!doc||!Array.isArray(doc.pages))throw new Error('格式不符');
-   }catch(e){ alert(t('開啟失敗：不是有效的筆記 JSON 檔')); return null; }
-   doc.id=uid(); doc.updated=Date.now();
-   if(!doc.name)doc.name=(handle.name||t('筆記')).replace(/\.(noteapp\.)?json$/i,'');
-   S.docs.unshift(doc); S.curId=doc.id; S.sel=null; S.editing=null;
-   initHist(); renderAll(); persist();
-   await FSA.link(doc.id,handle);
-   toast(tN('已開啟「{n}」，儲存時將覆蓋原檔',{n:doc.name}));
+    if(ext==='pdf')await importPDF(file,tr);
+    else if(ext==='docx')await importDOCX(file,tr);
+    else if(ext==='pptx')await importPPTX(file,tr);
+    else if(/^(txt|md|markdown)$/.test(ext))await importTXT(file,tr);
+    else await importImage(file,tr);
+   }catch(err){
+    console.error(err);
+    toast(tN('匯入失敗：{f}',{f:name})+(err&&err.message?'（'+err.message+'）':''));
+   }
+   await FSA.link(d.id,handle);
+   showHome();
+   toast(tN('已開啟「{n}」',{n:name}));
    return true;
   },
   /* 另存到本機檔案：以「另存新檔」選檔並連結（之後儲存即覆蓋此檔） */
@@ -1994,20 +2045,28 @@ const FSA=(function(){
    return ok;
   },
   /* 將筆記寫入指定 handle（覆寫） */
-  async writeTo(d,handle){
-   if(!(await ensureRW(handle))){ toast(t('已拒絕寫入權限，無法覆蓋檔案')); return false; }
-   try{
-    const w=await handle.createWritable();
-    await w.write(JSON.stringify({app:'noteapp',v:1,doc:d},null,1));
-    await w.close();
-   }catch(e){ console.error(e); toast(t('寫入檔案失敗')); return false; }
-   d.fileName=handle.name||d.fileName;
-   d.updated=Date.now();
-   await FSA.link(d.id,handle);
-   persist();
-   toast(tN('已覆蓋「{n}」',{n:handle.name||d.name}));
-   return true;
-  },
+   /* 將筆記寫入指定 handle（覆寫）
+      json/noteapp → 筆記 JSON；txt/md → 純文字；pdf/圖片/Office → 無法安全覆寫 → false（退回瀏覽器儲存） */
+   async writeTo(d,handle){
+    if(!(await ensureRW(handle))){ toast(t('已拒絕寫入權限，無法覆蓋檔案')); return false; }
+    const nm=handle.name||d.fileName||'';
+    const ext=(nm.split('.').pop()||'').toLowerCase();
+    let payload,payloadType;
+    if(/^(txt|md|markdown)$/.test(ext)){ payload=docToText(d); payloadType='text/plain;charset=utf-8'; }
+    else if(/^(json|noteapp)$/.test(ext)){ payload=JSON.stringify({app:'noteapp',v:1,doc:d},null,1); payloadType='application/json'; }
+    else { return false; }   /* 二進位檔不可用筆記內容覆寫 → 呼叫端退回瀏覽器儲存 */
+    try{
+     const w=await handle.createWritable();
+     await w.write(new Blob([payload],{type:payloadType}));
+     await w.close();
+    }catch(e){ console.error(e); toast(t('寫入檔案失敗')); return false; }
+    d.fileName=handle.name||d.fileName;
+    d.updated=Date.now();
+    await FSA.link(d.id,handle);
+    persist();
+    toast(tN('已覆蓋「{n}」',{n:handle.name||d.name}));
+    return true;
+   },
   /* 儲存：已連結→覆蓋原檔（不另存新檔）；未連結/不支援→回傳 false 由呼叫端改存瀏覽器 */
   async save(){
    if(!has)return false;
@@ -2414,7 +2473,7 @@ async function doSave(){
  const d=curDoc();
  if(DESK.supported&&d&&d.filePath){ await DESK.save(); return; }
  if(FSA.supported){
-  if(d && await FSA.handleFor(d.id)){ await FSA.save(); return; }
+  if(d && await FSA.handleFor(d.id)){ if(await FSA.save())return; }   /* pdf/圖片等二進位連結檔不可覆寫 → 退回存瀏覽器 */
  }
  toast(t('已儲存到瀏覽器'));
 }
@@ -4530,8 +4589,17 @@ function applyAdaptiveSize(ar){
 
 /* 上載檔案：主頁＝每個檔案建立一份新筆記；編輯頁＝匯入目前筆記 */
 let uploadMode='doc';
+/* v2.1.5：開啟本機檔案三段分流 — 桌面版走原生對話框（任何格式）；
+   Chrome/Edge 走 FSA（直接連結、儲存覆蓋原檔）；其餘（Safari/WebView）退回檔案選擇器匯入 */
 $('#btnHomeUpload').addEventListener('click',async()=>{
- await FSA.open();
+ if(DESK.supported){ await DESK.open(); return; }
+ const r=await FSA.open();
+ if(r===false){ uploadMode='home'; $('#fileInput').click(); }
+});
+$('#btnHomeNew').addEventListener('click',()=>{
+ const d=newDoc('筆記 '+(S.docs.length+1));
+ openDoc(d.id);
+ toast('已建立新筆記');
 });
 $('#btnUploadDoc').addEventListener('click',()=>{
  uploadMode='doc';
@@ -5664,9 +5732,9 @@ function renderHome(){
  docs.forEach(d=>{
   const dt=new Date(d.updated||Date.now());
   const ds=dt.toLocaleDateString('zh-TW')+' '+dt.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
-  const t=tintOf(d.id);
+  const tint=tintOf(d.id);   /* 注意：不可命名 t —— 會遮蔽全局翻譯函數 t()（v2.1.5 修正） */
   const picked=homeSel.on&&homeSel.ids.indexOf(d.id)>=0;
-  h+='<div class="ncard'+(picked?' picked':'')+(d.pin?' pinned':'')+'" data-id="'+d.id+'" role="button" tabindex="0" style="--c1:'+t[0]+';--c2:'+t[1]+';--csh:'+t[2]+'">'+
+  h+='<div class="ncard'+(picked?' picked':'')+(d.pin?' pinned':'')+'" data-id="'+d.id+'" role="button" tabindex="0" style="--c1:'+tint[0]+';--c2:'+tint[1]+';--csh:'+tint[2]+'">'+
    (homeSel.on
     ? '<span class="pick" aria-hidden="true"></span>'
     : '<span class="cic" data-thumb="0"><svg class="ic"><use href="#i-book"></use></svg></span>')+
