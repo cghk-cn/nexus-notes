@@ -5654,7 +5654,7 @@ function sortDocs(list){
 function renderHome(){
  const grid=$('#homeGrid');if(!grid)return;
  const q=($('#homeSearchIn').value||'').trim().toLowerCase();
- let docs=S.docs.filter(d=>!q||d.name.toLowerCase().includes(q)||docPreview(d).toLowerCase().includes(q));
+ let docs=S.docs.filter(d=>!q||(d.name||'').toLowerCase().includes(q)||(docPreview(d)||'').toLowerCase().includes(q));
  docs=sortDocs(docs);   /* B2：釘選置頂 + 依目前排序 */
  let h='<div class="ncard new" id="ncardNew" role="button" tabindex="0">'+
   '<div class="plus"><svg class="ic"><use href="#i-plus"></use></svg></div>'+
@@ -6167,7 +6167,10 @@ window.addEventListener('keydown',ev=>{
 /* ===== 啟動（先進入主頁） ===== */
 (function init(){
  /* v2.0.0：loadPersisted 改為 async（IDB 優先、localStorage 回退）→ 以 Promise 流程啟動 */
- loadPersisted().then(ok=>{
+ Promise.race([
+  loadPersisted(),
+  new Promise(resolve=>setTimeout(()=>resolve(false),2500))  /* IDB 掛起時 2.5 秒後回退，避免主頁不渲染 */
+ ]).then(ok=>{
   if(!ok)newDoc('我的筆記');
   else{initHist();renderAll(true);}
   setTool('text');   /* 進入編輯頁預設「文字工具」 */
