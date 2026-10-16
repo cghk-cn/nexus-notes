@@ -9,7 +9,7 @@ const fs = require('fs');
 const https = require('https');
 
 /* 允許作為開啟方式的副檔名（與桌面版 app 支援的匯入類型一致） */
-const OPEN_EXT = /\.(json|noteapp|txt|md|markdown|pdf|png|jpe?g|webp)$/i;
+const OPEN_EXT = /\.(json|noteapp|txt|md|markdown|pdf|png|jpe?g|webp|docx|pptx)$/i;
 
 let mainWindow = null;
 /* app 尚未就緒、或 renderer 尚未 notifyReady 時，先把路徑排隊，
@@ -270,12 +270,8 @@ ipcMain.handle('nexus:pick-open', async () => {
   const r = await dialog.showOpenDialog(mainWindow, {
     title: '選擇要開啟的檔案',
     properties: ['openFile'],
-    filters: [
-      { name: 'NEXUS 筆記檔 (.json / .noteapp)', extensions: ['json', 'noteapp'] },
-      { name: 'PDF / 文字 / 圖片', extensions: ['pdf', 'txt', 'md', 'markdown', 'png', 'jpg', 'jpeg', 'webp'] },
-      { name: 'Office 文件 (.docx / .pptx)', extensions: ['docx', 'pptx'] },
-      { name: '所有檔案', extensions: ['*'] },
-    ],
+    /* 不設 filters —— 讓對話框可選取任何副檔名（macOS 對 filter 會把不符合的檔案灰化，
+       之前預設 json filter 導致 pdf/docx/jpg/pptx 都選不了；openPath 會優雅處理不支援格式） */
   });
   if (r.canceled || !r.filePaths.length) return null;
   return r.filePaths[0];
