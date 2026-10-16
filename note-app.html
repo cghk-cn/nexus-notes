@@ -434,6 +434,19 @@ body.homeSel .ncard .acts{display:none}
 #homeSelBar #homeSelDel:disabled{opacity:.45;cursor:not-allowed}
 #homeSelBar #homeSelDel:not(:disabled):hover{filter:brightness(1.08)}
 .homeEmpty{grid-column:1/-1;text-align:center;color:var(--text-2);font-size:14px;padding:44px 0}
+/* v2.1.0 #7 Info 頁樣式 */
+#info{display:none;position:fixed;inset:0;z-index:60;background:var(--bg);color:var(--text);flex-direction:column;overflow:auto;-webkit-overflow-scrolling:touch}
+body.view-info #info{display:flex}
+.infoBar{display:flex;align-items:center;gap:10px;padding:calc(10px + var(--safe-top)) 14px 10px;border-bottom:1px solid var(--border)}
+.infoBar h2{margin:0;font-size:17px;letter-spacing:-.01em;flex:1}
+.infoSection{padding:14px 14px 8px;border-bottom:1px solid var(--line)}
+.infoSection h3{margin:0 0 10px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.infoRow{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:14px}
+.infoRow.rangeRow{align-items:center;gap:10px}
+.infoRow.rangeRow input{flex:1}
+.infoRow.rangeRow span:last-child{min-width:56px;text-align:right;font-size:12px;color:var(--mut)}
+.infoHint{font-size:11.5px;color:var(--mut);padding:4px 14px 10px;line-height:1.5}
+html[data-theme=dark] #info{background:var(--bg)}
 @media (hover:hover){
  .ncard:hover{transform:translateY(-5px) scale(1.02);filter:brightness(1.05)}
  .ncard:hover::after{transform:translateX(160%) rotate(8deg)}
@@ -495,7 +508,12 @@ body.sideCollapsed #sidebar{width:0;border-right:none;opacity:0;overflow:hidden}
 #docCount{font-size:10.5px;font-weight:700;background:var(--surface-2);border:1px solid var(--border);color:var(--text-3);border-radius:999px;padding:1px 7px;min-width:22px;text-align:center}
 #btnSideCollapse{padding:3px 9px;font-size:13px;border-radius:7px;border-color:var(--border);color:var(--text-2);line-height:1.2}
 #btnSideCollapse:hover{color:var(--accent);background:var(--accent-soft);border-color:transparent}
-#docList{overflow:auto;flex:1;padding:6px 12px 8px;min-height:60px}
+/* v2.1.0 #2 上下兩區：上=筆記列表（主捲動）、下=頁面縮圖＋檔案（副捲動） */
+.sideTop{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:thin}
+.sideBot{flex:0 0 44%;min-height:118px;overflow-y:auto;border-top:1px solid var(--border);display:flex;flex-direction:column;scrollbar-width:thin;padding-bottom:2px}
+.sideTop::-webkit-scrollbar,.sideBot::-webkit-scrollbar{width:6px}
+.sideTop::-webkit-scrollbar-thumb,.sideBot::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+#docList{overflow:visible;flex:none;padding:6px 12px 8px}
 .docItem{position:relative;display:block;padding:10px 12px;border:1px solid rgba(255,255,255,.75);border-radius:16px;background:linear-gradient(155deg,rgba(255,255,255,.94) 0%,rgba(249,250,252,.88) 55%,rgba(243,245,248,.92) 100%);backdrop-filter:blur(12px) saturate(1.4);-webkit-backdrop-filter:blur(12px) saturate(1.4);box-shadow:0 2px 8px rgba(16,24,40,.07),inset 0 1px 0 rgba(255,255,255,.8);cursor:pointer;margin-bottom:8px;transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease,background .14s ease}
 html[data-theme=dark] .docItem{border-color:rgba(255,255,255,.08);background:linear-gradient(155deg,rgba(40,44,54,.92) 0%,rgba(33,37,46,.88) 55%,rgba(28,32,40,.92) 100%);box-shadow:0 2px 8px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.05)}
 .docItem:hover{border-color:var(--border-strong);box-shadow:var(--shadow-md);transform:translateY(-2px) scale(1.02)}
@@ -526,7 +544,7 @@ html[data-theme=dark] .docItem.active{background:linear-gradient(155deg,rgba(91,
 #fileList .fiEmpty{padding:4px 12px 8px;font-size:11.5px;color:var(--text-3);line-height:1.6}
 #sideFoot{padding:11px 15px 13px;border-top:1px solid var(--border);font-size:10.5px;color:var(--text-3);line-height:1.7;background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(240,242,246,.6));white-space:normal;overflow:hidden}
 html[data-theme=dark] #sideFoot{background:linear-gradient(180deg,rgba(30,33,41,.4),rgba(24,27,34,.7))}
-#sideToggle{position:absolute;left:6px;top:50%;transform:translateY(-50%);z-index:70;width:24px;height:84px;padding:0;border-radius:12px;box-shadow:var(--shadow-md);display:none;align-items:center;justify-content:center;font-size:13px;line-height:1;background:var(--surface);border:1px solid var(--border);color:var(--text-2)}
+#sideToggle{position:absolute;left:6px;top:10px;z-index:70;width:26px;height:40px;padding:0;border-radius:10px;box-shadow:var(--shadow-md);display:none;align-items:center;justify-content:center;font-size:13px;line-height:1;background:var(--surface);border:1px solid var(--border);color:var(--text-2)}
 body.sideCollapsed #sideToggle{display:flex}
 #sideToggle:hover{background:var(--accent-soft);color:var(--accent);border-color:transparent}
 /* ================= Canvas / paper ================= */
@@ -751,6 +769,18 @@ body.dragging #dropHint{display:flex}
  .tbPane.on::-webkit-scrollbar{display:none}
  .tbPane>*{flex:none}
  .elbar{max-width:100%}
+ #tbPanel .mobOnly{display:inline-flex}
+ /* v2.1.0 #8 緊湊編輯 UI（手機） */
+ #topbar{padding:calc(4px + var(--safe-top)) calc(8px + var(--safe-right)) 4px calc(8px + var(--safe-left));gap:4px}
+ #topbar .brand{height:30px}
+ #tbCats .tcat{height:29px;min-width:56px;padding:0 10px;font-size:12.5px}
+ #tbPanel{padding:4px calc(8px + var(--safe-right)) 4px calc(8px + var(--safe-left));row-gap:4px}
+ #tbPanel .ibtn{width:31px;height:31px;border-radius:9px}
+ #tbPanel .rng.pill{height:29px;padding:0 9px;gap:5px}
+ #tbPanel .rng.pill input[type=range]{width:84px}
+ #elbarHost{padding:4px calc(8px + var(--safe-right)) 4px calc(8px + var(--safe-left))}
+ .elbar{padding:5px 8px;gap:5px}
+ .elbar button{padding:5px 10px;font-size:12px}
 }
 @media (pointer:coarse){
  /* 觸控裝置：畫筆 / 橡皮擦 / 文字工具優先接收手指事件，不被捲動搶走 */
@@ -794,16 +824,8 @@ body.dragging #dropHint{display:flex}
 /* B2 排序選擇器 */
 #homeSort{height:30px;padding:0 var(--sp-2);border-radius:9px;border:1px solid var(--border);
  background:var(--surface);color:var(--text);font-size:var(--fs-sm);font-weight:600;cursor:pointer}
-/* E2 手機閱讀優先：右下浮動「畫筆」FAB（進編輯） */
-#readFab{display:none;position:fixed;right:16px;bottom:calc(20px + var(--safe-bottom));z-index:320;
- width:56px;height:56px;border-radius:999px;border:none;align-items:center;justify-content:center;
- background:linear-gradient(135deg,var(--accent),#7b5cf0);color:#fff;box-shadow:0 12px 28px rgba(47,111,237,.46);
- cursor:pointer;transition:transform var(--t-fast) var(--ease-spring)}
-#readFab .ic{width:24px;height:24px}
-#readFab:active{transform:scale(.9)}
-body.readMode #readFab{display:flex}
-/* E2 閱讀模式：隱藏頂部工具列/分類列/編輯列，只留文件 */
-body.readMode #topbar,body.readMode #tbPanel,body.readMode #elbarHost{display:none!important}
+/* E2 已退役（v2.1.0 #6）：手機開啟筆記直接進入編輯模式 */
+@media (min-width:769px){button.mobOnly{display:none!important}}
 /* C4 側欄頁面縮圖 */
 .sidePgs{display:flex;flex-direction:column;gap:8px;padding:4px 2px 2px}
 .sidePg{display:flex;gap:9px;align-items:center;padding:6px;border:1px solid var(--border);border-radius:12px;
@@ -818,10 +840,25 @@ body.readMode #topbar,body.readMode #tbPanel,body.readMode #elbarHost{display:no
 .sidePg .spN{font-size:var(--fs-sm);font-weight:700;color:var(--text)}
 .sidePg .spS{font-size:var(--fs-xs);color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sidePg .spGrip{margin-left:auto;color:var(--text-3);cursor:grab;font-size:13px;flex:none}
+/* v2.1.0 #8 頁面縮圖浮層樣式 */
+.pgThumb{display:flex;gap:9px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:10px;cursor:pointer;background:var(--surface);margin-bottom:6px}
+.pgThumb:hover{border-color:var(--accent);box-shadow:var(--e-2)}
+.pgThumb.dragging{transform:translateY(var(--dragY,0px)) scale(1.02) rotate(.5deg);box-shadow:0 12px 24px -8px rgba(16,24,40,.3);border-color:var(--accent);z-index:6;pointer-events:none;transition:none}
+.pgThumb.dragOver{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-ring)}
+.pgThumbImg{flex:none;width:40px;height:52px;border-radius:6px;overflow:hidden;background:var(--paper);border:1px solid var(--border);box-shadow:var(--e-1)}
+.pgThumbImg img{width:100%;height:100%;object-fit:cover;display:block}
+.pgThumbMeta{min-width:0;display:flex;flex-direction:column;gap:2px}
+.pgThumbN{font-size:var(--fs-sm);font-weight:700;color:var(--text)}
+.pgThumbS{font-size:var(--fs-xs);color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pgThumbGrip{margin-left:auto;color:var(--text-3);cursor:grab;font-size:13px;flex:none}
+/* v2.1.0 #3 拖曳動畫：lift 跟手＋落位 snap */
+.sidePg.dragging{transform:translateY(var(--dragY,0px)) scale(1.04) rotate(.8deg);box-shadow:0 16px 34px -10px rgba(16,24,40,.4);border-color:var(--accent);opacity:.97;z-index:6;pointer-events:none;transition:none}
+html[data-theme=dark] .sidePg.dragging{box-shadow:0 16px 34px -10px rgba(0,0,0,.65)}
+@keyframes nxSnap{0%{transform:scale(1.06)}55%{transform:scale(.985)}100%{transform:none}}
+.sidePg.snapped{animation:nxSnap .24s var(--ease-out)}
 /* E1 拇指區：手機版工具面板貼近底部（單行橫向捲動），方便單手操作 */
 @media (max-width:768px){
  #tbPanel{position:sticky;bottom:0;z-index:59;box-shadow:0 -6px 20px rgba(16,24,40,.10)}
- body.readMode #tbPanel{display:none!important}
 }
 /* Print ================= */
 @media print{
@@ -883,6 +920,7 @@ body.readMode #topbar,body.readMode #tbPanel,body.readMode #elbarHost{display:no
 <symbol id="i-view-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="2"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="2"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="2"/><rect x="13" y="13" width="7.5" height="7.5" rx="2"/></symbol>
 <symbol id="i-view-list" viewBox="0 0 24 24"><rect x="3.2" y="4.4" width="17.6" height="5.6" rx="2.2"/><rect x="3.2" y="14" width="17.6" height="5.6" rx="2.2"/><path d="M6.4 7.2h.01M6.4 16.8h.01"/></symbol>
 <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></symbol>
+<symbol id="i-checks" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="2" ry="2"/><path d="M9 13l2 2 4-4M7 13l2 2 4-4"/></symbol>
 <symbol id="i-pin" viewBox="0 0 24 24"><path d="M9 4h6l-1 6 3.5 3.5H6.5L10 10 9 4z"/><path d="M12 13.5V21"/></symbol>
 <symbol id="i-doc-json" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M10 12l-1.5 1.5L10 15M14 12l1.5 1.5L14 15"/></symbol>
 <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></symbol>
@@ -920,13 +958,8 @@ body.readMode #topbar,body.readMode #tbPanel,body.readMode #elbarHost{display:no
     <option value="name">名稱</option>
     <option value="pages">頁數</option>
    </select>
-   <select id="langSelHome" class="langSel" data-nolang aria-label="語言 / Language">
-    <option value="zh-TW">繁體中文</option>
-    <option value="zh-Hans">简体中文</option>
-    <option value="en">English</option>
-   </select>
    <button class="ibtn" id="btnHomeTheme" data-tip="切換深色模式" aria-label="切換深色模式"><svg class="ic"><use href="#i-moon"></use></svg></button>
-    <button class="gbtn" id="btnHomeSelect" data-tip="批量管理：多選後一次刪除" aria-label="批量管理">管理</button>
+    <button class="gbtn" id="btnHomeSelect" data-tip="批量管理：多選後一次刪除" aria-label="批量管理"><svg class="ic mobOnly"><use href="#i-checks"></use></svg><span id="btnHomeSelectTx">管理</span></button>
    <button class="gbtn" id="btnHomeUpload"><svg class="ic"><use href="#i-upload"></use></svg>上載檔案</button>
   </div>
  </div>
@@ -942,6 +975,34 @@ body.readMode #topbar,body.readMode #tbPanel,body.readMode #elbarHost{display:no
    <button id="homeSelDel" class="danger" disabled>刪除選取</button>
    <button id="homeSelDone" class="primary">完成</button>
   </div>
+</div>
+
+<div id="info">
+ <div class="infoBar">
+  <button class="ibtn" id="btnInfoBack" data-tip="回到主頁" aria-label="回到主頁"><svg class="ic"><use href="#i-arrow-l"></use></svg></button>
+  <h2 id="infoTitle">NEXUS Info</h2>
+  <button class="ibtn" id="btnInfoRefresh" data-tip="刷新軟件（避免卡住）」" aria-label="刷新"><svg class="ic"><use href="#i-refresh"></use></svg></button>
+ </div>
+ <div class="infoSection">
+  <h3 id="infoUsageTitle">文件容量</h3>
+  <div class="infoRow"><span id="infoUsageLabel">已使用</span><span id="infoUsageVal">—</span></div>
+  <div class="infoRow"><span id="infoLimitLabel">容量上限</span><span id="infoLimitVal">—</span></div>
+  <div class="infoRow rangeRow"><span id="infoLimitText">0 MB</span><input type="range" id="infoLimitRange" min="1" max="1000" step="1" value="100"><span id="infoLimitText2">100 MB</span></div>
+  <div class="infoHint" id="infoUsageHint">本機儲存（localStorage / IndexedDB），隨瀏覽器資料清除而遺失。</div>
+ </div>
+ <div class="infoSection">
+  <h3 id="infoLangTitle">語言</h3>
+  <select id="infoLangSel" class="langSel" data-nolang aria-label="語言">
+   <option value="zh-TW">繁體中文</option>
+   <option value="zh-Hans">简体中文</option>
+   <option value="en">English</option>
+  </select>
+ </div>
+ <div class="infoSection">
+  <h3 id="infoAboutTitle">關於</h3>
+  <div class="infoRow"><span id="infoVerLabel">版本</span><span id="infoVerVal">2.1.0</span></div>
+  <div class="infoRow"><span id="infoBuildLabel">建置</span><span id="infoBuildVal">NEXUS Notes</span></div>
+ </div>
 </div>
 
 <div id="app">
@@ -979,6 +1040,7 @@ body.readMode #topbar,body.readMode #tbPanel,body.readMode #elbarHost{display:no
     <div class="tbPane" data-cat="page">
      <button id="btnAddPage" class="ibtn" data-tip="於結尾新增一頁" aria-label="新增頁面"><svg class="ic"><use href="#i-page-plus"></use></svg></button>
      <button id="btnDelPage" class="ibtn" data-tip="選擇頁面刪除" aria-label="刪除頁面"><svg class="ic"><use href="#i-trash"></use></svg></button>
+     <button id="btnPgThumbs" class="ibtn mobOnly" data-tip="頁面縮圖：拖曳調整頁次順序" aria-label="頁面縮圖"><svg class="ic"><use href="#i-view-list"></use></svg></button>
      <span class="rng pill" data-tip="頁面邊距：內容與頁緣的留白（可自訂）">
       <svg class="ic sm"><use href="#i-margins"></use></svg>
       <input type="range" id="pageMargin" min="0" max="160" step="4" value="72" aria-label="頁面邊距">
@@ -1015,11 +1077,6 @@ body.readMode #topbar,body.readMode #tbPanel,body.readMode #elbarHost{display:no
      <button id="btnRedo" class="ibtn" data-tip="重做 (Ctrl+Y)" aria-label="重做"><svg class="ic"><use href="#i-redo"></use></svg></button>
      <span class="tbSep" aria-hidden="true"></span>
      <button id="btnTheme" class="ibtn" data-tip="切換深色模式" aria-label="切換深色模式"><svg class="ic"><use href="#i-moon"></use></svg></button>
-     <select id="langSel" class="langSel" data-nolang aria-label="語言 / Language">
-      <option value="zh-TW">繁體中文</option>
-      <option value="zh-Hans">简体中文</option>
-      <option value="en">English</option>
-     </select>
     </div>
    </section>
    <div id="elbarWrap"><div id="elbarHost" aria-live="polite"></div></div>
@@ -1042,11 +1099,13 @@ body.readMode #topbar,body.readMode #tbPanel,body.readMode #elbarHost{display:no
      <i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i>
     </div>
     <div id="sideHead"><span class="shTitle">我的筆記 <span id="docCount">0</span></span><button id="btnSideCollapse" title="收起側欄">«</button></div>
-    <div id="docList"></div>
-    <div class="sideCap" id="sidePgsCap" style="display:none">頁面縮圖</div>
-    <div id="sidePgs" class="sidePgs" style="display:none"></div>
-    <div class="sideCap">上載的檔案</div>
-    <div id="fileList"><div class="fiEmpty">尚無上載檔案</div></div>
+    <div class="sideTop"><div id="docList"></div></div>
+    <div class="sideBot">
+     <div class="sideCap" id="sidePgsCap" style="display:none">頁面縮圖</div>
+     <div id="sidePgs" class="sidePgs" style="display:none"></div>
+     <div class="sideCap">上載的檔案</div>
+     <div id="fileList"><div class="fiEmpty">尚無上載檔案</div></div>
+    </div>
     <div id="sideFoot">自動儲存於瀏覽器本機<br>支援 PDF / TXT / JPG / PNG · 畫筆 · 文字 · 表格 · 經濟圖表</div>
    </aside>
    <button id="sideToggle" title="展開/收起我的筆記欄" aria-label="展開側欄">»</button>
@@ -1219,6 +1278,12 @@ body.readMode #topbar,body.readMode #tbPanel,body.readMode #elbarHost{display:no
   <select id="pngScale"><option value="1">1x（標準）</option><option value="2" selected>2x（高）</option><option value="3">3x（列印）</option></select></div>
  <div class="btns"><button onclick="closeModal('mPng')">取消</button><button class="primary" id="pngOk">匯出 PNG</button></div>
 </div></div>
+<div class="modal" id="mPgThumbs"><div class="card wide">
+ <h3 id="pgsThumbsTitle">頁面縮圖</h3>
+ <div class="hint" style="margin-bottom:10px">拖曳頁面卡片調整順序（僅手機）</div>
+ <div id="pgsThumbGrid"></div>
+ <div class="btns"><button onclick="closeModal('mPgThumbs')">完成</button></div>
+</div></div>
 <div id="colorPop" role="dialog" aria-label="調色盤">
  <div class="cpSV" id="cpSV"><i class="cpKnob" id="cpKnob"></i></div>
  <input type="range" class="cpHue" id="cpHue" min="0" max="360" step="1" value="0" aria-label="色相">
@@ -1237,8 +1302,7 @@ body.readMode #topbar,body.readMode #tbPanel,body.readMode #elbarHost{display:no
 </div>
 
 <div id="toast"></div>
-<button id="readFab" aria-label="開始編輯" data-tip="進入編輯模式"><svg class="ic"><use href="#i-pen"></use></svg></button>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
@@ -1250,8 +1314,9 @@ const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slic
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt=v=>{v=+v;if(Number.isInteger(v))return String(v);let s=Math.abs(v)>=100?v.toFixed(0):v.toFixed(2);if(s.indexOf('.')>=0)s=s.replace(/0+$/,'').replace(/\.$/,'');return s||'0';};
+function fmtSize(n){if(n==null)return '';const u=['B','KB','MB','GB'];let i=0;n=+n;while(n>=1024&&i<u.length-1){n/=1024;i++;}return (n>=10||i===0?Math.round(n):n.toFixed(1))+' '+u[i];};
 function toast(msg){const e=$('#toast');e.textContent=t(msg);e.classList.add('on');clearTimeout(e._h);e._h=setTimeout(()=>e.classList.remove('on'),2200);}
-function closeModal(id){$('#'+id).classList.remove('open');}
+function closeModal(id){$('#'+id).classList.remove('open');if(id==='mPgThumbs'){history.back();}}
 /* ===== 檢查更新（GitHub Releases） =====
    APP_VERSION 為目前版本；檢查時向 GitHub Releases API 取最新版並比對。
    發佈仓库：cghk-cn/nexus-notes。 */
@@ -1504,6 +1569,12 @@ Object.assign(I18N['zh-Hans'],{
 '新增筆記':'新增笔记','已釘選到頂端':'已钉选到顶部','已取消釘選':'已取消钉选',
 '已進入編輯模式':'已进入编辑模式','頁面縮圖':'页面缩图','已移動到第 {n} 頁':'已移动到第 {n} 頁',
 '頁面範圍':'页面范围','全部頁面':'全部页面','目前頁':'目前页','PNG 解析度':'PNG 分辨率','匯出 PNG':'导出 PNG'
+});
+Object.assign(I18N['zh-Hans'],{
+'NEXUS Info':'NEXUS Info','回到主頁':'返回主頁','刷新':'刷新','文件容量':'文件容量','已使用':'已使用','容量上限':'容量上限','MB':'MB','版本':'版本','關於':'關於','語言':'語言','已切換界面語言':'已切换界面语言'
+});
+Object.assign(I18N['en'],{
+'NEXUS Info':'NEXUS Info','回到主頁':'Back to Home','刷新':'Refresh','文件容量':'Storage','已使用':'Used','容量上限':'Limit','MB':'MB','版本':'Version','關於':'About','語言':'Language','已切換界面語言':'Language switched'
 });
 Object.assign(I18N['en'],{
 '還沒有任何筆記':'No notes yet','點一下下方按鈕，開始記錄你的第一頁。':'Tap the button below to start your first page.',
@@ -2449,21 +2520,30 @@ function gotoPage(i){
  const targetY=S.panY+(pr.top-wr.top)-(ws.clientHeight-pr.height)/2;
  S.panY=targetY;clampPan();applyPagesTransform();
 }
-/* C4：拖曳排序（拖到另一頁上方→互換順序） */
+/* C4：拖曳排序（拖到另一頁上方→互換順序，加拖動動畫） */
 let sideDrag=null;
 function startSideDrag(ev,i){
  ev.preventDefault();
  sideDrag={from:i};
  const items=[...document.querySelectorAll('.sidePg')];
+ const dragEl=items[i];
+ dragEl.classList.add('dragging');
+ const startY=dragEl.offsetTop;
  const move=e=>{
   const el=document.elementFromPoint(e.clientX,e.clientY);
   const over=el&&el.closest?el.closest('.sidePg'):null;
   items.forEach(x=>x.classList.remove('dragOver'));
   if(over&&+over.dataset.pi!==sideDrag.from)over.classList.add('dragOver');
+  /* 跟手位移（Y 軸） */
+  const rect=dragEl.getBoundingClientRect();
+  const hostRect=$('#sidePgs').getBoundingClientRect();
+  dragEl.style.setProperty('--dragY',(e.clientY-rect.top-hostRect.top)+'px');
  };
  const up=e=>{
   document.removeEventListener('pointermove',move);
   document.removeEventListener('pointerup',up);
+  dragEl.classList.remove('dragging');
+  dragEl.style.removeProperty('--dragY');
   items.forEach(x=>x.classList.remove('dragOver'));
   const el=document.elementFromPoint(e.clientX,e.clientY);
   const over=el&&el.closest?el.closest('.sidePg'):null;
@@ -2473,10 +2553,62 @@ function startSideDrag(ev,i){
     const d=curDoc();const mv=d.pages.splice(sideDrag.from,1)[0];
     d.pages.splice(to,0,mv);
     S.sel=null;S.editing=null;commit();renderAll();
+    /* 加 snapped 動畫類於目標位置 */
+    setTimeout(()=>{const t=document.querySelector('.sidePg[data-pi="'+to+'"]');if(t)t.classList.add('snapped');},0);
+    setTimeout(()=>{const t=document.querySelector('.sidePg[data-pi="'+to+'"]');if(t)t.classList.remove('snapped');},240);
     toast(tN('已移動到第 {n} 頁',{n:to+1}));
    }
   }
   sideDrag=null;
+ };
+ document.addEventListener('pointermove',move);
+ document.addEventListener('pointerup',up);
+}
+/* v2.1.0 #8 頁面縮圖浮層（僅手機）：開啟後可拖曳調整頁次順序 */
+$('#btnPgThumbs').addEventListener('click',()=>{showPgThumbs();history.pushState({v:'pgs'},'');$('#mPgThumbs').classList.add('open');});
+function showPgThumbs(){
+ const d=curDoc();const host=$('#pgsThumbGrid');if(!d||!host)return;
+ host.innerHTML='';
+ d.pages.forEach((p,i)=>{
+  const it=document.createElement('div');it.className='pgThumb';it.dataset.pi=i;
+  const bits=[];
+  if(p.bg&&p.bg.src)bits.push('底圖');
+  if(p.strokes&&p.strokes.length)bits.push(p.strokes.length+'筆');
+  if(p.els&&p.els.length)bits.push(p.els.length+'物');
+  if(p.flow&&p.flow.trim())bits.push('文字');
+  it.innerHTML='<div class="pgThumbImg"><img alt=""></div>'+
+   '<div class="pgThumbMeta"><span class="pgThumbN">第 '+(i+1)+' 頁</span><span class="pgThumbS">'+(bits.length?bits.join(' · '):'空白')+'</span></div>'+
+   '<span class="pgThumbGrip" title="拖曳排序">⠿</span>';
+  it.addEventListener('pointerdown',ev=>{if(ev.target.closest('.pgThumbGrip'))startPgThumbDrag(ev,i);});
+  NXThumb.renderThumb(d,i).then(url=>{const im=it.querySelector('img');if(im&&url)im.src=url;}).catch(()=>{});
+  host.appendChild(it);
+ });
+}
+/* 頁面縮圖浮層拖曳排序 */
+let pgDrag=null;
+function startPgThumbDrag(ev,i){
+ ev.preventDefault();
+ pgDrag={from:i};
+ const items=[...document.querySelectorAll('.pgThumb')];
+ const dragEl=items[i];
+ dragEl.classList.add('dragging');
+ const move=e=>{
+  const el=document.elementFromPoint(e.clientX,e.clientY);
+  const over=el&&el.closest?el.closest('.pgThumb'):null;
+  items.forEach(x=>x.classList.remove('dragOver'));
+  if(over&&+over.dataset.pi!==pgDrag.from)over.classList.add('dragOver');
+  const rect=dragEl.getBoundingClientRect();const hostRect=$('#pgsThumbGrid').getBoundingClientRect();
+  dragEl.style.setProperty('--dragY',(e.clientY-rect.top-hostRect.top)+'px');
+ };
+ const up=e=>{
+  document.removeEventListener('pointermove',move);
+  document.removeEventListener('pointerup',up);
+  dragEl.classList.remove('dragging');dragEl.style.removeProperty('--dragY');
+  items.forEach(x=>x.classList.remove('dragOver'));
+  const el=document.elementFromPoint(e.clientX,e.clientY);
+  const over=el&&el.closest?el.closest('.pgThumb'):null;
+  if(over){const to=+over.dataset.pi;if(to!==pgDrag.from){const d=curDoc();const mv=d.pages.splice(pgDrag.from,1)[0];d.pages.splice(to,0,mv);S.sel=null;S.editing=null;commit();renderAll();showPgThumbs();toast(tN('已移動到第 {n} 頁',{n:to+1}));}}
+  pgDrag=null;
  };
  document.addEventListener('pointermove',move);
  document.addEventListener('pointerup',up);
@@ -5554,8 +5686,7 @@ function renderHome(){
   else  h+=emptyState('home','還沒有任何筆記','點一下下方按鈕，開始記錄你的第一頁。','新增筆記','newFromEmpty');
  }
  grid.innerHTML=h;
- /* A2：為有內容的筆記卡片換上真實縮圖 */
- docs.forEach(d=>{ hydrateThumb(d); });
+ /* v2.1.0 #4：主頁筆記卡片不再顯示縮圖（NXThumb 引擎保留，僅側欄 C4 繼續使用） */
  const sub=$('#homeSub');
  if(sub)sub.textContent=S.docs.length?('共 '+S.docs.length+' 份筆記 · 點擊板塊開始編輯'):'還沒有筆記，點擊「新增筆記」開始';
  updateSelBar();
@@ -5589,22 +5720,38 @@ function hydrateThumb(d){
  }).catch(()=>{});
 }
 function showHome(){S.sel=null;S.editing=null;homeSel.on=false;homeSel.ids=[];document.body.classList.remove('homeSel');const b=$('#btnHomeSelect');if(b)b.textContent=t('管理');document.body.classList.add('view-home');renderHome();}
+
+/* ===== v2.1.0 #7 Info 頁 ===== */
+function showInfo(){history.pushState({v:'info'},'');document.body.classList.remove('view-home');document.body.classList.add('view-info');updateInfoUsage();}
+function hideInfo(){document.body.classList.remove('view-info');document.body.classList.add('view-home');history.back();}
+function updateInfoUsage(){
+ try{
+  let used=0;
+  try{used+=new Blob([localStorage.getItem('noteapp.v1')||'']).size;}catch(e){}
+  try{used+=new Blob([localStorage.getItem('noteapp.v1.bak')||'']).size;}catch(e){}
+  try{used+=new Blob([localStorage.getItem('noteapp.homeLayout')||'']).size;}catch(e){}
+  try{used+=new Blob([localStorage.getItem('noteapp.homeSort')||'']).size;}catch(e){}
+  try{used+=new Blob([localStorage.getItem('noteapp.lang')||'']).size;}catch(e){}
+  try{used+=new Blob([localStorage.getItem('noteapp.theme')||'']).size;}catch(e){}
+  const el=$('#infoUsageVal');if(el)el.textContent=fmtSize(used);
+  const lim=localStorage.getItem('noteapp.storageLimitMB');
+  const limitMB=lim?+lim:100;
+  const el2=$('#infoLimitVal');if(el2)el2.textContent=limitMB+' MB';
+  const el3=$('#infoLimitRange');if(el3){el3.value=limitMB;$('#infoLimitText').textContent=limitMB+' MB';$('#infoLimitText2').textContent=limitMB+' MB';}
+  const hint=$('#infoUsageHint');if(hint)hint.textContent=t('本機儲存（localStorage / IndexedDB），已用 {u} / {l} MB',{u:fmtSize(used).replace(' MB',''),l:limitMB});
+ }catch(e){}
+}
+function setInfoLimit(mb){try{localStorage.setItem('noteapp.storageLimitMB',String(mb));}catch(e){}updateInfoUsage();}
+function refreshApp(){location.reload();}
+$('#btnInfoBack').addEventListener('click',hideInfo);
+$('#btnInfoRefresh').addEventListener('click',refreshApp);
+$('#infoLimitRange').addEventListener('input',ev=>{setInfoLimit(ev.target.value);});
+$('#infoLangSel').addEventListener('change',ev=>setLang(ev.target.value));
 /* ===== v2.0.0 E2 手機閱讀優先 =====
    ≤768px 開啟筆記預設進入「閱讀模式」（隱藏頂部工具列/分類列，只留文件），
    右下浮動「畫筆」FAB 點一下才進編輯模式。桌機 (>768px) 不受影响。 */
 function isNarrow(){return window.matchMedia&&window.matchMedia('(max-width:768px)').matches;}
-function setReadMode(on){
- document.body.classList.toggle('readMode',!!on);
- const fab=$('#readFab');if(fab)fab.setAttribute('aria-hidden',on?'false':'true');
-}
-function enterEditMode(){
- setReadMode(false);
- setTool('pen');setCat('tools');
- toast(t('已進入編輯模式'));
-}
-if($('#readFab'))$('#readFab').addEventListener('click',enterEditMode);
-/* 離開閱讀模式後，若使用者在桌機視窗，不強制 readMode */
-window.addEventListener('resize',()=>{ if(!isNarrow())setReadMode(false); });
+function setReadMode(on){document.body.classList.toggle('readMode',!!on);}
 function openDoc(id){
  if(!S.docs.some(d=>d.id===id))return;
  S.curId=id;S.sel=null;S.editing=null;
@@ -5616,8 +5763,7 @@ function openDoc(id){
  renderAll();
  restoreView(id);
  persist();
- /* E2：手機寬度預設閱讀模式 */
- setReadMode(isNarrow());
+ /* E2 已退役（v2.1.0 #6）：手機開啟筆記直接進入編輯模式 */
 }
 /* 離開／切換分頁時把目前檢視位置存起來 */
 window.addEventListener('pagehide',()=>persist(true));
@@ -5674,7 +5820,7 @@ if($('#docList'))$('#docList').addEventListener('click',ev=>{
 (function(){const hs=$('#homeSort');if(!hs)return;hs.value=homeSort;
  hs.addEventListener('change',e=>{homeSort=e.target.value;try{localStorage.setItem('noteapp.homeSort',homeSort);}catch(err){}renderHome();});
 })();
-$('#btnHomeSelect').addEventListener('click',()=>homeSelToggle());
+$('#btnHomeSelect').addEventListener('click',homeSelToggle);
 $('#homeSelDone').addEventListener('click',()=>{if(homeSel.on)homeSelToggle();});
 $('#homeSelAll').addEventListener('click',()=>{homeSel.ids=S.docs.map(x=>x.id);renderHome();});
 $('#homeSelNone').addEventListener('click',()=>{homeSel.ids=[];renderHome();});
@@ -5690,8 +5836,8 @@ $('#homeSelDel').addEventListener('click',()=>{
 $('#langSel').addEventListener('change',e=>setLang(e.target.value));
 $('#langSelHome').addEventListener('change',e=>setLang(e.target.value));
 $('#btnHomeTheme').addEventListener('click',()=>applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark'));
-$('#brandHome').addEventListener('click',showHome);
-$('#brandHome').addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();showHome();}});
+$('#homeBrand').addEventListener('click',showInfo);
+$('#homeBrand').addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();showInfo();}});
 $('#btnImport').addEventListener('click',()=>$('#jsonInput').click());
 $('#jsonInput').addEventListener('change',ev=>{
  const f=ev.target.files[0];ev.target.value='';
@@ -6032,6 +6178,12 @@ window.addEventListener('keydown',ev=>{
   document.body.classList.add('view-home');
    /* 桌面版：訂閱「以此打開」事件，並告知主進緒渲染已就緒（送出待處理的開啟檔案） */
    if(DESK.supported){ DESK.listen(); DESK.ready(); }
+  /* v2.1.0 #9 返回鍵分層：popstate 關閉最上層介面（info / 頁面縮圖浮層 / modal） */
+  window.addEventListener('popstate',ev=>{
+   const st=ev.state||{};
+   if(st.v==='info'){hideInfo();}
+   else if(st.v==='pgs'){closeModal('mPgThumbs');}
+  });
   console.log('NoteApp ready —',S.docs.length,'doc(s) · home view · lang=',LANG);
  }).catch(e=>{
   console.warn('啟動載入失敗，改以空白筆記啟動',e);
