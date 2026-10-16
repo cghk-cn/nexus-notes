@@ -5833,8 +5833,7 @@ $('#homeSelDel').addEventListener('click',()=>{
  if(kill.has(S.curId)){if(S.docs.length)S.curId=S.docs[0].id;else newDoc('我的筆記');}
  homeSel.ids=[]; persist(); renderHome(); toast(t('已刪除選取筆記'));
 });
-$('#langSel').addEventListener('change',e=>setLang(e.target.value));
-$('#langSelHome').addEventListener('change',e=>setLang(e.target.value));
+$('#langSelHome')?.addEventListener('change',e=>setLang(e.target.value));
 $('#btnHomeTheme').addEventListener('click',()=>applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark'));
 $('#homeBrand').addEventListener('click',showInfo);
 $('#homeBrand').addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();showInfo();}});
