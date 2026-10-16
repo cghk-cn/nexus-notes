@@ -1325,7 +1325,7 @@ function closeModal(id){$('#'+id).classList.remove('open');if(id==='mPgThumbs'){
 /* ===== 檢查更新（GitHub Releases） =====
    APP_VERSION 為目前版本；檢查時向 GitHub Releases API 取最新版並比對。
    發佈仓库：cghk-cn/nexus-notes。 */
-const APP_VERSION='2.1.5';
+const APP_VERSION='2.1.6';
 const UPD=(function(){
  const OWNER='cghk-cn', REPO='nexus-notes';
  const API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/latest';
@@ -5738,8 +5738,8 @@ function renderHome(){
    (homeSel.on
     ? '<span class="pick" aria-hidden="true"></span>'
     : '<span class="cic" data-thumb="0"><svg class="ic"><use href="#i-book"></use></svg></span>')+
-   (d.pin&&!homeSel.on?'<span class="pinFlag" title="已釘選">📌</span>':'')+
-   (d.fileName?'<span class="linkFlag" title="'+t('已連結本機檔：儲存時將覆蓋原檔')+'">📎</span>':'')+
+   (d.pin&&!homeSel.on?'<span class="pinFlag" title="已釘選"><svg class="ic"><use href="#i-pin"></use></svg></span>':'')+
+   (d.fileName?'<span class="linkFlag" title="'+t('已連結本機檔：儲存時將覆蓋原檔')+'"><svg class="ic"><use href="#i-doc-json"></use></svg></span>':'')+
    '<span class="tx">'+
     '<span class="nm">'+esc(d.name)+'</span>'+
     '<span class="m2"><span>'+d.pages.length+' 頁</span><span class="sep">·</span><span>'+esc(relTime(d.updated)||ds)+'</span></span>'+
