@@ -615,6 +615,22 @@ body.tool-pen .flow,body.tool-eraser .flow,body.tool-text .flow{pointer-events:n
 .elbar input[type=text]{width:92px;padding:3px 7px;font-size:13px}
 .elbar .smi{color:var(--text-3);font-size:12px}
 .elbar select.fontSel{width:116px;padding:3px 6px;font-size:13px}
+/* 嵌入於工具列的文字格式列（與螢光筆同列，單行不換行，同一圖層鑲嵌） */
+.txtFmt{display:inline-flex;align-items:center;gap:6px;height:32px;padding:2px 8px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);flex:none;min-width:0}
+.txtFmt .tfs{font-size:11.5px;color:var(--text-3);white-space:nowrap;flex:none}
+.txtFmt input[type=number]{width:44px;padding:2px 5px;font-size:12px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)}
+.txtFmt .tfSwatch{width:24px;height:22px;padding:0;border-radius:6px;border:1px solid var(--border-strong);box-shadow:inset 0 0 0 2px var(--surface);cursor:pointer;background:#111111;flex:none}
+.txtFmt .tfSwatch.on{box-shadow:0 0 0 2px var(--accent)}
+.txtFmt .tseg{display:inline-flex;align-items:center;gap:2px;padding:1px;border-radius:8px;background:var(--surface);border:1px solid var(--border);flex:none}
+.txtFmt .tseg button{width:24px;height:22px;padding:0;border:none;background:transparent;font-size:13px;color:var(--text-2);border-radius:6px;cursor:pointer}
+.txtFmt .tseg button.on,.txtFmt .tseg button.active{background:var(--accent);color:#fff;box-shadow:0 2px 6px var(--accent-ring)}
+.txtFmt select{width:96px;padding:2px 5px;font-size:12px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;flex:none}
+.txtFmt button.tfRot{width:26px;height:22px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text-2);font-size:13px;cursor:pointer}
+.txtFmt button.tfRot:hover{background:var(--surface-2)}
+.txtHandle{position:absolute;left:50%;top:-14px;transform:translateX(-50%);width:22px;height:10px;background:var(--accent);border:1.5px solid #fff;border-radius:4px;cursor:grab;z-index:6;pointer-events:auto;box-shadow:0 1px 6px rgba(0,0,0,.45);user-select:none;-webkit-user-select:none}
+.txtHandle:active{cursor:grabbing}
+.txtHandle::before{content:'';display:block;width:100%;height:2px;background:rgba(255,255,255,.9);border-radius:1px;margin:1px auto}
+
 /* 元素編輯列改駐留於頂部工具列右側空白處，不再浮在文件上遮擋內容 */
 #tbPanel .tbPane{flex:0 1 auto}
 /* 元素編輯列：獨立一整條 contextual bar（只在選取元素時出現），
@@ -1068,6 +1084,25 @@ html[data-theme=dark] .sidePg.dragging{box-shadow:0 16px 34px -10px rgba(0,0,0,.
       <span class="rv tight" id="penAlphaV">100%</span>
      </span>
      <button id="btnMarker" class="ibtn" data-tip="螢光筆（半透明標示）" aria-label="螢光筆"><svg class="ic"><use href="#i-marker"></use></svg></button>
+      <div id="txtFmt" class="txtFmt" aria-label="文字格式" data-tip="文字格式：選取文字框後即可調整字級／字色／粗斜底線／字體／對齊與旋轉；更改會自動鎖定，下次新增文字沿用相同格式">
+       <span class="tfs">字級</span>
+       <input type="number" id="txtFs" min="8" max="120" value="16" aria-label="字級">
+       <button type="button" id="txtColor" class="tfSwatch" aria-label="字色"></button>
+       <input type="color" id="txtColorIn" style="display:none" aria-hidden="true">
+       <div class="tseg">
+        <button id="txtBold" aria-label="粗體"><b>B</b></button>
+        <button id="txtItalic" aria-label="斜體"><i>I</i></button>
+        <button id="txtUnderline" aria-label="底線"><u>U</u></button>
+       </div>
+       <select id="txtFont" aria-label="字體"></select>
+       <div class="tseg tal">
+        <button id="txtAlignL" aria-label="靠左對齊"><svg class="ic"><use href="#i-align-left"></use></svg></button>
+        <button id="txtAlignC" aria-label="置中對齊"><svg class="ic"><use href="#i-align-center"></use></svg></button>
+        <button id="txtAlignR" aria-label="靠右對齊"><svg class="ic"><use href="#i-align-right"></use></svg></button>
+       </div>
+       <button id="txtRotL" aria-label="逆時鐘旋轉">↺</button>
+       <button id="txtRotR" aria-label="順時鐘旋轉">↻</button>
+      </div>
     </div>
    <div class="tbPane" data-cat="insert">
      <button id="btnInsertText" class="ibtn" data-tip="插入文字框（置中）" aria-label="插入文字"><svg class="ic"><use href="#i-type"></use></svg></button>
@@ -1325,7 +1360,7 @@ function closeModal(id){$('#'+id).classList.remove('open');if(id==='mPgThumbs'){
 /* ===== 檢查更新（GitHub Releases） =====
    APP_VERSION 為目前版本；檢查時向 GitHub Releases API 取最新版並比對。
    發佈仓库：cghk-cn/nexus-notes。 */
-const APP_VERSION='2.1.7';
+const APP_VERSION='2.2.0';
 const UPD=(function(){
  const OWNER='cghk-cn', REPO='nexus-notes';
  const API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/latest';
@@ -1809,6 +1844,7 @@ const PW=900, PH=1273;
 const S={docs:[],curId:null,tool:'select',pen:{c:'#e53935',s:4,a:1,hl:false},
  sel:null,        /* {pi,id} */
  editing:null,    /* 編輯中的元素 id */
+ textFmtLock:{fs:16,color:'#111111',bold:false,italic:false,underline:false,font:'',align:'left'},  /* 文字格式鎖定：新增文字沿用 */
  dselLine:null,   /* 自繪圖表：目前選取的線 index */
  elbarOff:{},     /* 各元素編輯列的手動拖曳位置 */
  dselArrow:null,  /* 自繪圖表：目前選取的箭頭 index */
@@ -2765,6 +2801,13 @@ function renderEl(e){
   n.style.textAlign=e.align||'left';
   n.style.background=e.bg||'transparent';
   n.style.fontFamily=fontCss(e.font);
+  n.style.position='relative';
+  if(e.rot)n.style.transform='rotate('+e.rot+'deg)';
+  if(S.editing===e.id){
+   const hd=document.createElement('div');
+   hd.className='txtHandle';hd.dataset.id=e.id;hd.title='拖曳移動文字框';
+   n.appendChild(hd);
+  }
  }else if(e.type==='image'){
   n.innerHTML='<img src="'+e.src+'" alt="">';
  }else if(e.type==='table'){
@@ -2990,6 +3033,8 @@ function updateSelUI(){
   wireElbar(box,e);
  }
  renderPanel();
+ renderTextFmt();
+  if(!S.editing){$$('.txtHandle').forEach(h=>h.remove());}
 }
 function elbarHTML(e){
  const L=key=>t(key);
@@ -2998,23 +3043,6 @@ function elbarHTML(e){
  '<button class="ib" data-b="down" title="'+L('把元素下移一層')+'" aria-label="'+L('把元素下移一層')+'"><svg class="ic"><use href="#i-arrow-d"></use></svg></button>'+
  '<button class="ib" data-b="dup" title="'+L('複製元素')+'" aria-label="'+L('複製元素')+'"><svg class="ic"><use href="#i-copy"></use></svg></button>'+
  '<button class="ib xdel" data-b="del" title="'+L('刪除元素')+'" aria-label="'+L('刪除元素')+'"><svg class="ic"><use href="#i-x"></use></svg></button>';
- if(e.type==='text'){
-  h+='<span class="vsep"></span><input type="number" data-b="fs" value="'+(e.fs||16)+'" min="8" max="120" title="'+L('字級')+'" aria-label="'+L('字級')+'">'+
-   '<button type="button" class="dswatch" data-b="tcolor" style="background:'+(e.color||'#111111')+'" title="'+L('顏色')+'" aria-label="'+L('顏色')+'"></button>'+
-   '<span class="seg">'+
-    '<button data-b="bold" class="'+(e.bold?'active':'')+'" title="'+L('粗體 Ctrl+B')+'" aria-label="'+L('粗體 Ctrl+B')+'"><b>B</b></button>'+
-    '<button data-b="italic" class="'+(e.italic?'active':'')+'" title="'+L('斜體 Ctrl+I')+'" aria-label="'+L('斜體 Ctrl+I')+'"><i>I</i></button>'+
-    '<button data-b="underline" class="'+(e.underline?'active':'')+'" title="'+L('底線 Ctrl+U')+'" aria-label="'+L('底線 Ctrl+U')+'"><u>U</u></button>'+
-   '</span>'+
-   '<select data-b="font" title="'+L('字體，先選字體再打字或先選文字再改')+'">'+fontSelHTML(e.font)+
-   '</select>'+
-   '<span class="vsep"></span>'+
-   '<span class="seg">'+
-    '<button data-b="align-left" class="'+((e.align||'left')==='left'?'on':'')+'" title="'+L('靠左對齊')+'" aria-label="'+L('靠左對齊')+'"><svg class="ic"><use href="#i-align-left"></use></svg></button>'+
-    '<button data-b="align-center" class="'+((e.align||'left')==='center'?'on':'')+'" title="'+L('置中對齊')+'" aria-label="'+L('置中對齊')+'"><svg class="ic"><use href="#i-align-center"></use></svg></button>'+
-    '<button data-b="align-right" class="'+((e.align||'left')==='right'?'on':'')+'" title="'+L('靠右對齊')+'" aria-label="'+L('靠右對齊')+'"><svg class="ic"><use href="#i-align-right"></use></svg></button>'+
-   '</span>';
- }
  if(e.type==='table'){
   h+='<span style="width:4px"></span>'+
    '<button data-b="tedit">'+(e.editing?L('完成'):L('編輯內容'))+'</button>'+
@@ -3183,6 +3211,57 @@ function applyTextFont(el,font){
  }
  commit();renderAll();
 }
+/* ===== 嵌入式文字格式列（工具列 #txtFmt）：綁定選取文字，異動寫回鎖定預設 ===== */
+function textFmtTarget(){
+ const f=S.sel?findEl(S.sel.id):null;return(f&&f.el.type==='text')?f.el:null;
+}
+function renderTextFmt(){
+ const bar=document.getElementById('txtFmt');if(!bar)return;
+ const t=textFmtTarget();const lk=S.textFmtLock||{};const e=t||{};
+ const fs=t?(e.fs!=null?e.fs:16):(lk.fs!=null?lk.fs:16);
+ const color=t?e.color:(lk.color||'#111111');
+ const bold=t?!!e.bold:!!lk.bold;
+ const italic=t?!!e.italic:!!lk.italic;
+ const underline=t?!!e.underline:!!lk.underline;
+ const align=t?(e.align||'left'):(lk.align||'left');
+ const font=e.font||(lk.font||'');
+ try{$('#txtFs').value=fs;}catch(err){}
+ $('#txtColor').style.background=color;$('#txtColor').classList.toggle('on',color!=='#111111');
+ $('#txtBold').classList.toggle('on',bold);$('#txtItalic').classList.toggle('on',italic);$('#txtUnderline').classList.toggle('on',underline);
+ $('#txtFont').innerHTML=fontSelHTML(font);
+ $('#txtAlignL').classList.toggle('on',align==='left');$('#txtAlignC').classList.toggle('on',align==='center');$('#txtAlignR').classList.toggle('on',align==='right');
+}
+function textFmtCommit(t){
+ if(t){commit();renderAll();}renderTextFmt();
+}
+$('#txtFs').addEventListener('change',()=>{
+ const t=textFmtTarget();const v=clamp($('#txtFs').value||16,8,120);if(t)t.fs=v;
+ S.textFmtLock=S.textFmtLock||{};S.textFmtLock.fs=v;textFmtCommit(t);
+});
+$('#txtColorIn').addEventListener('input',()=>{
+ const v=$('#txtColorIn').value;$('#txtColor').style.background=v;const t=textFmtTarget();if(t)t.color=v;
+ S.textFmtLock=S.textFmtLock||{};S.textFmtLock.color=v;textFmtCommit(t);
+});
+$('#txtColor').addEventListener('click',()=>$('#txtColorIn').click());
+$('#txtBold').addEventListener('click',()=>{
+ const t=textFmtTarget();if(t)t.bold=!t.bold;S.textFmtLock=S.textFmtLock||{};S.textFmtLock.bold=t?t.bold:false;textFmtCommit(t);
+});
+$('#txtItalic').addEventListener('click',()=>{
+ const t=textFmtTarget();if(t)t.italic=!t.italic;S.textFmtLock=S.textFmtLock||{};S.textFmtLock.italic=t?t.italic:false;textFmtCommit(t);
+});
+$('#txtUnderline').addEventListener('click',()=>{
+ const t=textFmtTarget();if(t)t.underline=!t.underline;S.textFmtLock=S.textFmtLock||{};S.textFmtLock.underline=t?t.underline:false;textFmtCommit(t);
+});
+$('#txtFont').addEventListener('change',()=>{
+ const v=$('#txtFont').value;const t=textFmtTarget();if(t){t.font=v;applyTextFont(t,v);}
+ S.textFmtLock=S.textFmtLock||{};S.textFmtLock.font=v;renderTextFmt();
+});
+$('#txtAlignL').addEventListener('click',()=>{const t=textFmtTarget();if(t)t.align='left';S.textFmtLock=S.textFmtLock||{};S.textFmtLock.align='left';textFmtCommit(t);});
+$('#txtAlignC').addEventListener('click',()=>{const t=textFmtTarget();if(t)t.align='center';S.textFmtLock=S.textFmtLock||{};S.textFmtLock.align='center';textFmtCommit(t);});
+$('#txtAlignR').addEventListener('click',()=>{const t=textFmtTarget();if(t)t.align='right';S.textFmtLock=S.textFmtLock||{};S.textFmtLock.align='right';textFmtCommit(t);});
+$('#txtRotL').addEventListener('click',()=>{const t=textFmtTarget();if(t)t.rot=((t.rot||0)-15)%360;S.textFmtLock=S.textFmtLock||{};textFmtCommit(t);});
+$('#txtRotR').addEventListener('click',()=>{const t=textFmtTarget();if(t)t.rot=((t.rot||0)+15)%360;S.textFmtLock=S.textFmtLock||{};textFmtCommit(t);});
+
 /* ===== 屬性面板 ===== */
 function renderPanel(){
  const has=!!S.sel&&!!findEl(S.sel.id);
@@ -3435,6 +3514,15 @@ $('#pages').addEventListener('pointerdown',ev=>{
   return;
  }
  /* --- 選取工具 --- */
+ /* 文字編輯時的上方拖動把手：拖曳移動整個文字板塊 */
+ const thh=ev.target.closest?ev.target.closest('.txtHandle'):null;
+ if(thh){
+  const id=thh.dataset.id;const f=findEl(id);if(!f||f.el.type!=='text')return;
+  const [hx,hy]=ptOf(pageEl,ev);
+  drag={mode:'move',id,pageEl,sx:hx,sy:hy,ox:f.el.x,oy:f.el.y,moved:false};
+  ev.preventDefault();ev.stopPropagation();
+  return;
+ }
  /* 在 PDF 文字層上 → 交給瀏覽器原生文字選取（像 Mac 預覽程式），不攔截 */
  if(ev.target.closest&&ev.target.closest('.textLayer')){ return; }
  /* 表格格線拖曳（Excel 風格：調整欄寬 / 列高） */
@@ -3702,12 +3790,7 @@ if(drag.mode==='cnode'){
   if(dd.mode==='pen'||dd.mode==='erase'){commit();}
   else if(dd.mode==='move'){
    if(dd.moved){commit();updateSelUI();}
-   else{
-    /* 單擊（沒有拖動）文字框 → 直接進入編輯，不必再雙擊。
-       圖片／表格／圖表維持雙擊編輯（見 #pages dblclick）。 */
-    const f=findEl(dd.id);
-    if(f&&f.el.type==='text'&&S.editing!==dd.id)enterEdit(dd.id);
-   }
+   /* 單擊僅選取／拖曳；雙擊進入編輯模式（見 #pages dblclick） */
   }
   else if(dd.mode==='tresize'){
    const f=findEl(dd.id);
@@ -3740,7 +3823,10 @@ if(drag.mode==='cnode'){
 });
 /* ===== 文字元素與編輯 ===== */
 function makeText(x,y,html,w,h,fs){
- return {id:uid(),type:'text',x,y,w:w||300,h:h||34,html:html||'',fs:fs||16,color:'#111111',bold:false,align:'left'};
+ const lk=S.textFmtLock||{};
+ return {id:uid(),type:'text',x,y,w:w||300,h:h||34,html:html||'',
+  fs:fs!=null?fs:(lk.fs||16),color:lk.color||'#111111',bold:!!lk.bold,italic:!!lk.italic,underline:!!lk.underline,
+  font:lk.font||'',align:lk.align||'left',rot:0};
 }
 function enterEdit(id){
  const f=findEl(id);if(!f)return;
@@ -3750,6 +3836,10 @@ function enterEdit(id){
   S.sel={pi:f.pi,id};updateSelUI();
   node.setAttribute('contenteditable','true');
   node.focus();
+  /* 編輯時的上方拖動把手：拖曳移動整個文字板塊 */
+  if(!node.querySelector('.txtHandle')){
+   const hd=document.createElement('div');hd.className='txtHandle';hd.dataset.id=id;hd.title='拖曳移動文字框';node.appendChild(hd);
+  }
   const sel=window.getSelection(),rg=document.createRange();
   rg.selectNodeContents(node);sel.removeAllRanges();sel.addRange(rg);
   /* 離開焦點：稍後才結束編輯，讓「拖選後改字體」有時間還原選取 */
@@ -3782,6 +3872,7 @@ function finishTextEdit(id){
   if(wasEditable&&ff)ff.el.html=node.innerHTML;
   if(node._blur)node.removeEventListener('blur',node._blur);
   if(wasEditable)node.removeAttribute('contenteditable');
+  node.querySelectorAll('.txtHandle').forEach(h=>h.remove());
  }
  if(S.editing===id)S.editing=null;
  S.savedRange=null;
@@ -3899,7 +3990,7 @@ function centerPos(w,h){
 }
 function insertTextBtn(){
  const d=curDoc();
- const e=makeText(0,0,'在這裡輸入文字…',320,34,18);
+ const e=makeText(0,0,'在這裡輸入文字…',320,34);
  const pos=centerPos(e.w,e.h);
  e.x=pos.x;e.y=pos.y;
  d.pages[pos.pi].els.push(e);
@@ -3907,7 +3998,7 @@ function insertTextBtn(){
  /* 插入後回到選取工具：否則若原本停在文字工具，
     接下來的單擊會「再插一個文字框」而不是編輯這一個。 */
  if(S.tool!=='select')setTool('select');
- commit();renderAll();enterEdit(e.id);
+ commit();renderAll();
 }
 /* ===== 表格對話框 ===== */
 $('#btnInsertTable').addEventListener('click',()=>$('#mTable').classList.add('open'));
@@ -4564,18 +4655,22 @@ function setDocAspect(d,ar){ /* 核心：面積恆定重算長寬比（無內容
  renderAll();
  return true;
 }
-function docSourceAspect(d){ /* 來源比例：純匯入頁面（全頁 bg、無els/strokes/flow）才回傳比例 */
+function docSourceAspect(d){ /* 來源比例：掃描所有頁面，取 PPTX EMU 長寬比，否則用第一頁底圖自然尺寸；點擊自適應時全局套用到全部頁面 */
  if(!d||!d.pages.length)return Promise.resolve(null);
- const pure=d.pages.every(p=>p.bg&&p.bg.src&&!p.els.length&&!p.strokes.length&&!p.flow);
- if(!pure)return Promise.resolve(null);
- const T=d.pages[0].bg.text;
- if(T&&T.direct&&T.vpw&&T.vph)return Promise.resolve(T.vpw/T.vph); /* pptx：EMU sldSz */
- return new Promise(res=>{ /* PDF/圖片：讀底圖自然尺寸 */
-  const im=new Image();
-  im.onload=()=>res((im.naturalWidth&&im.naturalHeight)?(im.naturalWidth/im.naturalHeight):null);
-  im.onerror=()=>res(null);
-  im.src=d.pages[0].bg.src;
- });
+ for(const p of d.pages){ /* pptx：每頁 bg.text.vpw/vph（EMU sldSz） */
+  const T=p.bg&&p.bg.text;
+  if(T&&T.direct&&T.vpw&&T.vph)return Promise.resolve(T.vpw/T.vph);
+ }
+ const p0=d.pages[0];
+ if(p0&&p0.bg&&p0.bg.src){ /* PDF/圖片：讀底圖自然尺寸 */
+  return new Promise(res=>{
+   const im=new Image();
+   im.onload=()=>res((im.naturalWidth&&im.naturalHeight)?(im.naturalWidth/im.naturalHeight):null);
+   im.onerror=()=>res(null);
+   im.src=p0.bg.src;
+  });
+ }
+ return Promise.resolve(null);
 }
 function applyAdaptiveSize(ar){
  const d=curDoc();if(!d)return false;
