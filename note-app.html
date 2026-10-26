@@ -625,11 +625,14 @@ body.tool-pen .flow,body.tool-eraser .flow,body.tool-text .flow{pointer-events:n
 .txtFmt .tseg button{width:24px;height:22px;padding:0;border:none;background:transparent;font-size:13px;color:var(--text-2);border-radius:6px;cursor:pointer}
 .txtFmt .tseg button.on,.txtFmt .tseg button.active{background:var(--accent);color:#fff;box-shadow:0 2px 6px var(--accent-ring)}
 .txtFmt select{width:96px;padding:2px 5px;font-size:12px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;flex:none}
-.txtFmt button.tfRot{width:26px;height:22px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text-2);font-size:13px;cursor:pointer}
-.txtFmt button.tfRot:hover{background:var(--surface-2)}
 .txtHandle{position:absolute;left:50%;top:-14px;transform:translateX(-50%);width:22px;height:10px;background:var(--accent);border:1.5px solid #fff;border-radius:4px;cursor:grab;z-index:6;pointer-events:auto;box-shadow:0 1px 6px rgba(0,0,0,.45);user-select:none;-webkit-user-select:none}
 .txtHandle:active{cursor:grabbing}
 .txtHandle::before{content:'';display:block;width:100%;height:2px;background:rgba(255,255,255,.9);border-radius:1px;margin:1px auto}
+/* 文字框外旋轉把手（Microsoft 風格）：拖曳旋轉整個文字板塊 */
+.txtRotate{position:absolute;left:50%;top:-30px;transform:translateX(-50%) rotate(45deg);width:20px;height:20px;background:var(--accent);border:1.5px solid #fff;border-radius:50%;cursor:crosshair;z-index:7;pointer-events:auto;box-shadow:0 1px 6px rgba(0,0,0,.45);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;touch-action:none}
+.txtRotate::before{content:'↻';}
+.txtRotate:hover{background:#4358ff;transform:translateX(-50%) rotate(45deg) scale(1.15)}
+.txtRotate:active{cursor:grabbing}
 
 /* 元素編輯列改駐留於頂部工具列右側空白處，不再浮在文件上遮擋內容 */
 #tbPanel .tbPane{flex:0 1 auto}
@@ -1084,9 +1087,14 @@ html[data-theme=dark] .sidePg.dragging{box-shadow:0 16px 34px -10px rgba(0,0,0,.
       <span class="rv tight" id="penAlphaV">100%</span>
      </span>
      <button id="btnMarker" class="ibtn" data-tip="螢光筆（半透明標示）" aria-label="螢光筆"><svg class="ic"><use href="#i-marker"></use></svg></button>
-      <div id="txtFmt" class="txtFmt" aria-label="文字格式" data-tip="文字格式：選取文字框後即可調整字級／字色／粗斜底線／字體／對齊與旋轉；更改會自動鎖定，下次新增文字沿用相同格式">
+      <div id="txtFmt" class="txtFmt" aria-label="文字格式" data-tip="文字格式：選取文字框後即可調整字級／字色／粗斜底線／字體／對齊；更改會自動鎖定，下次新增文字沿用相同格式">
        <span class="tfs">字級</span>
-       <input type="number" id="txtFs" min="8" max="120" value="16" aria-label="字級">
+       <select id="txtFs" aria-label="字級">
+         <option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
+         <option value="14">14</option><option value="16" selected>16</option><option value="18">18</option><option value="20">20</option><option value="24">24</option>
+         <option value="28">28</option><option value="32">32</option><option value="36">36</option><option value="40">40</option><option value="44">44</option>
+         <option value="48">48</option><option value="54">54</option><option value="60">60</option><option value="72">72</option><option value="96">96</option>
+        </select>
        <button type="button" id="txtColor" class="tfSwatch" aria-label="字色"></button>
        <input type="color" id="txtColorIn" style="display:none" aria-hidden="true">
        <div class="tseg">
@@ -1100,8 +1108,7 @@ html[data-theme=dark] .sidePg.dragging{box-shadow:0 16px 34px -10px rgba(0,0,0,.
         <button id="txtAlignC" aria-label="置中對齊"><svg class="ic"><use href="#i-align-center"></use></svg></button>
         <button id="txtAlignR" aria-label="靠右對齊"><svg class="ic"><use href="#i-align-right"></use></svg></button>
        </div>
-       <button id="txtRotL" aria-label="逆時鐘旋轉">↺</button>
-       <button id="txtRotR" aria-label="順時鐘旋轉">↻</button>
+       <button id="txtCopy" aria-label="複製元素" title="複製元素"><svg class="ic"><use href="#i-copy"></use></svg></button>
       </div>
     </div>
    <div class="tbPane" data-cat="insert">
@@ -1360,7 +1367,7 @@ function closeModal(id){$('#'+id).classList.remove('open');if(id==='mPgThumbs'){
 /* ===== 檢查更新（GitHub Releases） =====
    APP_VERSION 為目前版本；檢查時向 GitHub Releases API 取最新版並比對。
    發佈仓库：cghk-cn/nexus-notes。 */
-const APP_VERSION='2.2.0';
+const APP_VERSION='2.2.1';
 const UPD=(function(){
  const OWNER='cghk-cn', REPO='nexus-notes';
  const API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/latest';
@@ -2807,6 +2814,9 @@ function renderEl(e){
    const hd=document.createElement('div');
    hd.className='txtHandle';hd.dataset.id=e.id;hd.title='拖曳移動文字框';
    n.appendChild(hd);
+   const rt=document.createElement('div');
+   rt.className='txtRotate';rt.dataset.id=e.id;rt.title='旋轉文字框';
+   n.appendChild(rt);
   }
  }else if(e.type==='image'){
   n.innerHTML='<img src="'+e.src+'" alt="">';
@@ -3038,11 +3048,7 @@ function updateSelUI(){
 }
 function elbarHTML(e){
  const L=key=>t(key);
- let h='<i class="elgrip" data-grip="1" title="'+L('拖曳以移動工具列')+'">⠿</i>'+
- '<button class="ib" data-b="up" title="'+L('把元素上移一層')+'" aria-label="'+L('把元素上移一層')+'"><svg class="ic"><use href="#i-arrow-u"></use></svg></button>'+
- '<button class="ib" data-b="down" title="'+L('把元素下移一層')+'" aria-label="'+L('把元素下移一層')+'"><svg class="ic"><use href="#i-arrow-d"></use></svg></button>'+
- '<button class="ib" data-b="dup" title="'+L('複製元素')+'" aria-label="'+L('複製元素')+'"><svg class="ic"><use href="#i-copy"></use></svg></button>'+
- '<button class="ib xdel" data-b="del" title="'+L('刪除元素')+'" aria-label="'+L('刪除元素')+'"><svg class="ic"><use href="#i-x"></use></svg></button>';
+ let h='<i class="elgrip" data-grip="1" title="'+L('拖曳以移動工具列')+'">⠿</i>';
  if(e.type==='table'){
   h+='<span style="width:4px"></span>'+
    '<button data-b="tedit">'+(e.editing?L('完成'):L('編輯內容'))+'</button>'+
@@ -3232,11 +3238,25 @@ function renderTextFmt(){
  $('#txtAlignL').classList.toggle('on',align==='left');$('#txtAlignC').classList.toggle('on',align==='center');$('#txtAlignR').classList.toggle('on',align==='right');
 }
 function textFmtCommit(t){
- if(t){commit();renderAll();}renderTextFmt();
+  if(t){
+    commit();
+    const node=document.querySelector('.el[data-id="'+t.id+'"]');
+    if(node){
+      node.style.fontSize=(t.fs||16)+'px';
+      node.style.color=t.color||'#111';
+      node.style.fontWeight=t.bold?'700':'400';
+      node.style.fontStyle=t.italic?'italic':'normal';
+      node.style.textDecoration=t.underline?'underline':'none';
+      node.style.textAlign=t.align||'left';
+      node.style.fontFamily=fontCss(t.font);
+      node.style.transform=t.rot?'rotate('+t.rot+'deg)':'';
+    }
+  }
+  renderTextFmt();
 }
 $('#txtFs').addEventListener('change',()=>{
- const t=textFmtTarget();const v=clamp($('#txtFs').value||16,8,120);if(t)t.fs=v;
- S.textFmtLock=S.textFmtLock||{};S.textFmtLock.fs=v;textFmtCommit(t);
+ const t=textFmtTarget();const v=$('#txtFs').value||16;if(t)t.fs=+v;
+ S.textFmtLock=S.textFmtLock||{};S.textFmtLock.fs=+v;textFmtCommit(t);
 });
 $('#txtColorIn').addEventListener('input',()=>{
  const v=$('#txtColorIn').value;$('#txtColor').style.background=v;const t=textFmtTarget();if(t)t.color=v;
@@ -3259,8 +3279,19 @@ $('#txtFont').addEventListener('change',()=>{
 $('#txtAlignL').addEventListener('click',()=>{const t=textFmtTarget();if(t)t.align='left';S.textFmtLock=S.textFmtLock||{};S.textFmtLock.align='left';textFmtCommit(t);});
 $('#txtAlignC').addEventListener('click',()=>{const t=textFmtTarget();if(t)t.align='center';S.textFmtLock=S.textFmtLock||{};S.textFmtLock.align='center';textFmtCommit(t);});
 $('#txtAlignR').addEventListener('click',()=>{const t=textFmtTarget();if(t)t.align='right';S.textFmtLock=S.textFmtLock||{};S.textFmtLock.align='right';textFmtCommit(t);});
-$('#txtRotL').addEventListener('click',()=>{const t=textFmtTarget();if(t)t.rot=((t.rot||0)-15)%360;S.textFmtLock=S.textFmtLock||{};textFmtCommit(t);});
-$('#txtRotR').addEventListener('click',()=>{const t=textFmtTarget();if(t)t.rot=((t.rot||0)+15)%360;S.textFmtLock=S.textFmtLock||{};textFmtCommit(t);});
+$('#txtCopy').addEventListener('click',()=>{
+  const t=textFmtTarget();
+  const f=t?findEl(t.id):(S.sel?findEl(S.sel.id):null);
+  const el=f?f.el:null;
+  if(!el)return;
+  const c=JSON.parse(JSON.stringify(el));c.id=uid();c.x+=24;c.y+=24;c.editing=false;
+  const d=curDoc();
+  let targetPage=null;
+  for(const pg of d.pages){if(pg.els.includes(el)){targetPage=pg;break;}}
+  if(!targetPage)return;
+  targetPage.els.push(c);S.sel={pi:d.pages.indexOf(targetPage),id:c.id};commit();renderAll();toast('已複製元素');
+});
+
 
 /* ===== 屬性面板 ===== */
 function renderPanel(){
@@ -3522,6 +3553,15 @@ $('#pages').addEventListener('pointerdown',ev=>{
   drag={mode:'move',id,pageEl,sx:hx,sy:hy,ox:f.el.x,oy:f.el.y,moved:false};
   ev.preventDefault();ev.stopPropagation();
   return;
+ /* 文字編輯時的框外旋轉把手：拖曳旋轉文字板塊 */
+ const trh=ev.target.closest?ev.target.closest('.txtRotate'):null;
+ if(trh){
+  const id=trh.dataset.id;const f=findEl(id);if(!f||f.el.type!=='text')return;
+  const [cx,cy]=ptOf(pageEl,ev);
+  drag={mode:'rotate',id,pageEl,sx:cx,sy:cy,ox:f.el.x,oy:f.el.y,ow:f.el.w,oh:f.el.h,startRot:f.el.rot||0};
+  ev.preventDefault();ev.stopPropagation();
+  return;
+ }
  }
  /* 在 PDF 文字層上 → 交給瀏覽器原生文字選取（像 Mac 預覽程式），不攔截 */
  if(ev.target.closest&&ev.target.closest('.textLayer')){ return; }
@@ -3614,11 +3654,16 @@ $('#pages').addEventListener('pointerdown',ev=>{
    exitEdit();
   }
   const f=findEl(id);if(!f)return;
+  /* 單擊文字板塊直接進入編輯（不用雙擊） */
+  if(f.el.type==='text'){
+   S.sel={pi:f.pi,id};updateSelUI();
+   enterEdit(id);
+   return;
+  }
   if(S.sel&&S.sel.id!==id){S.sel={pi:f.pi,id};S.dselLine=null;S.dselArrow=null;updateSelUI();}
   else if(!S.sel){S.sel={pi:f.pi,id};updateSelUI();}
   /* 表格編輯模式中：不拖曳，讓游標編輯格子 */
   if(f.el.editing)return;
-  if(f.el.type==='text'&&elNode.getAttribute('contenteditable')==='true')return;
   const [px,py]=ptOf(pageEl,ev);
   drag={mode:'move',id,pageEl,sx:px,sy:py,ox:f.el.x,oy:f.el.y,moved:false};
   ev.preventDefault();
@@ -3751,6 +3796,18 @@ if(drag.mode==='cnode'){
   syncPosUI();
   return;
  }
+  if(drag.mode==='rotate'){
+   const f=findEl(drag.id);if(!f)return;const e=f.el;
+   const cx=e.x+e.w/2,cy=e.y+e.h/2;
+   const start=Math.atan2(drag.sy-cy,drag.sx-cx);
+   const cur=Math.atan2(y-cy,x-cx);
+   let delta=(cur-start)*180/Math.PI;
+   e.rot=((drag.startRot+delta)%360+360)%360;
+   const node=document.querySelector('.el[data-id="'+drag.id+'"]');
+   if(node)node.style.transform='rotate('+e.rot+'deg)';
+   syncPosUI();
+   return;
+  }
  if(drag.mode==='resize'){
   const f=findEl(drag.id);if(!f)return;const e=f.el;
   const c=drag.corner;
@@ -3840,6 +3897,10 @@ function enterEdit(id){
   if(!node.querySelector('.txtHandle')){
    const hd=document.createElement('div');hd.className='txtHandle';hd.dataset.id=id;hd.title='拖曳移動文字框';node.appendChild(hd);
   }
+  /* 框外旋轉把手（Microsoft 風格） */
+  if(!node.querySelector('.txtRotate')){
+   const rt=document.createElement('div');rt.className='txtRotate';rt.dataset.id=id;rt.title='旋轉文字框';node.appendChild(rt);
+  }
   const sel=window.getSelection(),rg=document.createRange();
   rg.selectNodeContents(node);sel.removeAllRanges();sel.addRange(rg);
   /* 離開焦點：稍後才結束編輯，讓「拖選後改字體」有時間還原選取 */
@@ -3869,10 +3930,14 @@ function finishTextEdit(id){
     activeElement.isContentEditable 永遠為真 → Delete 判定成「編輯中」而無法刪除元素。 */
  if(node&&node.getAttribute){
   const wasEditable=node.getAttribute('contenteditable')==='true';
-  if(wasEditable&&ff)ff.el.html=node.innerHTML;
+   if(wasEditable&&ff){
+    const clone=node.cloneNode(true);
+    clone.querySelectorAll(".txtHandle,.txtRotate").forEach(h=>h.remove());
+    ff.el.html=clone.innerHTML;
+   }
   if(node._blur)node.removeEventListener('blur',node._blur);
   if(wasEditable)node.removeAttribute('contenteditable');
-  node.querySelectorAll('.txtHandle').forEach(h=>h.remove());
+  node.querySelectorAll('.txtHandle,.txtRotate').forEach(h=>h.remove());
  }
  if(S.editing===id)S.editing=null;
  S.savedRange=null;
@@ -3995,10 +4060,10 @@ function insertTextBtn(){
  e.x=pos.x;e.y=pos.y;
  d.pages[pos.pi].els.push(e);
  S.sel={pi:pos.pi,id:e.id};
- /* 插入後回到選取工具：否則若原本停在文字工具，
-    接下來的單擊會「再插一個文字框」而不是編輯這一個。 */
+ /* 插入後回到選取工具，並直接進入編輯（不用點擊） */
  if(S.tool!=='select')setTool('select');
  commit();renderAll();
+ enterEdit(e.id);
 }
 /* ===== 表格對話框 ===== */
 $('#btnInsertTable').addEventListener('click',()=>$('#mTable').classList.add('open'));
